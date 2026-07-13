@@ -1,0 +1,172 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id          String       @id @default(cuid())
+  name        String
+  email       String       @unique
+  password    String
+  role        String       @default("ASSESSOR")
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  assessments Assessment[]
+}
+
+model Assessment {
+  id               String @id @default(cuid())
+  assessmentNumber String @unique
+  status           String @default("DRAFT")
+
+  customerName     String
+  customerPhone    String
+  customerEmail    String
+  insuranceCompany String
+  claimNumber      String
+
+  registrationNumber String?
+  vin                String?
+  odometer           String?
+  vehicleNotes       String?
+
+  aiRawResponse       String?
+  verifiedVehicleJson String?
+  verifiedDamageJson  String?
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  images           AssessmentImage[]
+  damagedParts     AssessmentDamagedPart[]
+  replacementParts AssessmentReplacementPart[]
+  inspectionItems  InspectionItem[]
+}
+
+model AssessmentImage {
+  id           String @id @default(cuid())
+  filename     String
+  originalName String
+  path         String
+  mimeType     String
+  size         Int
+  sortOrder    Int    @default(0)
+
+  assessmentId String
+  assessment   Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+}
+
+model VehicleMake {
+  id     String         @id @default(cuid())
+  name   String         @unique
+  models VehicleModel[]
+}
+
+model VehicleModel {
+  id     String      @id @default(cuid())
+  name   String
+  makeId String
+  make   VehicleMake @relation(fields: [makeId], references: [id], onDelete: Cascade)
+
+  variants VehicleVariant[]
+
+  @@unique([name, makeId])
+}
+
+model VehicleVariant {
+  id      String       @id @default(cuid())
+  name    String
+  modelId String
+  model   VehicleModel @relation(fields: [modelId], references: [id], onDelete: Cascade)
+
+  parts VehiclePart[]
+
+  @@unique([name, modelId])
+}
+
+model VehiclePart {
+  id         String  @id @default(cuid())
+  partNumber String
+  name       String
+  category   String
+  unitPrice  Float
+  labourCost Float
+  active     Boolean @default(true)
+
+  variantId String?
+  variant   VehicleVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AssessmentDamagedPart {
+  id        String  @id @default(cuid())
+  name      String
+  severity  String?
+  confirmed Boolean @default(false)
+
+  assessmentId String
+  assessment   Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+}
+
+model AssessmentReplacementPart {
+  id            String  @id @default(cuid())
+  partName      String
+  partNumber    String?
+  quantity      Int     @default(1)
+  unitPrice     Float
+  subtotal      Float
+  confirmed     Boolean @default(false)
+  vehiclePartId String?
+
+  assessmentId String
+  assessment   Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+}
+
+model Supplier {
+  id        String              @id @default(cuid())
+  name      String
+  createdAt DateTime            @default(now())
+  prices    SupplierPartPrice[]
+
+  @@unique([name])
+}
+
+model SupplierPartPrice {
+  id           String   @id @default(cuid())
+  supplierId   String
+  supplier     Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  partName     String
+  vehicleMake  String?
+  vehicleModel String?
+  price        Float
+  createdAt    DateTime @default(now())
+
+  @@unique([supplierId, partName, vehicleMake, vehicleModel])
+}
+
+model InspectionItem {
+  id        String  @id @default(cuid())
+  item      String
+  notes     String?
+  completed Boolean @default(false)
+
+  assessmentId String
+  assessment   Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+}
