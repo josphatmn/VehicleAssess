@@ -369,6 +369,7 @@ export default function AnalyzeWizard() {
       setConfirmedVehicle(data.vehicle);
 
       // Auto-save assessment to DB
+      let savedId: string | null = null;
       try {
         const saveRes = await fetch("/api/assessments/save", {
           method: "POST",
@@ -391,13 +392,14 @@ export default function AnalyzeWizard() {
         });
         if (saveRes.ok) {
           const saved = await saveRes.json();
+          savedId = saved.id;
           setAssessmentId(saved.id);
         }
       } catch {
         // Non-blocking — user can still proceed
       }
 
-      setStep("confirm");
+      setStep("confirm", savedId);
       toast.success("Vehicle detected! Please confirm the details.");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Analysis failed";
@@ -520,7 +522,7 @@ export default function AnalyzeWizard() {
         setCatalogueLoading(false);
       }
     }
-    setStep("results");
+    setStep("results", assessmentId);
 
     // Update saved assessment with confirmed vehicle and parts
     if (assessmentId) {
@@ -603,6 +605,7 @@ export default function AnalyzeWizard() {
     setResult(null);
     setCatalogueParts([]);
     setEditableParts([]);
+    setSupplierPrices({});
     setCustomerInfo({ fullName: "", phone: "", email: "", address: "" });
     setConfirmedVehicle({ make: "", model: "", variant: "", year: "", body_type: "", color: "", registration: "", confidence: 0 });
     setAssessmentId(null);
@@ -652,6 +655,14 @@ export default function AnalyzeWizard() {
       </div>
 
       <div className="mx-auto max-w-4xl px-6 py-10">
+
+        {loadingAssessment && (
+          <div className="max-w-lg mx-auto text-center py-20">
+            <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center mx-auto"><Loader2 className="w-8 h-8 text-blue-600 animate-spin" /></div>
+            <h2 className="mt-6 text-xl font-bold">Loading assessment...</h2>
+            <p className="mt-2 text-sm text-gray-500">Fetching report data from the database.</p>
+          </div>
+        )}
 
         {/* STEP 1: Customer Details */}
         {step === "details" && (
