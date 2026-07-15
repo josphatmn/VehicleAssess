@@ -22,6 +22,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { X, Plus, AlertTriangle } from "lucide-react";
+import { formatCurrency } from "@/lib/currency";
 
 export function Step5Verify() {
   const {
@@ -285,7 +286,7 @@ export function Step5Verify() {
       <Card>
         <CardHeader>
           <CardTitle>
-            Replacement Parts (Total: ${totalReplacementCost.toFixed(2)})
+            Replacement Parts (Total: {formatCurrency(totalReplacementCost)})
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -355,7 +356,7 @@ export function Step5Verify() {
                     />
                   </TableCell>
                   <TableCell className="font-medium">
-                    ${(part.quantity * part.unitPrice).toFixed(2)}
+                    {formatCurrency(part.quantity * part.unitPrice)}
                   </TableCell>
                   <TableCell>
                     <Button

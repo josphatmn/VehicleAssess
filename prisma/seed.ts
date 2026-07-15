@@ -1,9 +1,13 @@
 import { PrismaClient } from "../src/generated/prisma";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import { PrismaMariaDb } from "@prisma/adapter-mariadb";
 import bcrypt from "bcryptjs";
 
-const adapter = new PrismaBetterSqlite3({
-  url: "file:./dev.db",
+const adapter = new PrismaMariaDb({
+  host: "localhost",
+  port: 3306,
+  user: "root",
+  password: "password",
+  database: "vehicle_assess",
 });
 const prisma = new PrismaClient({ adapter });
 

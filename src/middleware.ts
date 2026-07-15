@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { jwtVerify } from "jose";
-
-const JWT_SECRET = new TextEncoder().encode(process.env.NEXTAUTH_SECRET || "fallback-secret");
+import { getToken } from "next-auth/jwt";
 
 const publicPaths = ["/login", "/api/auth", "/api/analyze", "/api/reports"];
 
@@ -10,22 +8,15 @@ export async function middleware(req: NextRequest) {
 
   if (pathname === "/" || publicPaths.some((p) => pathname.startsWith(p))) {
     if (pathname === "/login") {
-      const token = req.cookies.get("authjs.session-token")?.value ||
-                    req.cookies.get("__Secure-authjs.session-token")?.value;
+      const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
       if (token) {
-        try {
-          await jwtVerify(token, JWT_SECRET);
-          return NextResponse.redirect(new URL("/dashboard", req.url));
-        } catch {
-          // invalid token, let them see login
-        }
+        return NextResponse.redirect(new URL("/dashboard", req.url));
       }
     }
     return NextResponse.next();
   }
 
-  const token = req.cookies.get("authjs.session-token")?.value ||
-                req.cookies.get("__Secure-authjs.session-token")?.value;
+  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
 
   if (!token) {
     const loginUrl = new URL("/login", req.url);
@@ -33,14 +24,7 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  try {
-    await jwtVerify(token, JWT_SECRET);
-    return NextResponse.next();
-  } catch {
-    const loginUrl = new URL("/login", req.url);
-    loginUrl.searchParams.set("callbackUrl", pathname);
-    return NextResponse.redirect(loginUrl);
-  }
+  return NextResponse.next();
 }
 
 export const config = {

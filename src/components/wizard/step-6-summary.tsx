@@ -25,6 +25,7 @@ import {
 } from "@/actions/assessments";
 import { toast } from "sonner";
 import { Loader2, Printer } from "lucide-react";
+import { formatCurrency } from "@/lib/currency";
 
 export function Step6Summary() {
   const router = useRouter();
@@ -225,7 +226,7 @@ export function Step6Summary() {
       <Card>
         <CardHeader>
           <CardTitle>
-            Replacement Parts - Estimated Cost: ${totalCost.toFixed(2)}
+            Replacement Parts - Estimated Cost: {formatCurrency(totalCost)}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -247,9 +248,9 @@ export function Step6Summary() {
                     {part.partNumber || "-"}
                   </TableCell>
                   <TableCell>{part.quantity}</TableCell>
-                  <TableCell>${part.unitPrice.toFixed(2)}</TableCell>
+                  <TableCell>{formatCurrency(part.unitPrice)}</TableCell>
                   <TableCell className="font-medium">
-                    ${(part.quantity * part.unitPrice).toFixed(2)}
+                    {formatCurrency(part.quantity * part.unitPrice)}
                   </TableCell>
                 </TableRow>
               ))}

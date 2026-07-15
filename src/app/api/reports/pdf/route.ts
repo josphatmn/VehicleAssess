@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import PDFDocument from "pdfkit";
 import { PassThrough } from "stream";
+import { CURRENCY, formatCurrency } from "@/lib/currency";
 
 interface PartRow {
   partName: string;
@@ -146,9 +147,9 @@ export async function POST(request: NextRequest) {
           part.partName + (part.found ? "" : " *"),
           part.selectedSupplier || "-",
           String(part.quantity),
-          part.unitPrice > 0 ? `KES ${part.unitPrice.toLocaleString()}` : "-",
-          part.labourCost && part.labourCost > 0 ? `KES ${part.labourCost.toLocaleString()}` : "-",
-          part.subtotal > 0 ? `KES ${part.subtotal.toLocaleString()}` : "-",
+          part.unitPrice > 0 ? `${CURRENCY} ${part.unitPrice.toLocaleString()}` : "-",
+          part.labourCost && part.labourCost > 0 ? `${CURRENCY} ${part.labourCost.toLocaleString()}` : "-",
+          part.subtotal > 0 ? `${CURRENCY} ${part.subtotal.toLocaleString()}` : "-",
           part.partNumber || "-",
         ];
 
@@ -167,13 +168,13 @@ export async function POST(request: NextRequest) {
       doc.moveTo(tableLeft, y).lineTo(tableLeft + 500, y).stroke("#dddddd");
       y += 5;
       doc.font("Helvetica-Bold").fontSize(9).fillColor("#000000");
-      doc.text(`Total Parts Cost: KES ${totalParts.toLocaleString()}`, tableLeft + 250, y, { width: 250, align: "right" });
+      doc.text(`Total Parts Cost: ${CURRENCY} ${totalParts.toLocaleString()}`, tableLeft + 250, y, { width: 250, align: "right" });
       y += 15;
       if (totalLabour > 0) {
-        doc.text(`Total Labour Cost: KES ${totalLabour.toLocaleString()}`, tableLeft + 250, y, { width: 250, align: "right" });
+        doc.text(`Total Labour Cost: ${CURRENCY} ${totalLabour.toLocaleString()}`, tableLeft + 250, y, { width: 250, align: "right" });
         y += 15;
       }
-      doc.fontSize(11).text(`Grand Total: KES ${(totalParts + totalLabour).toLocaleString()}`, tableLeft + 250, y, { width: 250, align: "right" });
+      doc.fontSize(11).text(`Grand Total: ${CURRENCY} ${(totalParts + totalLabour).toLocaleString()}`, tableLeft + 250, y, { width: 250, align: "right" });
       y += 20;
 
       doc.fontSize(7).font("Helvetica").fillColor("#999999");

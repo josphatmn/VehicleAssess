@@ -1,6 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+interface PriceOption {
+  supplier: string;
+  price: number;
+  url?: string;
+  brand?: string;
+  condition?: string;
+  availability?: string;
+  partNumber?: string;
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -9,7 +19,8 @@ export async function POST(req: NextRequest) {
         partName: string;
         vehicleMake?: string;
         vehicleModel?: string;
-        pricing_options: { supplier: string; price: number }[];
+        vehicleYear?: number;
+        pricing_options: PriceOption[];
       }[];
     };
 
@@ -17,10 +28,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No parts provided" }, { status: 400 });
     }
 
-    const result: Record<string, { supplier: string; price: number; supplierPriceId: string }[]> = {};
+    const result: Record<
+      string,
+      { supplier: string; price: number; supplierPriceId: string }[]
+    > = {};
 
     for (const part of parts) {
-      const prices: { supplier: string; price: number; supplierPriceId: string }[] = [];
+      const prices: {
+        supplier: string;
+        price: number;
+        supplierPriceId: string;
+      }[] = [];
 
       for (const option of part.pricing_options) {
         if (!option.supplier || option.price <= 0) continue;
@@ -33,6 +51,7 @@ export async function POST(req: NextRequest) {
 
         const make = part.vehicleMake || null;
         const model = part.vehicleModel || null;
+        const year = part.vehicleYear || null;
 
         const existing = await prisma.supplierPartPrice.findFirst({
           where: {
@@ -47,7 +66,15 @@ export async function POST(req: NextRequest) {
         if (existing) {
           supplierPartPrice = await prisma.supplierPartPrice.update({
             where: { id: existing.id },
-            data: { price: option.price },
+            data: {
+              price: option.price,
+              vehicleYear: year || existing.vehicleYear,
+              partNumber: option.partNumber || existing.partNumber,
+              availability: option.availability || existing.availability,
+              brand: option.brand || existing.brand,
+              condition: option.condition || existing.condition,
+              url: option.url || existing.url,
+            },
           });
         } else {
           supplierPartPrice = await prisma.supplierPartPrice.create({
@@ -56,7 +83,14 @@ export async function POST(req: NextRequest) {
               partName: part.partName,
               vehicleMake: make,
               vehicleModel: model,
+              vehicleYear: year,
+              partNumber: option.partNumber,
               price: option.price,
+              availability: option.availability || "Unknown",
+              brand: option.brand,
+              condition: option.condition || "New",
+              url: option.url,
+              source: "ai",
             },
           });
         }
@@ -73,8 +107,14 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error("Save supplier prices error:", error instanceof Error ? error.message : error);
-    return NextResponse.json({ error: "Failed to save supplier prices" }, { status: 500 });
+    console.error(
+      "Save supplier prices error:",
+      error instanceof Error ? error.message : error
+    );
+    return NextResponse.json(
+      { error: "Failed to save supplier prices" },
+      { status: 500 }
+    );
   }
 }
 
@@ -84,9 +124,13 @@ export async function GET(req: NextRequest) {
     const partName = searchParams.get("partName");
     const vehicleMake = searchParams.get("vehicleMake") || undefined;
     const vehicleModel = searchParams.get("vehicleModel") || undefined;
+    const vehicleYear = searchParams.get("vehicleYear");
 
     if (!partName) {
-      return NextResponse.json({ error: "partName is required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "partName is required" },
+        { status: 400 }
+      );
     }
 
     const prices = await prisma.supplierPartPrice.findMany({
@@ -94,6 +138,7 @@ export async function GET(req: NextRequest) {
         partName,
         vehicleMake: vehicleMake || null,
         vehicleModel: vehicleModel || null,
+        vehicleYear: vehicleYear ? parseInt(vehicleYear, 10) : null,
       },
       include: { supplier: true },
       orderBy: { price: "asc" },
@@ -104,10 +149,22 @@ export async function GET(req: NextRequest) {
         supplierPriceId: p.id,
         supplier: p.supplier.name,
         price: p.price,
+        currency: p.currency,
+        availability: p.availability,
+        brand: p.brand,
+        condition: p.condition,
+        url: p.url,
+        partNumber: p.partNumber,
       }))
     );
   } catch (error) {
-    console.error("Fetch supplier prices error:", error instanceof Error ? error.message : error);
-    return NextResponse.json({ error: "Failed to fetch supplier prices" }, { status: 500 });
+    console.error(
+      "Fetch supplier prices error:",
+      error instanceof Error ? error.message : error
+    );
+    return NextResponse.json(
+      { error: "Failed to fetch supplier prices" },
+      { status: 500 }
+    );
   }
 }

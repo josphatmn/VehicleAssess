@@ -23,6 +23,7 @@ import {
 import { useSession } from "@/hooks/use-session";
 import { Navbar } from "@/components/navbar";
 import { toast } from "sonner";
+import { CURRENCY, formatCurrency } from "@/lib/currency";
 
 interface DetectedPart {
   partName: string;
@@ -147,6 +148,18 @@ export default function AnalyzeWizard() {
     },
     [router, assessmentId]
   );
+
+  // Load assessment on direct URL access (e.g. /analyze?step=confirm&id=xxx)
+  const didMountRef = useRef(false);
+  useEffect(() => {
+    if (didMountRef.current) return;
+    didMountRef.current = true;
+    const id = searchParams.get("id");
+    if (id) {
+      loadAssessment(id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const urlStep = PARAM_TO_STEP[searchParams.get("step") || ""];
@@ -903,7 +916,7 @@ export default function AnalyzeWizard() {
                 </div>
                 <div className="bg-gray-50 rounded-xl p-3">
                   <p className="text-xs text-gray-400 font-medium">Est. Cost</p>
-                   <p className="mt-0.5 text-sm font-semibold text-gray-900">KES {result.damage.estimated_total_cost.toLocaleString()}</p>
+                   <p className="mt-0.5 text-sm font-semibold text-gray-900">{formatCurrency(result.damage.estimated_total_cost)}</p>
                 </div>
                 <div className="bg-gray-50 rounded-xl p-3">
                   <p className="text-xs text-gray-400 font-medium">Total Loss</p>
@@ -979,7 +992,7 @@ export default function AnalyzeWizard() {
                                 className="w-full px-2 py-1.5 rounded border border-gray-200 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500/20 focus:border-blue-400 transition bg-white">
                                 <option value="">Select supplier</option>
                                 {supplierPrices[part.partName].map((sp) => (
-                                  <option key={sp.supplier} value={sp.supplier}>{sp.supplier} (KES {sp.price.toLocaleString()})</option>
+                                  <option key={sp.supplier} value={sp.supplier}>{sp.supplier} ({CURRENCY} {sp.price.toLocaleString()})</option>
                                 ))}
                               </select>
                             ) : (
@@ -995,7 +1008,7 @@ export default function AnalyzeWizard() {
                               className="w-full px-2 py-1.5 rounded border border-gray-200 text-xs text-right focus:outline-none focus:ring-1 focus:ring-blue-500/20 focus:border-blue-400 transition bg-white" placeholder="0" />
                           </div>
                           <div className="text-right text-xs font-medium text-gray-900">
-                            {part.quantity * part.unitPrice > 0 ? `KES ${(part.quantity * part.unitPrice).toLocaleString()}` : <span className="text-gray-300">&mdash;</span>}
+                            {part.quantity * part.unitPrice > 0 ? `${CURRENCY} ${(part.quantity * part.unitPrice).toLocaleString()}` : <span className="text-gray-300">&mdash;</span>}
                           </div>
                           <div className="text-center w-8">
                             <button onClick={() => removeEditablePart(i)}
@@ -1036,7 +1049,7 @@ export default function AnalyzeWizard() {
                               className="w-full px-2 py-1.5 rounded border border-gray-200 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500/20 transition bg-white">
                               <option value="">Select supplier</option>
                               {supplierPrices[part.partName].map((sp) => (
-                                <option key={sp.supplier} value={sp.supplier}>{sp.supplier} (KES {sp.price.toLocaleString()})</option>
+                                <option key={sp.supplier} value={sp.supplier}>{sp.supplier} ({CURRENCY} {sp.price.toLocaleString()})</option>
                               ))}
                             </select>
                           </div>
@@ -1054,7 +1067,7 @@ export default function AnalyzeWizard() {
                           </div>
                         </div>
                         <div className="text-right text-xs font-medium text-gray-900">
-                          Subtotal: {part.quantity * part.unitPrice > 0 ? `KES ${(part.quantity * part.unitPrice).toLocaleString()}` : <span className="text-gray-300 font-normal">—</span>}
+                          Subtotal: {part.quantity * part.unitPrice > 0 ? `${CURRENCY} ${(part.quantity * part.unitPrice).toLocaleString()}` : <span className="text-gray-300 font-normal">—</span>}
                         </div>
                       </div>
                     ))}
@@ -1073,18 +1086,18 @@ export default function AnalyzeWizard() {
                       {partsTotal > 0 && (
                         <div className="flex justify-between w-48 text-sm">
                           <span className="text-gray-500">Parts Total</span>
-                          <span className="font-medium text-gray-900">KES {partsTotal.toLocaleString()}</span>
+                          <span className="font-medium text-gray-900">{CURRENCY} {partsTotal.toLocaleString()}</span>
                         </div>
                       )}
                       {labourTotal > 0 && (
                         <div className="flex justify-between w-48 text-sm">
                           <span className="text-gray-500">Labour Total</span>
-                          <span className="font-medium text-gray-900">KES {labourTotal.toLocaleString()}</span>
+                          <span className="font-medium text-gray-900">{CURRENCY} {labourTotal.toLocaleString()}</span>
                         </div>
                       )}
                       <div className="flex justify-between w-48 text-base font-bold pt-1">
                         <span className="text-gray-900">Grand Total</span>
-                        <span className="text-gray-900">KES {(partsTotal + labourTotal).toLocaleString()}</span>
+                        <span className="text-gray-900">{CURRENCY} {(partsTotal + labourTotal).toLocaleString()}</span>
                       </div>
                     </div>
                   </div>

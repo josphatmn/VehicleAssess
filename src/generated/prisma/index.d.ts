@@ -69,6 +69,11 @@ export type Supplier = $Result.DefaultSelection<Prisma.$SupplierPayload>
  */
 export type SupplierPartPrice = $Result.DefaultSelection<Prisma.$SupplierPartPricePayload>
 /**
+ * Model PartPrice
+ * 
+ */
+export type PartPrice = $Result.DefaultSelection<Prisma.$PartPricePayload>
+/**
  * Model InspectionItem
  * 
  */
@@ -304,6 +309,16 @@ export class PrismaClient<
     * ```
     */
   get supplierPartPrice(): Prisma.SupplierPartPriceDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.partPrice`: Exposes CRUD operations for the **PartPrice** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more PartPrices
+    * const partPrices = await prisma.partPrice.findMany()
+    * ```
+    */
+  get partPrice(): Prisma.PartPriceDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.inspectionItem`: Exposes CRUD operations for the **InspectionItem** model.
@@ -759,6 +774,7 @@ export namespace Prisma {
     AssessmentReplacementPart: 'AssessmentReplacementPart',
     Supplier: 'Supplier',
     SupplierPartPrice: 'SupplierPartPrice',
+    PartPrice: 'PartPrice',
     InspectionItem: 'InspectionItem'
   };
 
@@ -775,7 +791,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "assessment" | "assessmentImage" | "vehicleMake" | "vehicleModel" | "vehicleVariant" | "vehiclePart" | "assessmentDamagedPart" | "assessmentReplacementPart" | "supplier" | "supplierPartPrice" | "inspectionItem"
+      modelProps: "user" | "assessment" | "assessmentImage" | "vehicleMake" | "vehicleModel" | "vehicleVariant" | "vehiclePart" | "assessmentDamagedPart" | "assessmentReplacementPart" | "supplier" | "supplierPartPrice" | "partPrice" | "inspectionItem"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -811,10 +827,6 @@ export namespace Prisma {
             args: Prisma.UserCreateManyArgs<ExtArgs>
             result: BatchPayload
           }
-          createManyAndReturn: {
-            args: Prisma.UserCreateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$UserPayload>[]
-          }
           delete: {
             args: Prisma.UserDeleteArgs<ExtArgs>
             result: $Utils.PayloadToResult<Prisma.$UserPayload>
@@ -830,10 +842,6 @@ export namespace Prisma {
           updateMany: {
             args: Prisma.UserUpdateManyArgs<ExtArgs>
             result: BatchPayload
-          }
-          updateManyAndReturn: {
-            args: Prisma.UserUpdateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$UserPayload>[]
           }
           upsert: {
             args: Prisma.UserUpsertArgs<ExtArgs>
@@ -885,10 +893,6 @@ export namespace Prisma {
             args: Prisma.AssessmentCreateManyArgs<ExtArgs>
             result: BatchPayload
           }
-          createManyAndReturn: {
-            args: Prisma.AssessmentCreateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$AssessmentPayload>[]
-          }
           delete: {
             args: Prisma.AssessmentDeleteArgs<ExtArgs>
             result: $Utils.PayloadToResult<Prisma.$AssessmentPayload>
@@ -904,10 +908,6 @@ export namespace Prisma {
           updateMany: {
             args: Prisma.AssessmentUpdateManyArgs<ExtArgs>
             result: BatchPayload
-          }
-          updateManyAndReturn: {
-            args: Prisma.AssessmentUpdateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$AssessmentPayload>[]
           }
           upsert: {
             args: Prisma.AssessmentUpsertArgs<ExtArgs>
@@ -959,10 +959,6 @@ export namespace Prisma {
             args: Prisma.AssessmentImageCreateManyArgs<ExtArgs>
             result: BatchPayload
           }
-          createManyAndReturn: {
-            args: Prisma.AssessmentImageCreateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$AssessmentImagePayload>[]
-          }
           delete: {
             args: Prisma.AssessmentImageDeleteArgs<ExtArgs>
             result: $Utils.PayloadToResult<Prisma.$AssessmentImagePayload>
@@ -978,10 +974,6 @@ export namespace Prisma {
           updateMany: {
             args: Prisma.AssessmentImageUpdateManyArgs<ExtArgs>
             result: BatchPayload
-          }
-          updateManyAndReturn: {
-            args: Prisma.AssessmentImageUpdateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$AssessmentImagePayload>[]
           }
           upsert: {
             args: Prisma.AssessmentImageUpsertArgs<ExtArgs>
@@ -1033,10 +1025,6 @@ export namespace Prisma {
             args: Prisma.VehicleMakeCreateManyArgs<ExtArgs>
             result: BatchPayload
           }
-          createManyAndReturn: {
-            args: Prisma.VehicleMakeCreateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$VehicleMakePayload>[]
-          }
           delete: {
             args: Prisma.VehicleMakeDeleteArgs<ExtArgs>
             result: $Utils.PayloadToResult<Prisma.$VehicleMakePayload>
@@ -1052,10 +1040,6 @@ export namespace Prisma {
           updateMany: {
             args: Prisma.VehicleMakeUpdateManyArgs<ExtArgs>
             result: BatchPayload
-          }
-          updateManyAndReturn: {
-            args: Prisma.VehicleMakeUpdateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$VehicleMakePayload>[]
           }
           upsert: {
             args: Prisma.VehicleMakeUpsertArgs<ExtArgs>
@@ -1107,10 +1091,6 @@ export namespace Prisma {
             args: Prisma.VehicleModelCreateManyArgs<ExtArgs>
             result: BatchPayload
           }
-          createManyAndReturn: {
-            args: Prisma.VehicleModelCreateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$VehicleModelPayload>[]
-          }
           delete: {
             args: Prisma.VehicleModelDeleteArgs<ExtArgs>
             result: $Utils.PayloadToResult<Prisma.$VehicleModelPayload>
@@ -1126,10 +1106,6 @@ export namespace Prisma {
           updateMany: {
             args: Prisma.VehicleModelUpdateManyArgs<ExtArgs>
             result: BatchPayload
-          }
-          updateManyAndReturn: {
-            args: Prisma.VehicleModelUpdateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$VehicleModelPayload>[]
           }
           upsert: {
             args: Prisma.VehicleModelUpsertArgs<ExtArgs>
@@ -1181,10 +1157,6 @@ export namespace Prisma {
             args: Prisma.VehicleVariantCreateManyArgs<ExtArgs>
             result: BatchPayload
           }
-          createManyAndReturn: {
-            args: Prisma.VehicleVariantCreateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$VehicleVariantPayload>[]
-          }
           delete: {
             args: Prisma.VehicleVariantDeleteArgs<ExtArgs>
             result: $Utils.PayloadToResult<Prisma.$VehicleVariantPayload>
@@ -1200,10 +1172,6 @@ export namespace Prisma {
           updateMany: {
             args: Prisma.VehicleVariantUpdateManyArgs<ExtArgs>
             result: BatchPayload
-          }
-          updateManyAndReturn: {
-            args: Prisma.VehicleVariantUpdateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$VehicleVariantPayload>[]
           }
           upsert: {
             args: Prisma.VehicleVariantUpsertArgs<ExtArgs>
@@ -1255,10 +1223,6 @@ export namespace Prisma {
             args: Prisma.VehiclePartCreateManyArgs<ExtArgs>
             result: BatchPayload
           }
-          createManyAndReturn: {
-            args: Prisma.VehiclePartCreateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$VehiclePartPayload>[]
-          }
           delete: {
             args: Prisma.VehiclePartDeleteArgs<ExtArgs>
             result: $Utils.PayloadToResult<Prisma.$VehiclePartPayload>
@@ -1274,10 +1238,6 @@ export namespace Prisma {
           updateMany: {
             args: Prisma.VehiclePartUpdateManyArgs<ExtArgs>
             result: BatchPayload
-          }
-          updateManyAndReturn: {
-            args: Prisma.VehiclePartUpdateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$VehiclePartPayload>[]
           }
           upsert: {
             args: Prisma.VehiclePartUpsertArgs<ExtArgs>
@@ -1329,10 +1289,6 @@ export namespace Prisma {
             args: Prisma.AssessmentDamagedPartCreateManyArgs<ExtArgs>
             result: BatchPayload
           }
-          createManyAndReturn: {
-            args: Prisma.AssessmentDamagedPartCreateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$AssessmentDamagedPartPayload>[]
-          }
           delete: {
             args: Prisma.AssessmentDamagedPartDeleteArgs<ExtArgs>
             result: $Utils.PayloadToResult<Prisma.$AssessmentDamagedPartPayload>
@@ -1348,10 +1304,6 @@ export namespace Prisma {
           updateMany: {
             args: Prisma.AssessmentDamagedPartUpdateManyArgs<ExtArgs>
             result: BatchPayload
-          }
-          updateManyAndReturn: {
-            args: Prisma.AssessmentDamagedPartUpdateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$AssessmentDamagedPartPayload>[]
           }
           upsert: {
             args: Prisma.AssessmentDamagedPartUpsertArgs<ExtArgs>
@@ -1403,10 +1355,6 @@ export namespace Prisma {
             args: Prisma.AssessmentReplacementPartCreateManyArgs<ExtArgs>
             result: BatchPayload
           }
-          createManyAndReturn: {
-            args: Prisma.AssessmentReplacementPartCreateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$AssessmentReplacementPartPayload>[]
-          }
           delete: {
             args: Prisma.AssessmentReplacementPartDeleteArgs<ExtArgs>
             result: $Utils.PayloadToResult<Prisma.$AssessmentReplacementPartPayload>
@@ -1422,10 +1370,6 @@ export namespace Prisma {
           updateMany: {
             args: Prisma.AssessmentReplacementPartUpdateManyArgs<ExtArgs>
             result: BatchPayload
-          }
-          updateManyAndReturn: {
-            args: Prisma.AssessmentReplacementPartUpdateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$AssessmentReplacementPartPayload>[]
           }
           upsert: {
             args: Prisma.AssessmentReplacementPartUpsertArgs<ExtArgs>
@@ -1477,10 +1421,6 @@ export namespace Prisma {
             args: Prisma.SupplierCreateManyArgs<ExtArgs>
             result: BatchPayload
           }
-          createManyAndReturn: {
-            args: Prisma.SupplierCreateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$SupplierPayload>[]
-          }
           delete: {
             args: Prisma.SupplierDeleteArgs<ExtArgs>
             result: $Utils.PayloadToResult<Prisma.$SupplierPayload>
@@ -1496,10 +1436,6 @@ export namespace Prisma {
           updateMany: {
             args: Prisma.SupplierUpdateManyArgs<ExtArgs>
             result: BatchPayload
-          }
-          updateManyAndReturn: {
-            args: Prisma.SupplierUpdateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$SupplierPayload>[]
           }
           upsert: {
             args: Prisma.SupplierUpsertArgs<ExtArgs>
@@ -1551,10 +1487,6 @@ export namespace Prisma {
             args: Prisma.SupplierPartPriceCreateManyArgs<ExtArgs>
             result: BatchPayload
           }
-          createManyAndReturn: {
-            args: Prisma.SupplierPartPriceCreateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$SupplierPartPricePayload>[]
-          }
           delete: {
             args: Prisma.SupplierPartPriceDeleteArgs<ExtArgs>
             result: $Utils.PayloadToResult<Prisma.$SupplierPartPricePayload>
@@ -1571,10 +1503,6 @@ export namespace Prisma {
             args: Prisma.SupplierPartPriceUpdateManyArgs<ExtArgs>
             result: BatchPayload
           }
-          updateManyAndReturn: {
-            args: Prisma.SupplierPartPriceUpdateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$SupplierPartPricePayload>[]
-          }
           upsert: {
             args: Prisma.SupplierPartPriceUpsertArgs<ExtArgs>
             result: $Utils.PayloadToResult<Prisma.$SupplierPartPricePayload>
@@ -1590,6 +1518,72 @@ export namespace Prisma {
           count: {
             args: Prisma.SupplierPartPriceCountArgs<ExtArgs>
             result: $Utils.Optional<SupplierPartPriceCountAggregateOutputType> | number
+          }
+        }
+      }
+      PartPrice: {
+        payload: Prisma.$PartPricePayload<ExtArgs>
+        fields: Prisma.PartPriceFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.PartPriceFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PartPricePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.PartPriceFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PartPricePayload>
+          }
+          findFirst: {
+            args: Prisma.PartPriceFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PartPricePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.PartPriceFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PartPricePayload>
+          }
+          findMany: {
+            args: Prisma.PartPriceFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PartPricePayload>[]
+          }
+          create: {
+            args: Prisma.PartPriceCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PartPricePayload>
+          }
+          createMany: {
+            args: Prisma.PartPriceCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          delete: {
+            args: Prisma.PartPriceDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PartPricePayload>
+          }
+          update: {
+            args: Prisma.PartPriceUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PartPricePayload>
+          }
+          deleteMany: {
+            args: Prisma.PartPriceDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.PartPriceUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.PartPriceUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PartPricePayload>
+          }
+          aggregate: {
+            args: Prisma.PartPriceAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregatePartPrice>
+          }
+          groupBy: {
+            args: Prisma.PartPriceGroupByArgs<ExtArgs>
+            result: $Utils.Optional<PartPriceGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.PartPriceCountArgs<ExtArgs>
+            result: $Utils.Optional<PartPriceCountAggregateOutputType> | number
           }
         }
       }
@@ -1625,10 +1619,6 @@ export namespace Prisma {
             args: Prisma.InspectionItemCreateManyArgs<ExtArgs>
             result: BatchPayload
           }
-          createManyAndReturn: {
-            args: Prisma.InspectionItemCreateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$InspectionItemPayload>[]
-          }
           delete: {
             args: Prisma.InspectionItemDeleteArgs<ExtArgs>
             result: $Utils.PayloadToResult<Prisma.$InspectionItemPayload>
@@ -1644,10 +1634,6 @@ export namespace Prisma {
           updateMany: {
             args: Prisma.InspectionItemUpdateManyArgs<ExtArgs>
             result: BatchPayload
-          }
-          updateManyAndReturn: {
-            args: Prisma.InspectionItemUpdateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$InspectionItemPayload>[]
           }
           upsert: {
             args: Prisma.InspectionItemUpsertArgs<ExtArgs>
@@ -1786,6 +1772,7 @@ export namespace Prisma {
     assessmentReplacementPart?: AssessmentReplacementPartOmit
     supplier?: SupplierOmit
     supplierPartPrice?: SupplierPartPriceOmit
+    partPrice?: PartPriceOmit
     inspectionItem?: InspectionItemOmit
   }
 
@@ -2263,25 +2250,7 @@ export namespace Prisma {
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
 
-  export type UserSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    name?: boolean
-    email?: boolean
-    password?: boolean
-    role?: boolean
-    createdAt?: boolean
-    updatedAt?: boolean
-  }, ExtArgs["result"]["user"]>
 
-  export type UserSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    name?: boolean
-    email?: boolean
-    password?: boolean
-    role?: boolean
-    createdAt?: boolean
-    updatedAt?: boolean
-  }, ExtArgs["result"]["user"]>
 
   export type UserSelectScalar = {
     id?: boolean
@@ -2298,8 +2267,6 @@ export namespace Prisma {
     assessments?: boolean | User$assessmentsArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }
-  export type UserIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
-  export type UserIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
 
   export type $UserPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "User"
@@ -2432,30 +2399,6 @@ export namespace Prisma {
     createMany<T extends UserCreateManyArgs>(args?: SelectSubset<T, UserCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Create many Users and returns the data saved in the database.
-     * @param {UserCreateManyAndReturnArgs} args - Arguments to create many Users.
-     * @example
-     * // Create many Users
-     * const user = await prisma.user.createManyAndReturn({
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * 
-     * // Create many Users and only return the `id`
-     * const userWithIdOnly = await prisma.user.createManyAndReturn({
-     *   select: { id: true },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * 
-     */
-    createManyAndReturn<T extends UserCreateManyAndReturnArgs>(args?: SelectSubset<T, UserCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
-
-    /**
      * Delete a User.
      * @param {UserDeleteArgs} args - Arguments to delete one User.
      * @example
@@ -2518,36 +2461,6 @@ export namespace Prisma {
      * 
      */
     updateMany<T extends UserUpdateManyArgs>(args: SelectSubset<T, UserUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
-
-    /**
-     * Update zero or more Users and returns the data updated in the database.
-     * @param {UserUpdateManyAndReturnArgs} args - Arguments to update many Users.
-     * @example
-     * // Update many Users
-     * const user = await prisma.user.updateManyAndReturn({
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * 
-     * // Update zero or more Users and only return the `id`
-     * const userWithIdOnly = await prisma.user.updateManyAndReturn({
-     *   select: { id: true },
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * 
-     */
-    updateManyAndReturn<T extends UserUpdateManyAndReturnArgs>(args: SelectSubset<T, UserUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
 
     /**
      * Create or update one User.
@@ -2979,24 +2892,7 @@ export namespace Prisma {
      * The data used to create many Users.
      */
     data: UserCreateManyInput | UserCreateManyInput[]
-  }
-
-  /**
-   * User createManyAndReturn
-   */
-  export type UserCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the User
-     */
-    select?: UserSelectCreateManyAndReturn<ExtArgs> | null
-    /**
-     * Omit specific fields from the User
-     */
-    omit?: UserOmit<ExtArgs> | null
-    /**
-     * The data used to create many Users.
-     */
-    data: UserCreateManyInput | UserCreateManyInput[]
+    skipDuplicates?: boolean
   }
 
   /**
@@ -3029,32 +2925,6 @@ export namespace Prisma {
    * User updateMany
    */
   export type UserUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * The data used to update Users.
-     */
-    data: XOR<UserUpdateManyMutationInput, UserUncheckedUpdateManyInput>
-    /**
-     * Filter which Users to update
-     */
-    where?: UserWhereInput
-    /**
-     * Limit how many Users to update.
-     */
-    limit?: number
-  }
-
-  /**
-   * User updateManyAndReturn
-   */
-  export type UserUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the User
-     */
-    select?: UserSelectUpdateManyAndReturn<ExtArgs> | null
-    /**
-     * Omit specific fields from the User
-     */
-    omit?: UserOmit<ExtArgs> | null
     /**
      * The data used to update Users.
      */
@@ -3454,49 +3324,7 @@ export namespace Prisma {
     _count?: boolean | AssessmentCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["assessment"]>
 
-  export type AssessmentSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    assessmentNumber?: boolean
-    status?: boolean
-    customerName?: boolean
-    customerPhone?: boolean
-    customerEmail?: boolean
-    insuranceCompany?: boolean
-    claimNumber?: boolean
-    registrationNumber?: boolean
-    vin?: boolean
-    odometer?: boolean
-    vehicleNotes?: boolean
-    aiRawResponse?: boolean
-    verifiedVehicleJson?: boolean
-    verifiedDamageJson?: boolean
-    userId?: boolean
-    createdAt?: boolean
-    updatedAt?: boolean
-    user?: boolean | Assessment$userArgs<ExtArgs>
-  }, ExtArgs["result"]["assessment"]>
 
-  export type AssessmentSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    assessmentNumber?: boolean
-    status?: boolean
-    customerName?: boolean
-    customerPhone?: boolean
-    customerEmail?: boolean
-    insuranceCompany?: boolean
-    claimNumber?: boolean
-    registrationNumber?: boolean
-    vin?: boolean
-    odometer?: boolean
-    vehicleNotes?: boolean
-    aiRawResponse?: boolean
-    verifiedVehicleJson?: boolean
-    verifiedDamageJson?: boolean
-    userId?: boolean
-    createdAt?: boolean
-    updatedAt?: boolean
-    user?: boolean | Assessment$userArgs<ExtArgs>
-  }, ExtArgs["result"]["assessment"]>
 
   export type AssessmentSelectScalar = {
     id?: boolean
@@ -3527,12 +3355,6 @@ export namespace Prisma {
     replacementParts?: boolean | Assessment$replacementPartsArgs<ExtArgs>
     inspectionItems?: boolean | Assessment$inspectionItemsArgs<ExtArgs>
     _count?: boolean | AssessmentCountOutputTypeDefaultArgs<ExtArgs>
-  }
-  export type AssessmentIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    user?: boolean | Assessment$userArgs<ExtArgs>
-  }
-  export type AssessmentIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    user?: boolean | Assessment$userArgs<ExtArgs>
   }
 
   export type $AssessmentPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -3681,30 +3503,6 @@ export namespace Prisma {
     createMany<T extends AssessmentCreateManyArgs>(args?: SelectSubset<T, AssessmentCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Create many Assessments and returns the data saved in the database.
-     * @param {AssessmentCreateManyAndReturnArgs} args - Arguments to create many Assessments.
-     * @example
-     * // Create many Assessments
-     * const assessment = await prisma.assessment.createManyAndReturn({
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * 
-     * // Create many Assessments and only return the `id`
-     * const assessmentWithIdOnly = await prisma.assessment.createManyAndReturn({
-     *   select: { id: true },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * 
-     */
-    createManyAndReturn<T extends AssessmentCreateManyAndReturnArgs>(args?: SelectSubset<T, AssessmentCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AssessmentPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
-
-    /**
      * Delete a Assessment.
      * @param {AssessmentDeleteArgs} args - Arguments to delete one Assessment.
      * @example
@@ -3767,36 +3565,6 @@ export namespace Prisma {
      * 
      */
     updateMany<T extends AssessmentUpdateManyArgs>(args: SelectSubset<T, AssessmentUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
-
-    /**
-     * Update zero or more Assessments and returns the data updated in the database.
-     * @param {AssessmentUpdateManyAndReturnArgs} args - Arguments to update many Assessments.
-     * @example
-     * // Update many Assessments
-     * const assessment = await prisma.assessment.updateManyAndReturn({
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * 
-     * // Update zero or more Assessments and only return the `id`
-     * const assessmentWithIdOnly = await prisma.assessment.updateManyAndReturn({
-     *   select: { id: true },
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * 
-     */
-    updateManyAndReturn<T extends AssessmentUpdateManyAndReturnArgs>(args: SelectSubset<T, AssessmentUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AssessmentPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
 
     /**
      * Create or update one Assessment.
@@ -4243,28 +4011,7 @@ export namespace Prisma {
      * The data used to create many Assessments.
      */
     data: AssessmentCreateManyInput | AssessmentCreateManyInput[]
-  }
-
-  /**
-   * Assessment createManyAndReturn
-   */
-  export type AssessmentCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the Assessment
-     */
-    select?: AssessmentSelectCreateManyAndReturn<ExtArgs> | null
-    /**
-     * Omit specific fields from the Assessment
-     */
-    omit?: AssessmentOmit<ExtArgs> | null
-    /**
-     * The data used to create many Assessments.
-     */
-    data: AssessmentCreateManyInput | AssessmentCreateManyInput[]
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: AssessmentIncludeCreateManyAndReturn<ExtArgs> | null
+    skipDuplicates?: boolean
   }
 
   /**
@@ -4309,36 +4056,6 @@ export namespace Prisma {
      * Limit how many Assessments to update.
      */
     limit?: number
-  }
-
-  /**
-   * Assessment updateManyAndReturn
-   */
-  export type AssessmentUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the Assessment
-     */
-    select?: AssessmentSelectUpdateManyAndReturn<ExtArgs> | null
-    /**
-     * Omit specific fields from the Assessment
-     */
-    omit?: AssessmentOmit<ExtArgs> | null
-    /**
-     * The data used to update Assessments.
-     */
-    data: XOR<AssessmentUpdateManyMutationInput, AssessmentUncheckedUpdateManyInput>
-    /**
-     * Filter which Assessments to update
-     */
-    where?: AssessmentWhereInput
-    /**
-     * Limit how many Assessments to update.
-     */
-    limit?: number
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: AssessmentIncludeUpdateManyAndReturn<ExtArgs> | null
   }
 
   /**
@@ -4778,31 +4495,7 @@ export namespace Prisma {
     assessment?: boolean | AssessmentDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["assessmentImage"]>
 
-  export type AssessmentImageSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    filename?: boolean
-    originalName?: boolean
-    path?: boolean
-    mimeType?: boolean
-    size?: boolean
-    sortOrder?: boolean
-    assessmentId?: boolean
-    createdAt?: boolean
-    assessment?: boolean | AssessmentDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["assessmentImage"]>
 
-  export type AssessmentImageSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    filename?: boolean
-    originalName?: boolean
-    path?: boolean
-    mimeType?: boolean
-    size?: boolean
-    sortOrder?: boolean
-    assessmentId?: boolean
-    createdAt?: boolean
-    assessment?: boolean | AssessmentDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["assessmentImage"]>
 
   export type AssessmentImageSelectScalar = {
     id?: boolean
@@ -4818,12 +4511,6 @@ export namespace Prisma {
 
   export type AssessmentImageOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "filename" | "originalName" | "path" | "mimeType" | "size" | "sortOrder" | "assessmentId" | "createdAt", ExtArgs["result"]["assessmentImage"]>
   export type AssessmentImageInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    assessment?: boolean | AssessmentDefaultArgs<ExtArgs>
-  }
-  export type AssessmentImageIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    assessment?: boolean | AssessmentDefaultArgs<ExtArgs>
-  }
-  export type AssessmentImageIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     assessment?: boolean | AssessmentDefaultArgs<ExtArgs>
   }
 
@@ -4960,30 +4647,6 @@ export namespace Prisma {
     createMany<T extends AssessmentImageCreateManyArgs>(args?: SelectSubset<T, AssessmentImageCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Create many AssessmentImages and returns the data saved in the database.
-     * @param {AssessmentImageCreateManyAndReturnArgs} args - Arguments to create many AssessmentImages.
-     * @example
-     * // Create many AssessmentImages
-     * const assessmentImage = await prisma.assessmentImage.createManyAndReturn({
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * 
-     * // Create many AssessmentImages and only return the `id`
-     * const assessmentImageWithIdOnly = await prisma.assessmentImage.createManyAndReturn({
-     *   select: { id: true },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * 
-     */
-    createManyAndReturn<T extends AssessmentImageCreateManyAndReturnArgs>(args?: SelectSubset<T, AssessmentImageCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AssessmentImagePayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
-
-    /**
      * Delete a AssessmentImage.
      * @param {AssessmentImageDeleteArgs} args - Arguments to delete one AssessmentImage.
      * @example
@@ -5046,36 +4709,6 @@ export namespace Prisma {
      * 
      */
     updateMany<T extends AssessmentImageUpdateManyArgs>(args: SelectSubset<T, AssessmentImageUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
-
-    /**
-     * Update zero or more AssessmentImages and returns the data updated in the database.
-     * @param {AssessmentImageUpdateManyAndReturnArgs} args - Arguments to update many AssessmentImages.
-     * @example
-     * // Update many AssessmentImages
-     * const assessmentImage = await prisma.assessmentImage.updateManyAndReturn({
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * 
-     * // Update zero or more AssessmentImages and only return the `id`
-     * const assessmentImageWithIdOnly = await prisma.assessmentImage.updateManyAndReturn({
-     *   select: { id: true },
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * 
-     */
-    updateManyAndReturn<T extends AssessmentImageUpdateManyAndReturnArgs>(args: SelectSubset<T, AssessmentImageUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AssessmentImagePayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
 
     /**
      * Create or update one AssessmentImage.
@@ -5509,28 +5142,7 @@ export namespace Prisma {
      * The data used to create many AssessmentImages.
      */
     data: AssessmentImageCreateManyInput | AssessmentImageCreateManyInput[]
-  }
-
-  /**
-   * AssessmentImage createManyAndReturn
-   */
-  export type AssessmentImageCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the AssessmentImage
-     */
-    select?: AssessmentImageSelectCreateManyAndReturn<ExtArgs> | null
-    /**
-     * Omit specific fields from the AssessmentImage
-     */
-    omit?: AssessmentImageOmit<ExtArgs> | null
-    /**
-     * The data used to create many AssessmentImages.
-     */
-    data: AssessmentImageCreateManyInput | AssessmentImageCreateManyInput[]
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: AssessmentImageIncludeCreateManyAndReturn<ExtArgs> | null
+    skipDuplicates?: boolean
   }
 
   /**
@@ -5575,36 +5187,6 @@ export namespace Prisma {
      * Limit how many AssessmentImages to update.
      */
     limit?: number
-  }
-
-  /**
-   * AssessmentImage updateManyAndReturn
-   */
-  export type AssessmentImageUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the AssessmentImage
-     */
-    select?: AssessmentImageSelectUpdateManyAndReturn<ExtArgs> | null
-    /**
-     * Omit specific fields from the AssessmentImage
-     */
-    omit?: AssessmentImageOmit<ExtArgs> | null
-    /**
-     * The data used to update AssessmentImages.
-     */
-    data: XOR<AssessmentImageUpdateManyMutationInput, AssessmentImageUncheckedUpdateManyInput>
-    /**
-     * Filter which AssessmentImages to update
-     */
-    where?: AssessmentImageWhereInput
-    /**
-     * Limit how many AssessmentImages to update.
-     */
-    limit?: number
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: AssessmentImageIncludeUpdateManyAndReturn<ExtArgs> | null
   }
 
   /**
@@ -5836,15 +5418,7 @@ export namespace Prisma {
     _count?: boolean | VehicleMakeCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["vehicleMake"]>
 
-  export type VehicleMakeSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    name?: boolean
-  }, ExtArgs["result"]["vehicleMake"]>
 
-  export type VehicleMakeSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    name?: boolean
-  }, ExtArgs["result"]["vehicleMake"]>
 
   export type VehicleMakeSelectScalar = {
     id?: boolean
@@ -5856,8 +5430,6 @@ export namespace Prisma {
     models?: boolean | VehicleMake$modelsArgs<ExtArgs>
     _count?: boolean | VehicleMakeCountOutputTypeDefaultArgs<ExtArgs>
   }
-  export type VehicleMakeIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
-  export type VehicleMakeIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
 
   export type $VehicleMakePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "VehicleMake"
@@ -5985,30 +5557,6 @@ export namespace Prisma {
     createMany<T extends VehicleMakeCreateManyArgs>(args?: SelectSubset<T, VehicleMakeCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Create many VehicleMakes and returns the data saved in the database.
-     * @param {VehicleMakeCreateManyAndReturnArgs} args - Arguments to create many VehicleMakes.
-     * @example
-     * // Create many VehicleMakes
-     * const vehicleMake = await prisma.vehicleMake.createManyAndReturn({
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * 
-     * // Create many VehicleMakes and only return the `id`
-     * const vehicleMakeWithIdOnly = await prisma.vehicleMake.createManyAndReturn({
-     *   select: { id: true },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * 
-     */
-    createManyAndReturn<T extends VehicleMakeCreateManyAndReturnArgs>(args?: SelectSubset<T, VehicleMakeCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VehicleMakePayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
-
-    /**
      * Delete a VehicleMake.
      * @param {VehicleMakeDeleteArgs} args - Arguments to delete one VehicleMake.
      * @example
@@ -6071,36 +5619,6 @@ export namespace Prisma {
      * 
      */
     updateMany<T extends VehicleMakeUpdateManyArgs>(args: SelectSubset<T, VehicleMakeUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
-
-    /**
-     * Update zero or more VehicleMakes and returns the data updated in the database.
-     * @param {VehicleMakeUpdateManyAndReturnArgs} args - Arguments to update many VehicleMakes.
-     * @example
-     * // Update many VehicleMakes
-     * const vehicleMake = await prisma.vehicleMake.updateManyAndReturn({
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * 
-     * // Update zero or more VehicleMakes and only return the `id`
-     * const vehicleMakeWithIdOnly = await prisma.vehicleMake.updateManyAndReturn({
-     *   select: { id: true },
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * 
-     */
-    updateManyAndReturn<T extends VehicleMakeUpdateManyAndReturnArgs>(args: SelectSubset<T, VehicleMakeUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VehicleMakePayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
 
     /**
      * Create or update one VehicleMake.
@@ -6527,24 +6045,7 @@ export namespace Prisma {
      * The data used to create many VehicleMakes.
      */
     data: VehicleMakeCreateManyInput | VehicleMakeCreateManyInput[]
-  }
-
-  /**
-   * VehicleMake createManyAndReturn
-   */
-  export type VehicleMakeCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the VehicleMake
-     */
-    select?: VehicleMakeSelectCreateManyAndReturn<ExtArgs> | null
-    /**
-     * Omit specific fields from the VehicleMake
-     */
-    omit?: VehicleMakeOmit<ExtArgs> | null
-    /**
-     * The data used to create many VehicleMakes.
-     */
-    data: VehicleMakeCreateManyInput | VehicleMakeCreateManyInput[]
+    skipDuplicates?: boolean
   }
 
   /**
@@ -6577,32 +6078,6 @@ export namespace Prisma {
    * VehicleMake updateMany
    */
   export type VehicleMakeUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * The data used to update VehicleMakes.
-     */
-    data: XOR<VehicleMakeUpdateManyMutationInput, VehicleMakeUncheckedUpdateManyInput>
-    /**
-     * Filter which VehicleMakes to update
-     */
-    where?: VehicleMakeWhereInput
-    /**
-     * Limit how many VehicleMakes to update.
-     */
-    limit?: number
-  }
-
-  /**
-   * VehicleMake updateManyAndReturn
-   */
-  export type VehicleMakeUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the VehicleMake
-     */
-    select?: VehicleMakeSelectUpdateManyAndReturn<ExtArgs> | null
-    /**
-     * Omit specific fields from the VehicleMake
-     */
-    omit?: VehicleMakeOmit<ExtArgs> | null
     /**
      * The data used to update VehicleMakes.
      */
@@ -6879,19 +6354,7 @@ export namespace Prisma {
     _count?: boolean | VehicleModelCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["vehicleModel"]>
 
-  export type VehicleModelSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    name?: boolean
-    makeId?: boolean
-    make?: boolean | VehicleMakeDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["vehicleModel"]>
 
-  export type VehicleModelSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    name?: boolean
-    makeId?: boolean
-    make?: boolean | VehicleMakeDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["vehicleModel"]>
 
   export type VehicleModelSelectScalar = {
     id?: boolean
@@ -6904,12 +6367,6 @@ export namespace Prisma {
     make?: boolean | VehicleMakeDefaultArgs<ExtArgs>
     variants?: boolean | VehicleModel$variantsArgs<ExtArgs>
     _count?: boolean | VehicleModelCountOutputTypeDefaultArgs<ExtArgs>
-  }
-  export type VehicleModelIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    make?: boolean | VehicleMakeDefaultArgs<ExtArgs>
-  }
-  export type VehicleModelIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    make?: boolean | VehicleMakeDefaultArgs<ExtArgs>
   }
 
   export type $VehicleModelPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -7040,30 +6497,6 @@ export namespace Prisma {
     createMany<T extends VehicleModelCreateManyArgs>(args?: SelectSubset<T, VehicleModelCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Create many VehicleModels and returns the data saved in the database.
-     * @param {VehicleModelCreateManyAndReturnArgs} args - Arguments to create many VehicleModels.
-     * @example
-     * // Create many VehicleModels
-     * const vehicleModel = await prisma.vehicleModel.createManyAndReturn({
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * 
-     * // Create many VehicleModels and only return the `id`
-     * const vehicleModelWithIdOnly = await prisma.vehicleModel.createManyAndReturn({
-     *   select: { id: true },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * 
-     */
-    createManyAndReturn<T extends VehicleModelCreateManyAndReturnArgs>(args?: SelectSubset<T, VehicleModelCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VehicleModelPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
-
-    /**
      * Delete a VehicleModel.
      * @param {VehicleModelDeleteArgs} args - Arguments to delete one VehicleModel.
      * @example
@@ -7126,36 +6559,6 @@ export namespace Prisma {
      * 
      */
     updateMany<T extends VehicleModelUpdateManyArgs>(args: SelectSubset<T, VehicleModelUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
-
-    /**
-     * Update zero or more VehicleModels and returns the data updated in the database.
-     * @param {VehicleModelUpdateManyAndReturnArgs} args - Arguments to update many VehicleModels.
-     * @example
-     * // Update many VehicleModels
-     * const vehicleModel = await prisma.vehicleModel.updateManyAndReturn({
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * 
-     * // Update zero or more VehicleModels and only return the `id`
-     * const vehicleModelWithIdOnly = await prisma.vehicleModel.updateManyAndReturn({
-     *   select: { id: true },
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * 
-     */
-    updateManyAndReturn<T extends VehicleModelUpdateManyAndReturnArgs>(args: SelectSubset<T, VehicleModelUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VehicleModelPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
 
     /**
      * Create or update one VehicleModel.
@@ -7584,28 +6987,7 @@ export namespace Prisma {
      * The data used to create many VehicleModels.
      */
     data: VehicleModelCreateManyInput | VehicleModelCreateManyInput[]
-  }
-
-  /**
-   * VehicleModel createManyAndReturn
-   */
-  export type VehicleModelCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the VehicleModel
-     */
-    select?: VehicleModelSelectCreateManyAndReturn<ExtArgs> | null
-    /**
-     * Omit specific fields from the VehicleModel
-     */
-    omit?: VehicleModelOmit<ExtArgs> | null
-    /**
-     * The data used to create many VehicleModels.
-     */
-    data: VehicleModelCreateManyInput | VehicleModelCreateManyInput[]
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: VehicleModelIncludeCreateManyAndReturn<ExtArgs> | null
+    skipDuplicates?: boolean
   }
 
   /**
@@ -7650,36 +7032,6 @@ export namespace Prisma {
      * Limit how many VehicleModels to update.
      */
     limit?: number
-  }
-
-  /**
-   * VehicleModel updateManyAndReturn
-   */
-  export type VehicleModelUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the VehicleModel
-     */
-    select?: VehicleModelSelectUpdateManyAndReturn<ExtArgs> | null
-    /**
-     * Omit specific fields from the VehicleModel
-     */
-    omit?: VehicleModelOmit<ExtArgs> | null
-    /**
-     * The data used to update VehicleModels.
-     */
-    data: XOR<VehicleModelUpdateManyMutationInput, VehicleModelUncheckedUpdateManyInput>
-    /**
-     * Filter which VehicleModels to update
-     */
-    where?: VehicleModelWhereInput
-    /**
-     * Limit how many VehicleModels to update.
-     */
-    limit?: number
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: VehicleModelIncludeUpdateManyAndReturn<ExtArgs> | null
   }
 
   /**
@@ -7944,19 +7296,7 @@ export namespace Prisma {
     _count?: boolean | VehicleVariantCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["vehicleVariant"]>
 
-  export type VehicleVariantSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    name?: boolean
-    modelId?: boolean
-    model?: boolean | VehicleModelDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["vehicleVariant"]>
 
-  export type VehicleVariantSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    name?: boolean
-    modelId?: boolean
-    model?: boolean | VehicleModelDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["vehicleVariant"]>
 
   export type VehicleVariantSelectScalar = {
     id?: boolean
@@ -7969,12 +7309,6 @@ export namespace Prisma {
     model?: boolean | VehicleModelDefaultArgs<ExtArgs>
     parts?: boolean | VehicleVariant$partsArgs<ExtArgs>
     _count?: boolean | VehicleVariantCountOutputTypeDefaultArgs<ExtArgs>
-  }
-  export type VehicleVariantIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    model?: boolean | VehicleModelDefaultArgs<ExtArgs>
-  }
-  export type VehicleVariantIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    model?: boolean | VehicleModelDefaultArgs<ExtArgs>
   }
 
   export type $VehicleVariantPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -8105,30 +7439,6 @@ export namespace Prisma {
     createMany<T extends VehicleVariantCreateManyArgs>(args?: SelectSubset<T, VehicleVariantCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Create many VehicleVariants and returns the data saved in the database.
-     * @param {VehicleVariantCreateManyAndReturnArgs} args - Arguments to create many VehicleVariants.
-     * @example
-     * // Create many VehicleVariants
-     * const vehicleVariant = await prisma.vehicleVariant.createManyAndReturn({
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * 
-     * // Create many VehicleVariants and only return the `id`
-     * const vehicleVariantWithIdOnly = await prisma.vehicleVariant.createManyAndReturn({
-     *   select: { id: true },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * 
-     */
-    createManyAndReturn<T extends VehicleVariantCreateManyAndReturnArgs>(args?: SelectSubset<T, VehicleVariantCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VehicleVariantPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
-
-    /**
      * Delete a VehicleVariant.
      * @param {VehicleVariantDeleteArgs} args - Arguments to delete one VehicleVariant.
      * @example
@@ -8191,36 +7501,6 @@ export namespace Prisma {
      * 
      */
     updateMany<T extends VehicleVariantUpdateManyArgs>(args: SelectSubset<T, VehicleVariantUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
-
-    /**
-     * Update zero or more VehicleVariants and returns the data updated in the database.
-     * @param {VehicleVariantUpdateManyAndReturnArgs} args - Arguments to update many VehicleVariants.
-     * @example
-     * // Update many VehicleVariants
-     * const vehicleVariant = await prisma.vehicleVariant.updateManyAndReturn({
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * 
-     * // Update zero or more VehicleVariants and only return the `id`
-     * const vehicleVariantWithIdOnly = await prisma.vehicleVariant.updateManyAndReturn({
-     *   select: { id: true },
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * 
-     */
-    updateManyAndReturn<T extends VehicleVariantUpdateManyAndReturnArgs>(args: SelectSubset<T, VehicleVariantUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VehicleVariantPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
 
     /**
      * Create or update one VehicleVariant.
@@ -8649,28 +7929,7 @@ export namespace Prisma {
      * The data used to create many VehicleVariants.
      */
     data: VehicleVariantCreateManyInput | VehicleVariantCreateManyInput[]
-  }
-
-  /**
-   * VehicleVariant createManyAndReturn
-   */
-  export type VehicleVariantCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the VehicleVariant
-     */
-    select?: VehicleVariantSelectCreateManyAndReturn<ExtArgs> | null
-    /**
-     * Omit specific fields from the VehicleVariant
-     */
-    omit?: VehicleVariantOmit<ExtArgs> | null
-    /**
-     * The data used to create many VehicleVariants.
-     */
-    data: VehicleVariantCreateManyInput | VehicleVariantCreateManyInput[]
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: VehicleVariantIncludeCreateManyAndReturn<ExtArgs> | null
+    skipDuplicates?: boolean
   }
 
   /**
@@ -8715,36 +7974,6 @@ export namespace Prisma {
      * Limit how many VehicleVariants to update.
      */
     limit?: number
-  }
-
-  /**
-   * VehicleVariant updateManyAndReturn
-   */
-  export type VehicleVariantUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the VehicleVariant
-     */
-    select?: VehicleVariantSelectUpdateManyAndReturn<ExtArgs> | null
-    /**
-     * Omit specific fields from the VehicleVariant
-     */
-    omit?: VehicleVariantOmit<ExtArgs> | null
-    /**
-     * The data used to update VehicleVariants.
-     */
-    data: XOR<VehicleVariantUpdateManyMutationInput, VehicleVariantUncheckedUpdateManyInput>
-    /**
-     * Filter which VehicleVariants to update
-     */
-    where?: VehicleVariantWhereInput
-    /**
-     * Limit how many VehicleVariants to update.
-     */
-    limit?: number
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: VehicleVariantIncludeUpdateManyAndReturn<ExtArgs> | null
   }
 
   /**
@@ -9101,33 +8330,7 @@ export namespace Prisma {
     variant?: boolean | VehiclePart$variantArgs<ExtArgs>
   }, ExtArgs["result"]["vehiclePart"]>
 
-  export type VehiclePartSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    partNumber?: boolean
-    name?: boolean
-    category?: boolean
-    unitPrice?: boolean
-    labourCost?: boolean
-    active?: boolean
-    variantId?: boolean
-    createdAt?: boolean
-    updatedAt?: boolean
-    variant?: boolean | VehiclePart$variantArgs<ExtArgs>
-  }, ExtArgs["result"]["vehiclePart"]>
 
-  export type VehiclePartSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    partNumber?: boolean
-    name?: boolean
-    category?: boolean
-    unitPrice?: boolean
-    labourCost?: boolean
-    active?: boolean
-    variantId?: boolean
-    createdAt?: boolean
-    updatedAt?: boolean
-    variant?: boolean | VehiclePart$variantArgs<ExtArgs>
-  }, ExtArgs["result"]["vehiclePart"]>
 
   export type VehiclePartSelectScalar = {
     id?: boolean
@@ -9144,12 +8347,6 @@ export namespace Prisma {
 
   export type VehiclePartOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "partNumber" | "name" | "category" | "unitPrice" | "labourCost" | "active" | "variantId" | "createdAt" | "updatedAt", ExtArgs["result"]["vehiclePart"]>
   export type VehiclePartInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    variant?: boolean | VehiclePart$variantArgs<ExtArgs>
-  }
-  export type VehiclePartIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    variant?: boolean | VehiclePart$variantArgs<ExtArgs>
-  }
-  export type VehiclePartIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     variant?: boolean | VehiclePart$variantArgs<ExtArgs>
   }
 
@@ -9287,30 +8484,6 @@ export namespace Prisma {
     createMany<T extends VehiclePartCreateManyArgs>(args?: SelectSubset<T, VehiclePartCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Create many VehicleParts and returns the data saved in the database.
-     * @param {VehiclePartCreateManyAndReturnArgs} args - Arguments to create many VehicleParts.
-     * @example
-     * // Create many VehicleParts
-     * const vehiclePart = await prisma.vehiclePart.createManyAndReturn({
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * 
-     * // Create many VehicleParts and only return the `id`
-     * const vehiclePartWithIdOnly = await prisma.vehiclePart.createManyAndReturn({
-     *   select: { id: true },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * 
-     */
-    createManyAndReturn<T extends VehiclePartCreateManyAndReturnArgs>(args?: SelectSubset<T, VehiclePartCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VehiclePartPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
-
-    /**
      * Delete a VehiclePart.
      * @param {VehiclePartDeleteArgs} args - Arguments to delete one VehiclePart.
      * @example
@@ -9373,36 +8546,6 @@ export namespace Prisma {
      * 
      */
     updateMany<T extends VehiclePartUpdateManyArgs>(args: SelectSubset<T, VehiclePartUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
-
-    /**
-     * Update zero or more VehicleParts and returns the data updated in the database.
-     * @param {VehiclePartUpdateManyAndReturnArgs} args - Arguments to update many VehicleParts.
-     * @example
-     * // Update many VehicleParts
-     * const vehiclePart = await prisma.vehiclePart.updateManyAndReturn({
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * 
-     * // Update zero or more VehicleParts and only return the `id`
-     * const vehiclePartWithIdOnly = await prisma.vehiclePart.updateManyAndReturn({
-     *   select: { id: true },
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * 
-     */
-    updateManyAndReturn<T extends VehiclePartUpdateManyAndReturnArgs>(args: SelectSubset<T, VehiclePartUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VehiclePartPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
 
     /**
      * Create or update one VehiclePart.
@@ -9837,28 +8980,7 @@ export namespace Prisma {
      * The data used to create many VehicleParts.
      */
     data: VehiclePartCreateManyInput | VehiclePartCreateManyInput[]
-  }
-
-  /**
-   * VehiclePart createManyAndReturn
-   */
-  export type VehiclePartCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the VehiclePart
-     */
-    select?: VehiclePartSelectCreateManyAndReturn<ExtArgs> | null
-    /**
-     * Omit specific fields from the VehiclePart
-     */
-    omit?: VehiclePartOmit<ExtArgs> | null
-    /**
-     * The data used to create many VehicleParts.
-     */
-    data: VehiclePartCreateManyInput | VehiclePartCreateManyInput[]
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: VehiclePartIncludeCreateManyAndReturn<ExtArgs> | null
+    skipDuplicates?: boolean
   }
 
   /**
@@ -9903,36 +9025,6 @@ export namespace Prisma {
      * Limit how many VehicleParts to update.
      */
     limit?: number
-  }
-
-  /**
-   * VehiclePart updateManyAndReturn
-   */
-  export type VehiclePartUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the VehiclePart
-     */
-    select?: VehiclePartSelectUpdateManyAndReturn<ExtArgs> | null
-    /**
-     * Omit specific fields from the VehiclePart
-     */
-    omit?: VehiclePartOmit<ExtArgs> | null
-    /**
-     * The data used to update VehicleParts.
-     */
-    data: XOR<VehiclePartUpdateManyMutationInput, VehiclePartUncheckedUpdateManyInput>
-    /**
-     * Filter which VehicleParts to update
-     */
-    where?: VehiclePartWhereInput
-    /**
-     * Limit how many VehicleParts to update.
-     */
-    limit?: number
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: VehiclePartIncludeUpdateManyAndReturn<ExtArgs> | null
   }
 
   /**
@@ -10214,25 +9306,7 @@ export namespace Prisma {
     assessment?: boolean | AssessmentDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["assessmentDamagedPart"]>
 
-  export type AssessmentDamagedPartSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    name?: boolean
-    severity?: boolean
-    confirmed?: boolean
-    assessmentId?: boolean
-    createdAt?: boolean
-    assessment?: boolean | AssessmentDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["assessmentDamagedPart"]>
 
-  export type AssessmentDamagedPartSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    name?: boolean
-    severity?: boolean
-    confirmed?: boolean
-    assessmentId?: boolean
-    createdAt?: boolean
-    assessment?: boolean | AssessmentDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["assessmentDamagedPart"]>
 
   export type AssessmentDamagedPartSelectScalar = {
     id?: boolean
@@ -10245,12 +9319,6 @@ export namespace Prisma {
 
   export type AssessmentDamagedPartOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "severity" | "confirmed" | "assessmentId" | "createdAt", ExtArgs["result"]["assessmentDamagedPart"]>
   export type AssessmentDamagedPartInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    assessment?: boolean | AssessmentDefaultArgs<ExtArgs>
-  }
-  export type AssessmentDamagedPartIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    assessment?: boolean | AssessmentDefaultArgs<ExtArgs>
-  }
-  export type AssessmentDamagedPartIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     assessment?: boolean | AssessmentDefaultArgs<ExtArgs>
   }
 
@@ -10384,30 +9452,6 @@ export namespace Prisma {
     createMany<T extends AssessmentDamagedPartCreateManyArgs>(args?: SelectSubset<T, AssessmentDamagedPartCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Create many AssessmentDamagedParts and returns the data saved in the database.
-     * @param {AssessmentDamagedPartCreateManyAndReturnArgs} args - Arguments to create many AssessmentDamagedParts.
-     * @example
-     * // Create many AssessmentDamagedParts
-     * const assessmentDamagedPart = await prisma.assessmentDamagedPart.createManyAndReturn({
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * 
-     * // Create many AssessmentDamagedParts and only return the `id`
-     * const assessmentDamagedPartWithIdOnly = await prisma.assessmentDamagedPart.createManyAndReturn({
-     *   select: { id: true },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * 
-     */
-    createManyAndReturn<T extends AssessmentDamagedPartCreateManyAndReturnArgs>(args?: SelectSubset<T, AssessmentDamagedPartCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AssessmentDamagedPartPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
-
-    /**
      * Delete a AssessmentDamagedPart.
      * @param {AssessmentDamagedPartDeleteArgs} args - Arguments to delete one AssessmentDamagedPart.
      * @example
@@ -10470,36 +9514,6 @@ export namespace Prisma {
      * 
      */
     updateMany<T extends AssessmentDamagedPartUpdateManyArgs>(args: SelectSubset<T, AssessmentDamagedPartUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
-
-    /**
-     * Update zero or more AssessmentDamagedParts and returns the data updated in the database.
-     * @param {AssessmentDamagedPartUpdateManyAndReturnArgs} args - Arguments to update many AssessmentDamagedParts.
-     * @example
-     * // Update many AssessmentDamagedParts
-     * const assessmentDamagedPart = await prisma.assessmentDamagedPart.updateManyAndReturn({
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * 
-     * // Update zero or more AssessmentDamagedParts and only return the `id`
-     * const assessmentDamagedPartWithIdOnly = await prisma.assessmentDamagedPart.updateManyAndReturn({
-     *   select: { id: true },
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * 
-     */
-    updateManyAndReturn<T extends AssessmentDamagedPartUpdateManyAndReturnArgs>(args: SelectSubset<T, AssessmentDamagedPartUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AssessmentDamagedPartPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
 
     /**
      * Create or update one AssessmentDamagedPart.
@@ -10930,28 +9944,7 @@ export namespace Prisma {
      * The data used to create many AssessmentDamagedParts.
      */
     data: AssessmentDamagedPartCreateManyInput | AssessmentDamagedPartCreateManyInput[]
-  }
-
-  /**
-   * AssessmentDamagedPart createManyAndReturn
-   */
-  export type AssessmentDamagedPartCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the AssessmentDamagedPart
-     */
-    select?: AssessmentDamagedPartSelectCreateManyAndReturn<ExtArgs> | null
-    /**
-     * Omit specific fields from the AssessmentDamagedPart
-     */
-    omit?: AssessmentDamagedPartOmit<ExtArgs> | null
-    /**
-     * The data used to create many AssessmentDamagedParts.
-     */
-    data: AssessmentDamagedPartCreateManyInput | AssessmentDamagedPartCreateManyInput[]
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: AssessmentDamagedPartIncludeCreateManyAndReturn<ExtArgs> | null
+    skipDuplicates?: boolean
   }
 
   /**
@@ -10996,36 +9989,6 @@ export namespace Prisma {
      * Limit how many AssessmentDamagedParts to update.
      */
     limit?: number
-  }
-
-  /**
-   * AssessmentDamagedPart updateManyAndReturn
-   */
-  export type AssessmentDamagedPartUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the AssessmentDamagedPart
-     */
-    select?: AssessmentDamagedPartSelectUpdateManyAndReturn<ExtArgs> | null
-    /**
-     * Omit specific fields from the AssessmentDamagedPart
-     */
-    omit?: AssessmentDamagedPartOmit<ExtArgs> | null
-    /**
-     * The data used to update AssessmentDamagedParts.
-     */
-    data: XOR<AssessmentDamagedPartUpdateManyMutationInput, AssessmentDamagedPartUncheckedUpdateManyInput>
-    /**
-     * Filter which AssessmentDamagedParts to update
-     */
-    where?: AssessmentDamagedPartWhereInput
-    /**
-     * Limit how many AssessmentDamagedParts to update.
-     */
-    limit?: number
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: AssessmentDamagedPartIncludeUpdateManyAndReturn<ExtArgs> | null
   }
 
   /**
@@ -11362,33 +10325,7 @@ export namespace Prisma {
     assessment?: boolean | AssessmentDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["assessmentReplacementPart"]>
 
-  export type AssessmentReplacementPartSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    partName?: boolean
-    partNumber?: boolean
-    quantity?: boolean
-    unitPrice?: boolean
-    subtotal?: boolean
-    confirmed?: boolean
-    vehiclePartId?: boolean
-    assessmentId?: boolean
-    createdAt?: boolean
-    assessment?: boolean | AssessmentDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["assessmentReplacementPart"]>
 
-  export type AssessmentReplacementPartSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    partName?: boolean
-    partNumber?: boolean
-    quantity?: boolean
-    unitPrice?: boolean
-    subtotal?: boolean
-    confirmed?: boolean
-    vehiclePartId?: boolean
-    assessmentId?: boolean
-    createdAt?: boolean
-    assessment?: boolean | AssessmentDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["assessmentReplacementPart"]>
 
   export type AssessmentReplacementPartSelectScalar = {
     id?: boolean
@@ -11405,12 +10342,6 @@ export namespace Prisma {
 
   export type AssessmentReplacementPartOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "partName" | "partNumber" | "quantity" | "unitPrice" | "subtotal" | "confirmed" | "vehiclePartId" | "assessmentId" | "createdAt", ExtArgs["result"]["assessmentReplacementPart"]>
   export type AssessmentReplacementPartInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    assessment?: boolean | AssessmentDefaultArgs<ExtArgs>
-  }
-  export type AssessmentReplacementPartIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    assessment?: boolean | AssessmentDefaultArgs<ExtArgs>
-  }
-  export type AssessmentReplacementPartIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     assessment?: boolean | AssessmentDefaultArgs<ExtArgs>
   }
 
@@ -11548,30 +10479,6 @@ export namespace Prisma {
     createMany<T extends AssessmentReplacementPartCreateManyArgs>(args?: SelectSubset<T, AssessmentReplacementPartCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Create many AssessmentReplacementParts and returns the data saved in the database.
-     * @param {AssessmentReplacementPartCreateManyAndReturnArgs} args - Arguments to create many AssessmentReplacementParts.
-     * @example
-     * // Create many AssessmentReplacementParts
-     * const assessmentReplacementPart = await prisma.assessmentReplacementPart.createManyAndReturn({
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * 
-     * // Create many AssessmentReplacementParts and only return the `id`
-     * const assessmentReplacementPartWithIdOnly = await prisma.assessmentReplacementPart.createManyAndReturn({
-     *   select: { id: true },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * 
-     */
-    createManyAndReturn<T extends AssessmentReplacementPartCreateManyAndReturnArgs>(args?: SelectSubset<T, AssessmentReplacementPartCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AssessmentReplacementPartPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
-
-    /**
      * Delete a AssessmentReplacementPart.
      * @param {AssessmentReplacementPartDeleteArgs} args - Arguments to delete one AssessmentReplacementPart.
      * @example
@@ -11634,36 +10541,6 @@ export namespace Prisma {
      * 
      */
     updateMany<T extends AssessmentReplacementPartUpdateManyArgs>(args: SelectSubset<T, AssessmentReplacementPartUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
-
-    /**
-     * Update zero or more AssessmentReplacementParts and returns the data updated in the database.
-     * @param {AssessmentReplacementPartUpdateManyAndReturnArgs} args - Arguments to update many AssessmentReplacementParts.
-     * @example
-     * // Update many AssessmentReplacementParts
-     * const assessmentReplacementPart = await prisma.assessmentReplacementPart.updateManyAndReturn({
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * 
-     * // Update zero or more AssessmentReplacementParts and only return the `id`
-     * const assessmentReplacementPartWithIdOnly = await prisma.assessmentReplacementPart.updateManyAndReturn({
-     *   select: { id: true },
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * 
-     */
-    updateManyAndReturn<T extends AssessmentReplacementPartUpdateManyAndReturnArgs>(args: SelectSubset<T, AssessmentReplacementPartUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AssessmentReplacementPartPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
 
     /**
      * Create or update one AssessmentReplacementPart.
@@ -12098,28 +10975,7 @@ export namespace Prisma {
      * The data used to create many AssessmentReplacementParts.
      */
     data: AssessmentReplacementPartCreateManyInput | AssessmentReplacementPartCreateManyInput[]
-  }
-
-  /**
-   * AssessmentReplacementPart createManyAndReturn
-   */
-  export type AssessmentReplacementPartCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the AssessmentReplacementPart
-     */
-    select?: AssessmentReplacementPartSelectCreateManyAndReturn<ExtArgs> | null
-    /**
-     * Omit specific fields from the AssessmentReplacementPart
-     */
-    omit?: AssessmentReplacementPartOmit<ExtArgs> | null
-    /**
-     * The data used to create many AssessmentReplacementParts.
-     */
-    data: AssessmentReplacementPartCreateManyInput | AssessmentReplacementPartCreateManyInput[]
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: AssessmentReplacementPartIncludeCreateManyAndReturn<ExtArgs> | null
+    skipDuplicates?: boolean
   }
 
   /**
@@ -12164,36 +11020,6 @@ export namespace Prisma {
      * Limit how many AssessmentReplacementParts to update.
      */
     limit?: number
-  }
-
-  /**
-   * AssessmentReplacementPart updateManyAndReturn
-   */
-  export type AssessmentReplacementPartUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the AssessmentReplacementPart
-     */
-    select?: AssessmentReplacementPartSelectUpdateManyAndReturn<ExtArgs> | null
-    /**
-     * Omit specific fields from the AssessmentReplacementPart
-     */
-    omit?: AssessmentReplacementPartOmit<ExtArgs> | null
-    /**
-     * The data used to update AssessmentReplacementParts.
-     */
-    data: XOR<AssessmentReplacementPartUpdateManyMutationInput, AssessmentReplacementPartUncheckedUpdateManyInput>
-    /**
-     * Filter which AssessmentReplacementParts to update
-     */
-    where?: AssessmentReplacementPartWhereInput
-    /**
-     * Limit how many AssessmentReplacementParts to update.
-     */
-    limit?: number
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: AssessmentReplacementPartIncludeUpdateManyAndReturn<ExtArgs> | null
   }
 
   /**
@@ -12294,18 +11120,21 @@ export namespace Prisma {
   export type SupplierMinAggregateOutputType = {
     id: string | null
     name: string | null
+    website: string | null
     createdAt: Date | null
   }
 
   export type SupplierMaxAggregateOutputType = {
     id: string | null
     name: string | null
+    website: string | null
     createdAt: Date | null
   }
 
   export type SupplierCountAggregateOutputType = {
     id: number
     name: number
+    website: number
     createdAt: number
     _all: number
   }
@@ -12314,18 +11143,21 @@ export namespace Prisma {
   export type SupplierMinAggregateInputType = {
     id?: true
     name?: true
+    website?: true
     createdAt?: true
   }
 
   export type SupplierMaxAggregateInputType = {
     id?: true
     name?: true
+    website?: true
     createdAt?: true
   }
 
   export type SupplierCountAggregateInputType = {
     id?: true
     name?: true
+    website?: true
     createdAt?: true
     _all?: true
   }
@@ -12405,6 +11237,7 @@ export namespace Prisma {
   export type SupplierGroupByOutputType = {
     id: string
     name: string
+    website: string | null
     createdAt: Date
     _count: SupplierCountAggregateOutputType | null
     _min: SupplierMinAggregateOutputType | null
@@ -12428,36 +11261,26 @@ export namespace Prisma {
   export type SupplierSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     name?: boolean
+    website?: boolean
     createdAt?: boolean
     prices?: boolean | Supplier$pricesArgs<ExtArgs>
     _count?: boolean | SupplierCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["supplier"]>
 
-  export type SupplierSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    name?: boolean
-    createdAt?: boolean
-  }, ExtArgs["result"]["supplier"]>
 
-  export type SupplierSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    name?: boolean
-    createdAt?: boolean
-  }, ExtArgs["result"]["supplier"]>
 
   export type SupplierSelectScalar = {
     id?: boolean
     name?: boolean
+    website?: boolean
     createdAt?: boolean
   }
 
-  export type SupplierOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "createdAt", ExtArgs["result"]["supplier"]>
+  export type SupplierOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "website" | "createdAt", ExtArgs["result"]["supplier"]>
   export type SupplierInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     prices?: boolean | Supplier$pricesArgs<ExtArgs>
     _count?: boolean | SupplierCountOutputTypeDefaultArgs<ExtArgs>
   }
-  export type SupplierIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
-  export type SupplierIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
 
   export type $SupplierPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Supplier"
@@ -12467,6 +11290,7 @@ export namespace Prisma {
     scalars: $Extensions.GetPayloadResult<{
       id: string
       name: string
+      website: string | null
       createdAt: Date
     }, ExtArgs["result"]["supplier"]>
     composites: {}
@@ -12586,30 +11410,6 @@ export namespace Prisma {
     createMany<T extends SupplierCreateManyArgs>(args?: SelectSubset<T, SupplierCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Create many Suppliers and returns the data saved in the database.
-     * @param {SupplierCreateManyAndReturnArgs} args - Arguments to create many Suppliers.
-     * @example
-     * // Create many Suppliers
-     * const supplier = await prisma.supplier.createManyAndReturn({
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * 
-     * // Create many Suppliers and only return the `id`
-     * const supplierWithIdOnly = await prisma.supplier.createManyAndReturn({
-     *   select: { id: true },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * 
-     */
-    createManyAndReturn<T extends SupplierCreateManyAndReturnArgs>(args?: SelectSubset<T, SupplierCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SupplierPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
-
-    /**
      * Delete a Supplier.
      * @param {SupplierDeleteArgs} args - Arguments to delete one Supplier.
      * @example
@@ -12672,36 +11472,6 @@ export namespace Prisma {
      * 
      */
     updateMany<T extends SupplierUpdateManyArgs>(args: SelectSubset<T, SupplierUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
-
-    /**
-     * Update zero or more Suppliers and returns the data updated in the database.
-     * @param {SupplierUpdateManyAndReturnArgs} args - Arguments to update many Suppliers.
-     * @example
-     * // Update many Suppliers
-     * const supplier = await prisma.supplier.updateManyAndReturn({
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * 
-     * // Update zero or more Suppliers and only return the `id`
-     * const supplierWithIdOnly = await prisma.supplier.updateManyAndReturn({
-     *   select: { id: true },
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * 
-     */
-    updateManyAndReturn<T extends SupplierUpdateManyAndReturnArgs>(args: SelectSubset<T, SupplierUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SupplierPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
 
     /**
      * Create or update one Supplier.
@@ -12894,6 +11664,7 @@ export namespace Prisma {
   interface SupplierFieldRefs {
     readonly id: FieldRef<"Supplier", 'String'>
     readonly name: FieldRef<"Supplier", 'String'>
+    readonly website: FieldRef<"Supplier", 'String'>
     readonly createdAt: FieldRef<"Supplier", 'DateTime'>
   }
     
@@ -13129,24 +11900,7 @@ export namespace Prisma {
      * The data used to create many Suppliers.
      */
     data: SupplierCreateManyInput | SupplierCreateManyInput[]
-  }
-
-  /**
-   * Supplier createManyAndReturn
-   */
-  export type SupplierCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the Supplier
-     */
-    select?: SupplierSelectCreateManyAndReturn<ExtArgs> | null
-    /**
-     * Omit specific fields from the Supplier
-     */
-    omit?: SupplierOmit<ExtArgs> | null
-    /**
-     * The data used to create many Suppliers.
-     */
-    data: SupplierCreateManyInput | SupplierCreateManyInput[]
+    skipDuplicates?: boolean
   }
 
   /**
@@ -13179,32 +11933,6 @@ export namespace Prisma {
    * Supplier updateMany
    */
   export type SupplierUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * The data used to update Suppliers.
-     */
-    data: XOR<SupplierUpdateManyMutationInput, SupplierUncheckedUpdateManyInput>
-    /**
-     * Filter which Suppliers to update
-     */
-    where?: SupplierWhereInput
-    /**
-     * Limit how many Suppliers to update.
-     */
-    limit?: number
-  }
-
-  /**
-   * Supplier updateManyAndReturn
-   */
-  export type SupplierUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the Supplier
-     */
-    select?: SupplierSelectUpdateManyAndReturn<ExtArgs> | null
-    /**
-     * Omit specific fields from the Supplier
-     */
-    omit?: SupplierOmit<ExtArgs> | null
     /**
      * The data used to update Suppliers.
      */
@@ -13341,10 +12069,12 @@ export namespace Prisma {
   }
 
   export type SupplierPartPriceAvgAggregateOutputType = {
+    vehicleYear: number | null
     price: number | null
   }
 
   export type SupplierPartPriceSumAggregateOutputType = {
+    vehicleYear: number | null
     price: number | null
   }
 
@@ -13354,8 +12084,17 @@ export namespace Prisma {
     partName: string | null
     vehicleMake: string | null
     vehicleModel: string | null
+    vehicleYear: number | null
+    partNumber: string | null
     price: number | null
+    currency: string | null
+    availability: string | null
+    brand: string | null
+    condition: string | null
+    url: string | null
+    source: string | null
     createdAt: Date | null
+    updatedAt: Date | null
   }
 
   export type SupplierPartPriceMaxAggregateOutputType = {
@@ -13364,8 +12103,17 @@ export namespace Prisma {
     partName: string | null
     vehicleMake: string | null
     vehicleModel: string | null
+    vehicleYear: number | null
+    partNumber: string | null
     price: number | null
+    currency: string | null
+    availability: string | null
+    brand: string | null
+    condition: string | null
+    url: string | null
+    source: string | null
     createdAt: Date | null
+    updatedAt: Date | null
   }
 
   export type SupplierPartPriceCountAggregateOutputType = {
@@ -13374,17 +12122,28 @@ export namespace Prisma {
     partName: number
     vehicleMake: number
     vehicleModel: number
+    vehicleYear: number
+    partNumber: number
     price: number
+    currency: number
+    availability: number
+    brand: number
+    condition: number
+    url: number
+    source: number
     createdAt: number
+    updatedAt: number
     _all: number
   }
 
 
   export type SupplierPartPriceAvgAggregateInputType = {
+    vehicleYear?: true
     price?: true
   }
 
   export type SupplierPartPriceSumAggregateInputType = {
+    vehicleYear?: true
     price?: true
   }
 
@@ -13394,8 +12153,17 @@ export namespace Prisma {
     partName?: true
     vehicleMake?: true
     vehicleModel?: true
+    vehicleYear?: true
+    partNumber?: true
     price?: true
+    currency?: true
+    availability?: true
+    brand?: true
+    condition?: true
+    url?: true
+    source?: true
     createdAt?: true
+    updatedAt?: true
   }
 
   export type SupplierPartPriceMaxAggregateInputType = {
@@ -13404,8 +12172,17 @@ export namespace Prisma {
     partName?: true
     vehicleMake?: true
     vehicleModel?: true
+    vehicleYear?: true
+    partNumber?: true
     price?: true
+    currency?: true
+    availability?: true
+    brand?: true
+    condition?: true
+    url?: true
+    source?: true
     createdAt?: true
+    updatedAt?: true
   }
 
   export type SupplierPartPriceCountAggregateInputType = {
@@ -13414,8 +12191,17 @@ export namespace Prisma {
     partName?: true
     vehicleMake?: true
     vehicleModel?: true
+    vehicleYear?: true
+    partNumber?: true
     price?: true
+    currency?: true
+    availability?: true
+    brand?: true
+    condition?: true
+    url?: true
+    source?: true
     createdAt?: true
+    updatedAt?: true
     _all?: true
   }
 
@@ -13511,8 +12297,17 @@ export namespace Prisma {
     partName: string
     vehicleMake: string | null
     vehicleModel: string | null
+    vehicleYear: number | null
+    partNumber: string | null
     price: number
+    currency: string
+    availability: string
+    brand: string | null
+    condition: string
+    url: string | null
+    source: string
     createdAt: Date
+    updatedAt: Date
     _count: SupplierPartPriceCountAggregateOutputType | null
     _avg: SupplierPartPriceAvgAggregateOutputType | null
     _sum: SupplierPartPriceSumAggregateOutputType | null
@@ -13540,32 +12335,21 @@ export namespace Prisma {
     partName?: boolean
     vehicleMake?: boolean
     vehicleModel?: boolean
+    vehicleYear?: boolean
+    partNumber?: boolean
     price?: boolean
+    currency?: boolean
+    availability?: boolean
+    brand?: boolean
+    condition?: boolean
+    url?: boolean
+    source?: boolean
     createdAt?: boolean
+    updatedAt?: boolean
     supplier?: boolean | SupplierDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["supplierPartPrice"]>
 
-  export type SupplierPartPriceSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    supplierId?: boolean
-    partName?: boolean
-    vehicleMake?: boolean
-    vehicleModel?: boolean
-    price?: boolean
-    createdAt?: boolean
-    supplier?: boolean | SupplierDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["supplierPartPrice"]>
 
-  export type SupplierPartPriceSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    supplierId?: boolean
-    partName?: boolean
-    vehicleMake?: boolean
-    vehicleModel?: boolean
-    price?: boolean
-    createdAt?: boolean
-    supplier?: boolean | SupplierDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["supplierPartPrice"]>
 
   export type SupplierPartPriceSelectScalar = {
     id?: boolean
@@ -13573,18 +12357,21 @@ export namespace Prisma {
     partName?: boolean
     vehicleMake?: boolean
     vehicleModel?: boolean
+    vehicleYear?: boolean
+    partNumber?: boolean
     price?: boolean
+    currency?: boolean
+    availability?: boolean
+    brand?: boolean
+    condition?: boolean
+    url?: boolean
+    source?: boolean
     createdAt?: boolean
+    updatedAt?: boolean
   }
 
-  export type SupplierPartPriceOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "supplierId" | "partName" | "vehicleMake" | "vehicleModel" | "price" | "createdAt", ExtArgs["result"]["supplierPartPrice"]>
+  export type SupplierPartPriceOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "supplierId" | "partName" | "vehicleMake" | "vehicleModel" | "vehicleYear" | "partNumber" | "price" | "currency" | "availability" | "brand" | "condition" | "url" | "source" | "createdAt" | "updatedAt", ExtArgs["result"]["supplierPartPrice"]>
   export type SupplierPartPriceInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    supplier?: boolean | SupplierDefaultArgs<ExtArgs>
-  }
-  export type SupplierPartPriceIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    supplier?: boolean | SupplierDefaultArgs<ExtArgs>
-  }
-  export type SupplierPartPriceIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     supplier?: boolean | SupplierDefaultArgs<ExtArgs>
   }
 
@@ -13599,8 +12386,17 @@ export namespace Prisma {
       partName: string
       vehicleMake: string | null
       vehicleModel: string | null
+      vehicleYear: number | null
+      partNumber: string | null
       price: number
+      currency: string
+      availability: string
+      brand: string | null
+      condition: string
+      url: string | null
+      source: string
       createdAt: Date
+      updatedAt: Date
     }, ExtArgs["result"]["supplierPartPrice"]>
     composites: {}
   }
@@ -13719,30 +12515,6 @@ export namespace Prisma {
     createMany<T extends SupplierPartPriceCreateManyArgs>(args?: SelectSubset<T, SupplierPartPriceCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Create many SupplierPartPrices and returns the data saved in the database.
-     * @param {SupplierPartPriceCreateManyAndReturnArgs} args - Arguments to create many SupplierPartPrices.
-     * @example
-     * // Create many SupplierPartPrices
-     * const supplierPartPrice = await prisma.supplierPartPrice.createManyAndReturn({
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * 
-     * // Create many SupplierPartPrices and only return the `id`
-     * const supplierPartPriceWithIdOnly = await prisma.supplierPartPrice.createManyAndReturn({
-     *   select: { id: true },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * 
-     */
-    createManyAndReturn<T extends SupplierPartPriceCreateManyAndReturnArgs>(args?: SelectSubset<T, SupplierPartPriceCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SupplierPartPricePayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
-
-    /**
      * Delete a SupplierPartPrice.
      * @param {SupplierPartPriceDeleteArgs} args - Arguments to delete one SupplierPartPrice.
      * @example
@@ -13805,36 +12577,6 @@ export namespace Prisma {
      * 
      */
     updateMany<T extends SupplierPartPriceUpdateManyArgs>(args: SelectSubset<T, SupplierPartPriceUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
-
-    /**
-     * Update zero or more SupplierPartPrices and returns the data updated in the database.
-     * @param {SupplierPartPriceUpdateManyAndReturnArgs} args - Arguments to update many SupplierPartPrices.
-     * @example
-     * // Update many SupplierPartPrices
-     * const supplierPartPrice = await prisma.supplierPartPrice.updateManyAndReturn({
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * 
-     * // Update zero or more SupplierPartPrices and only return the `id`
-     * const supplierPartPriceWithIdOnly = await prisma.supplierPartPrice.updateManyAndReturn({
-     *   select: { id: true },
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * 
-     */
-    updateManyAndReturn<T extends SupplierPartPriceUpdateManyAndReturnArgs>(args: SelectSubset<T, SupplierPartPriceUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SupplierPartPricePayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
 
     /**
      * Create or update one SupplierPartPrice.
@@ -14030,8 +12772,17 @@ export namespace Prisma {
     readonly partName: FieldRef<"SupplierPartPrice", 'String'>
     readonly vehicleMake: FieldRef<"SupplierPartPrice", 'String'>
     readonly vehicleModel: FieldRef<"SupplierPartPrice", 'String'>
+    readonly vehicleYear: FieldRef<"SupplierPartPrice", 'Int'>
+    readonly partNumber: FieldRef<"SupplierPartPrice", 'String'>
     readonly price: FieldRef<"SupplierPartPrice", 'Float'>
+    readonly currency: FieldRef<"SupplierPartPrice", 'String'>
+    readonly availability: FieldRef<"SupplierPartPrice", 'String'>
+    readonly brand: FieldRef<"SupplierPartPrice", 'String'>
+    readonly condition: FieldRef<"SupplierPartPrice", 'String'>
+    readonly url: FieldRef<"SupplierPartPrice", 'String'>
+    readonly source: FieldRef<"SupplierPartPrice", 'String'>
     readonly createdAt: FieldRef<"SupplierPartPrice", 'DateTime'>
+    readonly updatedAt: FieldRef<"SupplierPartPrice", 'DateTime'>
   }
     
 
@@ -14266,28 +13017,7 @@ export namespace Prisma {
      * The data used to create many SupplierPartPrices.
      */
     data: SupplierPartPriceCreateManyInput | SupplierPartPriceCreateManyInput[]
-  }
-
-  /**
-   * SupplierPartPrice createManyAndReturn
-   */
-  export type SupplierPartPriceCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the SupplierPartPrice
-     */
-    select?: SupplierPartPriceSelectCreateManyAndReturn<ExtArgs> | null
-    /**
-     * Omit specific fields from the SupplierPartPrice
-     */
-    omit?: SupplierPartPriceOmit<ExtArgs> | null
-    /**
-     * The data used to create many SupplierPartPrices.
-     */
-    data: SupplierPartPriceCreateManyInput | SupplierPartPriceCreateManyInput[]
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: SupplierPartPriceIncludeCreateManyAndReturn<ExtArgs> | null
+    skipDuplicates?: boolean
   }
 
   /**
@@ -14332,36 +13062,6 @@ export namespace Prisma {
      * Limit how many SupplierPartPrices to update.
      */
     limit?: number
-  }
-
-  /**
-   * SupplierPartPrice updateManyAndReturn
-   */
-  export type SupplierPartPriceUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the SupplierPartPrice
-     */
-    select?: SupplierPartPriceSelectUpdateManyAndReturn<ExtArgs> | null
-    /**
-     * Omit specific fields from the SupplierPartPrice
-     */
-    omit?: SupplierPartPriceOmit<ExtArgs> | null
-    /**
-     * The data used to update SupplierPartPrices.
-     */
-    data: XOR<SupplierPartPriceUpdateManyMutationInput, SupplierPartPriceUncheckedUpdateManyInput>
-    /**
-     * Filter which SupplierPartPrices to update
-     */
-    where?: SupplierPartPriceWhereInput
-    /**
-     * Limit how many SupplierPartPrices to update.
-     */
-    limit?: number
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: SupplierPartPriceIncludeUpdateManyAndReturn<ExtArgs> | null
   }
 
   /**
@@ -14446,6 +13146,1019 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: SupplierPartPriceInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model PartPrice
+   */
+
+  export type AggregatePartPrice = {
+    _count: PartPriceCountAggregateOutputType | null
+    _avg: PartPriceAvgAggregateOutputType | null
+    _sum: PartPriceSumAggregateOutputType | null
+    _min: PartPriceMinAggregateOutputType | null
+    _max: PartPriceMaxAggregateOutputType | null
+  }
+
+  export type PartPriceAvgAggregateOutputType = {
+    year: number | null
+    price: number | null
+  }
+
+  export type PartPriceSumAggregateOutputType = {
+    year: number | null
+    price: number | null
+  }
+
+  export type PartPriceMinAggregateOutputType = {
+    id: string | null
+    make: string | null
+    model: string | null
+    year: number | null
+    partName: string | null
+    partNumber: string | null
+    supplier: string | null
+    price: number | null
+    currency: string | null
+    condition: string | null
+    source: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type PartPriceMaxAggregateOutputType = {
+    id: string | null
+    make: string | null
+    model: string | null
+    year: number | null
+    partName: string | null
+    partNumber: string | null
+    supplier: string | null
+    price: number | null
+    currency: string | null
+    condition: string | null
+    source: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type PartPriceCountAggregateOutputType = {
+    id: number
+    make: number
+    model: number
+    year: number
+    partName: number
+    partNumber: number
+    supplier: number
+    price: number
+    currency: number
+    condition: number
+    source: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type PartPriceAvgAggregateInputType = {
+    year?: true
+    price?: true
+  }
+
+  export type PartPriceSumAggregateInputType = {
+    year?: true
+    price?: true
+  }
+
+  export type PartPriceMinAggregateInputType = {
+    id?: true
+    make?: true
+    model?: true
+    year?: true
+    partName?: true
+    partNumber?: true
+    supplier?: true
+    price?: true
+    currency?: true
+    condition?: true
+    source?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type PartPriceMaxAggregateInputType = {
+    id?: true
+    make?: true
+    model?: true
+    year?: true
+    partName?: true
+    partNumber?: true
+    supplier?: true
+    price?: true
+    currency?: true
+    condition?: true
+    source?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type PartPriceCountAggregateInputType = {
+    id?: true
+    make?: true
+    model?: true
+    year?: true
+    partName?: true
+    partNumber?: true
+    supplier?: true
+    price?: true
+    currency?: true
+    condition?: true
+    source?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type PartPriceAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which PartPrice to aggregate.
+     */
+    where?: PartPriceWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PartPrices to fetch.
+     */
+    orderBy?: PartPriceOrderByWithRelationInput | PartPriceOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: PartPriceWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PartPrices from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PartPrices.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned PartPrices
+    **/
+    _count?: true | PartPriceCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: PartPriceAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: PartPriceSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: PartPriceMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: PartPriceMaxAggregateInputType
+  }
+
+  export type GetPartPriceAggregateType<T extends PartPriceAggregateArgs> = {
+        [P in keyof T & keyof AggregatePartPrice]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregatePartPrice[P]>
+      : GetScalarType<T[P], AggregatePartPrice[P]>
+  }
+
+
+
+
+  export type PartPriceGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: PartPriceWhereInput
+    orderBy?: PartPriceOrderByWithAggregationInput | PartPriceOrderByWithAggregationInput[]
+    by: PartPriceScalarFieldEnum[] | PartPriceScalarFieldEnum
+    having?: PartPriceScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: PartPriceCountAggregateInputType | true
+    _avg?: PartPriceAvgAggregateInputType
+    _sum?: PartPriceSumAggregateInputType
+    _min?: PartPriceMinAggregateInputType
+    _max?: PartPriceMaxAggregateInputType
+  }
+
+  export type PartPriceGroupByOutputType = {
+    id: string
+    make: string
+    model: string
+    year: number | null
+    partName: string
+    partNumber: string | null
+    supplier: string
+    price: number
+    currency: string
+    condition: string
+    source: string
+    createdAt: Date
+    updatedAt: Date
+    _count: PartPriceCountAggregateOutputType | null
+    _avg: PartPriceAvgAggregateOutputType | null
+    _sum: PartPriceSumAggregateOutputType | null
+    _min: PartPriceMinAggregateOutputType | null
+    _max: PartPriceMaxAggregateOutputType | null
+  }
+
+  type GetPartPriceGroupByPayload<T extends PartPriceGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<PartPriceGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof PartPriceGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], PartPriceGroupByOutputType[P]>
+            : GetScalarType<T[P], PartPriceGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type PartPriceSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    make?: boolean
+    model?: boolean
+    year?: boolean
+    partName?: boolean
+    partNumber?: boolean
+    supplier?: boolean
+    price?: boolean
+    currency?: boolean
+    condition?: boolean
+    source?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["partPrice"]>
+
+
+
+  export type PartPriceSelectScalar = {
+    id?: boolean
+    make?: boolean
+    model?: boolean
+    year?: boolean
+    partName?: boolean
+    partNumber?: boolean
+    supplier?: boolean
+    price?: boolean
+    currency?: boolean
+    condition?: boolean
+    source?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type PartPriceOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "make" | "model" | "year" | "partName" | "partNumber" | "supplier" | "price" | "currency" | "condition" | "source" | "createdAt" | "updatedAt", ExtArgs["result"]["partPrice"]>
+
+  export type $PartPricePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "PartPrice"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      make: string
+      model: string
+      year: number | null
+      partName: string
+      partNumber: string | null
+      supplier: string
+      price: number
+      currency: string
+      condition: string
+      source: string
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["partPrice"]>
+    composites: {}
+  }
+
+  type PartPriceGetPayload<S extends boolean | null | undefined | PartPriceDefaultArgs> = $Result.GetResult<Prisma.$PartPricePayload, S>
+
+  type PartPriceCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<PartPriceFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: PartPriceCountAggregateInputType | true
+    }
+
+  export interface PartPriceDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['PartPrice'], meta: { name: 'PartPrice' } }
+    /**
+     * Find zero or one PartPrice that matches the filter.
+     * @param {PartPriceFindUniqueArgs} args - Arguments to find a PartPrice
+     * @example
+     * // Get one PartPrice
+     * const partPrice = await prisma.partPrice.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends PartPriceFindUniqueArgs>(args: SelectSubset<T, PartPriceFindUniqueArgs<ExtArgs>>): Prisma__PartPriceClient<$Result.GetResult<Prisma.$PartPricePayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one PartPrice that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {PartPriceFindUniqueOrThrowArgs} args - Arguments to find a PartPrice
+     * @example
+     * // Get one PartPrice
+     * const partPrice = await prisma.partPrice.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends PartPriceFindUniqueOrThrowArgs>(args: SelectSubset<T, PartPriceFindUniqueOrThrowArgs<ExtArgs>>): Prisma__PartPriceClient<$Result.GetResult<Prisma.$PartPricePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first PartPrice that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PartPriceFindFirstArgs} args - Arguments to find a PartPrice
+     * @example
+     * // Get one PartPrice
+     * const partPrice = await prisma.partPrice.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends PartPriceFindFirstArgs>(args?: SelectSubset<T, PartPriceFindFirstArgs<ExtArgs>>): Prisma__PartPriceClient<$Result.GetResult<Prisma.$PartPricePayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first PartPrice that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PartPriceFindFirstOrThrowArgs} args - Arguments to find a PartPrice
+     * @example
+     * // Get one PartPrice
+     * const partPrice = await prisma.partPrice.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends PartPriceFindFirstOrThrowArgs>(args?: SelectSubset<T, PartPriceFindFirstOrThrowArgs<ExtArgs>>): Prisma__PartPriceClient<$Result.GetResult<Prisma.$PartPricePayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more PartPrices that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PartPriceFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all PartPrices
+     * const partPrices = await prisma.partPrice.findMany()
+     * 
+     * // Get first 10 PartPrices
+     * const partPrices = await prisma.partPrice.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const partPriceWithIdOnly = await prisma.partPrice.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends PartPriceFindManyArgs>(args?: SelectSubset<T, PartPriceFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PartPricePayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a PartPrice.
+     * @param {PartPriceCreateArgs} args - Arguments to create a PartPrice.
+     * @example
+     * // Create one PartPrice
+     * const PartPrice = await prisma.partPrice.create({
+     *   data: {
+     *     // ... data to create a PartPrice
+     *   }
+     * })
+     * 
+     */
+    create<T extends PartPriceCreateArgs>(args: SelectSubset<T, PartPriceCreateArgs<ExtArgs>>): Prisma__PartPriceClient<$Result.GetResult<Prisma.$PartPricePayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many PartPrices.
+     * @param {PartPriceCreateManyArgs} args - Arguments to create many PartPrices.
+     * @example
+     * // Create many PartPrices
+     * const partPrice = await prisma.partPrice.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends PartPriceCreateManyArgs>(args?: SelectSubset<T, PartPriceCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Delete a PartPrice.
+     * @param {PartPriceDeleteArgs} args - Arguments to delete one PartPrice.
+     * @example
+     * // Delete one PartPrice
+     * const PartPrice = await prisma.partPrice.delete({
+     *   where: {
+     *     // ... filter to delete one PartPrice
+     *   }
+     * })
+     * 
+     */
+    delete<T extends PartPriceDeleteArgs>(args: SelectSubset<T, PartPriceDeleteArgs<ExtArgs>>): Prisma__PartPriceClient<$Result.GetResult<Prisma.$PartPricePayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one PartPrice.
+     * @param {PartPriceUpdateArgs} args - Arguments to update one PartPrice.
+     * @example
+     * // Update one PartPrice
+     * const partPrice = await prisma.partPrice.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends PartPriceUpdateArgs>(args: SelectSubset<T, PartPriceUpdateArgs<ExtArgs>>): Prisma__PartPriceClient<$Result.GetResult<Prisma.$PartPricePayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more PartPrices.
+     * @param {PartPriceDeleteManyArgs} args - Arguments to filter PartPrices to delete.
+     * @example
+     * // Delete a few PartPrices
+     * const { count } = await prisma.partPrice.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends PartPriceDeleteManyArgs>(args?: SelectSubset<T, PartPriceDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more PartPrices.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PartPriceUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many PartPrices
+     * const partPrice = await prisma.partPrice.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends PartPriceUpdateManyArgs>(args: SelectSubset<T, PartPriceUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one PartPrice.
+     * @param {PartPriceUpsertArgs} args - Arguments to update or create a PartPrice.
+     * @example
+     * // Update or create a PartPrice
+     * const partPrice = await prisma.partPrice.upsert({
+     *   create: {
+     *     // ... data to create a PartPrice
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the PartPrice we want to update
+     *   }
+     * })
+     */
+    upsert<T extends PartPriceUpsertArgs>(args: SelectSubset<T, PartPriceUpsertArgs<ExtArgs>>): Prisma__PartPriceClient<$Result.GetResult<Prisma.$PartPricePayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of PartPrices.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PartPriceCountArgs} args - Arguments to filter PartPrices to count.
+     * @example
+     * // Count the number of PartPrices
+     * const count = await prisma.partPrice.count({
+     *   where: {
+     *     // ... the filter for the PartPrices we want to count
+     *   }
+     * })
+    **/
+    count<T extends PartPriceCountArgs>(
+      args?: Subset<T, PartPriceCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], PartPriceCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a PartPrice.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PartPriceAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends PartPriceAggregateArgs>(args: Subset<T, PartPriceAggregateArgs>): Prisma.PrismaPromise<GetPartPriceAggregateType<T>>
+
+    /**
+     * Group by PartPrice.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PartPriceGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends PartPriceGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: PartPriceGroupByArgs['orderBy'] }
+        : { orderBy?: PartPriceGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, PartPriceGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetPartPriceGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the PartPrice model
+   */
+  readonly fields: PartPriceFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for PartPrice.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__PartPriceClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the PartPrice model
+   */
+  interface PartPriceFieldRefs {
+    readonly id: FieldRef<"PartPrice", 'String'>
+    readonly make: FieldRef<"PartPrice", 'String'>
+    readonly model: FieldRef<"PartPrice", 'String'>
+    readonly year: FieldRef<"PartPrice", 'Int'>
+    readonly partName: FieldRef<"PartPrice", 'String'>
+    readonly partNumber: FieldRef<"PartPrice", 'String'>
+    readonly supplier: FieldRef<"PartPrice", 'String'>
+    readonly price: FieldRef<"PartPrice", 'Float'>
+    readonly currency: FieldRef<"PartPrice", 'String'>
+    readonly condition: FieldRef<"PartPrice", 'String'>
+    readonly source: FieldRef<"PartPrice", 'String'>
+    readonly createdAt: FieldRef<"PartPrice", 'DateTime'>
+    readonly updatedAt: FieldRef<"PartPrice", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * PartPrice findUnique
+   */
+  export type PartPriceFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PartPrice
+     */
+    select?: PartPriceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PartPrice
+     */
+    omit?: PartPriceOmit<ExtArgs> | null
+    /**
+     * Filter, which PartPrice to fetch.
+     */
+    where: PartPriceWhereUniqueInput
+  }
+
+  /**
+   * PartPrice findUniqueOrThrow
+   */
+  export type PartPriceFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PartPrice
+     */
+    select?: PartPriceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PartPrice
+     */
+    omit?: PartPriceOmit<ExtArgs> | null
+    /**
+     * Filter, which PartPrice to fetch.
+     */
+    where: PartPriceWhereUniqueInput
+  }
+
+  /**
+   * PartPrice findFirst
+   */
+  export type PartPriceFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PartPrice
+     */
+    select?: PartPriceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PartPrice
+     */
+    omit?: PartPriceOmit<ExtArgs> | null
+    /**
+     * Filter, which PartPrice to fetch.
+     */
+    where?: PartPriceWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PartPrices to fetch.
+     */
+    orderBy?: PartPriceOrderByWithRelationInput | PartPriceOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for PartPrices.
+     */
+    cursor?: PartPriceWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PartPrices from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PartPrices.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of PartPrices.
+     */
+    distinct?: PartPriceScalarFieldEnum | PartPriceScalarFieldEnum[]
+  }
+
+  /**
+   * PartPrice findFirstOrThrow
+   */
+  export type PartPriceFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PartPrice
+     */
+    select?: PartPriceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PartPrice
+     */
+    omit?: PartPriceOmit<ExtArgs> | null
+    /**
+     * Filter, which PartPrice to fetch.
+     */
+    where?: PartPriceWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PartPrices to fetch.
+     */
+    orderBy?: PartPriceOrderByWithRelationInput | PartPriceOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for PartPrices.
+     */
+    cursor?: PartPriceWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PartPrices from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PartPrices.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of PartPrices.
+     */
+    distinct?: PartPriceScalarFieldEnum | PartPriceScalarFieldEnum[]
+  }
+
+  /**
+   * PartPrice findMany
+   */
+  export type PartPriceFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PartPrice
+     */
+    select?: PartPriceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PartPrice
+     */
+    omit?: PartPriceOmit<ExtArgs> | null
+    /**
+     * Filter, which PartPrices to fetch.
+     */
+    where?: PartPriceWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PartPrices to fetch.
+     */
+    orderBy?: PartPriceOrderByWithRelationInput | PartPriceOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing PartPrices.
+     */
+    cursor?: PartPriceWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PartPrices from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PartPrices.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of PartPrices.
+     */
+    distinct?: PartPriceScalarFieldEnum | PartPriceScalarFieldEnum[]
+  }
+
+  /**
+   * PartPrice create
+   */
+  export type PartPriceCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PartPrice
+     */
+    select?: PartPriceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PartPrice
+     */
+    omit?: PartPriceOmit<ExtArgs> | null
+    /**
+     * The data needed to create a PartPrice.
+     */
+    data: XOR<PartPriceCreateInput, PartPriceUncheckedCreateInput>
+  }
+
+  /**
+   * PartPrice createMany
+   */
+  export type PartPriceCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many PartPrices.
+     */
+    data: PartPriceCreateManyInput | PartPriceCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * PartPrice update
+   */
+  export type PartPriceUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PartPrice
+     */
+    select?: PartPriceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PartPrice
+     */
+    omit?: PartPriceOmit<ExtArgs> | null
+    /**
+     * The data needed to update a PartPrice.
+     */
+    data: XOR<PartPriceUpdateInput, PartPriceUncheckedUpdateInput>
+    /**
+     * Choose, which PartPrice to update.
+     */
+    where: PartPriceWhereUniqueInput
+  }
+
+  /**
+   * PartPrice updateMany
+   */
+  export type PartPriceUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update PartPrices.
+     */
+    data: XOR<PartPriceUpdateManyMutationInput, PartPriceUncheckedUpdateManyInput>
+    /**
+     * Filter which PartPrices to update
+     */
+    where?: PartPriceWhereInput
+    /**
+     * Limit how many PartPrices to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * PartPrice upsert
+   */
+  export type PartPriceUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PartPrice
+     */
+    select?: PartPriceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PartPrice
+     */
+    omit?: PartPriceOmit<ExtArgs> | null
+    /**
+     * The filter to search for the PartPrice to update in case it exists.
+     */
+    where: PartPriceWhereUniqueInput
+    /**
+     * In case the PartPrice found by the `where` argument doesn't exist, create a new PartPrice with this data.
+     */
+    create: XOR<PartPriceCreateInput, PartPriceUncheckedCreateInput>
+    /**
+     * In case the PartPrice was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<PartPriceUpdateInput, PartPriceUncheckedUpdateInput>
+  }
+
+  /**
+   * PartPrice delete
+   */
+  export type PartPriceDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PartPrice
+     */
+    select?: PartPriceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PartPrice
+     */
+    omit?: PartPriceOmit<ExtArgs> | null
+    /**
+     * Filter which PartPrice to delete.
+     */
+    where: PartPriceWhereUniqueInput
+  }
+
+  /**
+   * PartPrice deleteMany
+   */
+  export type PartPriceDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which PartPrices to delete
+     */
+    where?: PartPriceWhereInput
+    /**
+     * Limit how many PartPrices to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * PartPrice without action
+   */
+  export type PartPriceDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PartPrice
+     */
+    select?: PartPriceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PartPrice
+     */
+    omit?: PartPriceOmit<ExtArgs> | null
   }
 
 
@@ -14624,25 +14337,7 @@ export namespace Prisma {
     assessment?: boolean | AssessmentDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["inspectionItem"]>
 
-  export type InspectionItemSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    item?: boolean
-    notes?: boolean
-    completed?: boolean
-    assessmentId?: boolean
-    createdAt?: boolean
-    assessment?: boolean | AssessmentDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["inspectionItem"]>
 
-  export type InspectionItemSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    item?: boolean
-    notes?: boolean
-    completed?: boolean
-    assessmentId?: boolean
-    createdAt?: boolean
-    assessment?: boolean | AssessmentDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["inspectionItem"]>
 
   export type InspectionItemSelectScalar = {
     id?: boolean
@@ -14655,12 +14350,6 @@ export namespace Prisma {
 
   export type InspectionItemOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "item" | "notes" | "completed" | "assessmentId" | "createdAt", ExtArgs["result"]["inspectionItem"]>
   export type InspectionItemInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    assessment?: boolean | AssessmentDefaultArgs<ExtArgs>
-  }
-  export type InspectionItemIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    assessment?: boolean | AssessmentDefaultArgs<ExtArgs>
-  }
-  export type InspectionItemIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     assessment?: boolean | AssessmentDefaultArgs<ExtArgs>
   }
 
@@ -14794,30 +14483,6 @@ export namespace Prisma {
     createMany<T extends InspectionItemCreateManyArgs>(args?: SelectSubset<T, InspectionItemCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Create many InspectionItems and returns the data saved in the database.
-     * @param {InspectionItemCreateManyAndReturnArgs} args - Arguments to create many InspectionItems.
-     * @example
-     * // Create many InspectionItems
-     * const inspectionItem = await prisma.inspectionItem.createManyAndReturn({
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * 
-     * // Create many InspectionItems and only return the `id`
-     * const inspectionItemWithIdOnly = await prisma.inspectionItem.createManyAndReturn({
-     *   select: { id: true },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * 
-     */
-    createManyAndReturn<T extends InspectionItemCreateManyAndReturnArgs>(args?: SelectSubset<T, InspectionItemCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$InspectionItemPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
-
-    /**
      * Delete a InspectionItem.
      * @param {InspectionItemDeleteArgs} args - Arguments to delete one InspectionItem.
      * @example
@@ -14880,36 +14545,6 @@ export namespace Prisma {
      * 
      */
     updateMany<T extends InspectionItemUpdateManyArgs>(args: SelectSubset<T, InspectionItemUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
-
-    /**
-     * Update zero or more InspectionItems and returns the data updated in the database.
-     * @param {InspectionItemUpdateManyAndReturnArgs} args - Arguments to update many InspectionItems.
-     * @example
-     * // Update many InspectionItems
-     * const inspectionItem = await prisma.inspectionItem.updateManyAndReturn({
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * 
-     * // Update zero or more InspectionItems and only return the `id`
-     * const inspectionItemWithIdOnly = await prisma.inspectionItem.updateManyAndReturn({
-     *   select: { id: true },
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * 
-     */
-    updateManyAndReturn<T extends InspectionItemUpdateManyAndReturnArgs>(args: SelectSubset<T, InspectionItemUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$InspectionItemPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
 
     /**
      * Create or update one InspectionItem.
@@ -15340,28 +14975,7 @@ export namespace Prisma {
      * The data used to create many InspectionItems.
      */
     data: InspectionItemCreateManyInput | InspectionItemCreateManyInput[]
-  }
-
-  /**
-   * InspectionItem createManyAndReturn
-   */
-  export type InspectionItemCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the InspectionItem
-     */
-    select?: InspectionItemSelectCreateManyAndReturn<ExtArgs> | null
-    /**
-     * Omit specific fields from the InspectionItem
-     */
-    omit?: InspectionItemOmit<ExtArgs> | null
-    /**
-     * The data used to create many InspectionItems.
-     */
-    data: InspectionItemCreateManyInput | InspectionItemCreateManyInput[]
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: InspectionItemIncludeCreateManyAndReturn<ExtArgs> | null
+    skipDuplicates?: boolean
   }
 
   /**
@@ -15406,36 +15020,6 @@ export namespace Prisma {
      * Limit how many InspectionItems to update.
      */
     limit?: number
-  }
-
-  /**
-   * InspectionItem updateManyAndReturn
-   */
-  export type InspectionItemUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the InspectionItem
-     */
-    select?: InspectionItemSelectUpdateManyAndReturn<ExtArgs> | null
-    /**
-     * Omit specific fields from the InspectionItem
-     */
-    omit?: InspectionItemOmit<ExtArgs> | null
-    /**
-     * The data used to update InspectionItems.
-     */
-    data: XOR<InspectionItemUpdateManyMutationInput, InspectionItemUncheckedUpdateManyInput>
-    /**
-     * Filter which InspectionItems to update
-     */
-    where?: InspectionItemWhereInput
-    /**
-     * Limit how many InspectionItems to update.
-     */
-    limit?: number
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: InspectionItemIncludeUpdateManyAndReturn<ExtArgs> | null
   }
 
   /**
@@ -15528,6 +15112,9 @@ export namespace Prisma {
    */
 
   export const TransactionIsolationLevel: {
+    ReadUncommitted: 'ReadUncommitted',
+    ReadCommitted: 'ReadCommitted',
+    RepeatableRead: 'RepeatableRead',
     Serializable: 'Serializable'
   };
 
@@ -15659,6 +15246,7 @@ export namespace Prisma {
   export const SupplierScalarFieldEnum: {
     id: 'id',
     name: 'name',
+    website: 'website',
     createdAt: 'createdAt'
   };
 
@@ -15671,11 +15259,39 @@ export namespace Prisma {
     partName: 'partName',
     vehicleMake: 'vehicleMake',
     vehicleModel: 'vehicleModel',
+    vehicleYear: 'vehicleYear',
+    partNumber: 'partNumber',
     price: 'price',
-    createdAt: 'createdAt'
+    currency: 'currency',
+    availability: 'availability',
+    brand: 'brand',
+    condition: 'condition',
+    url: 'url',
+    source: 'source',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
   };
 
   export type SupplierPartPriceScalarFieldEnum = (typeof SupplierPartPriceScalarFieldEnum)[keyof typeof SupplierPartPriceScalarFieldEnum]
+
+
+  export const PartPriceScalarFieldEnum: {
+    id: 'id',
+    make: 'make',
+    model: 'model',
+    year: 'year',
+    partName: 'partName',
+    partNumber: 'partNumber',
+    supplier: 'supplier',
+    price: 'price',
+    currency: 'currency',
+    condition: 'condition',
+    source: 'source',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type PartPriceScalarFieldEnum = (typeof PartPriceScalarFieldEnum)[keyof typeof PartPriceScalarFieldEnum]
 
 
   export const InspectionItemScalarFieldEnum: {
@@ -15698,12 +15314,167 @@ export namespace Prisma {
   export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
 
 
+  export const UserOrderByRelevanceFieldEnum: {
+    id: 'id',
+    name: 'name',
+    email: 'email',
+    password: 'password',
+    role: 'role'
+  };
+
+  export type UserOrderByRelevanceFieldEnum = (typeof UserOrderByRelevanceFieldEnum)[keyof typeof UserOrderByRelevanceFieldEnum]
+
+
   export const NullsOrder: {
     first: 'first',
     last: 'last'
   };
 
   export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
+
+
+  export const AssessmentOrderByRelevanceFieldEnum: {
+    id: 'id',
+    assessmentNumber: 'assessmentNumber',
+    status: 'status',
+    customerName: 'customerName',
+    customerPhone: 'customerPhone',
+    customerEmail: 'customerEmail',
+    insuranceCompany: 'insuranceCompany',
+    claimNumber: 'claimNumber',
+    registrationNumber: 'registrationNumber',
+    vin: 'vin',
+    odometer: 'odometer',
+    vehicleNotes: 'vehicleNotes',
+    aiRawResponse: 'aiRawResponse',
+    verifiedVehicleJson: 'verifiedVehicleJson',
+    verifiedDamageJson: 'verifiedDamageJson',
+    userId: 'userId'
+  };
+
+  export type AssessmentOrderByRelevanceFieldEnum = (typeof AssessmentOrderByRelevanceFieldEnum)[keyof typeof AssessmentOrderByRelevanceFieldEnum]
+
+
+  export const AssessmentImageOrderByRelevanceFieldEnum: {
+    id: 'id',
+    filename: 'filename',
+    originalName: 'originalName',
+    path: 'path',
+    mimeType: 'mimeType',
+    assessmentId: 'assessmentId'
+  };
+
+  export type AssessmentImageOrderByRelevanceFieldEnum = (typeof AssessmentImageOrderByRelevanceFieldEnum)[keyof typeof AssessmentImageOrderByRelevanceFieldEnum]
+
+
+  export const VehicleMakeOrderByRelevanceFieldEnum: {
+    id: 'id',
+    name: 'name'
+  };
+
+  export type VehicleMakeOrderByRelevanceFieldEnum = (typeof VehicleMakeOrderByRelevanceFieldEnum)[keyof typeof VehicleMakeOrderByRelevanceFieldEnum]
+
+
+  export const VehicleModelOrderByRelevanceFieldEnum: {
+    id: 'id',
+    name: 'name',
+    makeId: 'makeId'
+  };
+
+  export type VehicleModelOrderByRelevanceFieldEnum = (typeof VehicleModelOrderByRelevanceFieldEnum)[keyof typeof VehicleModelOrderByRelevanceFieldEnum]
+
+
+  export const VehicleVariantOrderByRelevanceFieldEnum: {
+    id: 'id',
+    name: 'name',
+    modelId: 'modelId'
+  };
+
+  export type VehicleVariantOrderByRelevanceFieldEnum = (typeof VehicleVariantOrderByRelevanceFieldEnum)[keyof typeof VehicleVariantOrderByRelevanceFieldEnum]
+
+
+  export const VehiclePartOrderByRelevanceFieldEnum: {
+    id: 'id',
+    partNumber: 'partNumber',
+    name: 'name',
+    category: 'category',
+    variantId: 'variantId'
+  };
+
+  export type VehiclePartOrderByRelevanceFieldEnum = (typeof VehiclePartOrderByRelevanceFieldEnum)[keyof typeof VehiclePartOrderByRelevanceFieldEnum]
+
+
+  export const AssessmentDamagedPartOrderByRelevanceFieldEnum: {
+    id: 'id',
+    name: 'name',
+    severity: 'severity',
+    assessmentId: 'assessmentId'
+  };
+
+  export type AssessmentDamagedPartOrderByRelevanceFieldEnum = (typeof AssessmentDamagedPartOrderByRelevanceFieldEnum)[keyof typeof AssessmentDamagedPartOrderByRelevanceFieldEnum]
+
+
+  export const AssessmentReplacementPartOrderByRelevanceFieldEnum: {
+    id: 'id',
+    partName: 'partName',
+    partNumber: 'partNumber',
+    vehiclePartId: 'vehiclePartId',
+    assessmentId: 'assessmentId'
+  };
+
+  export type AssessmentReplacementPartOrderByRelevanceFieldEnum = (typeof AssessmentReplacementPartOrderByRelevanceFieldEnum)[keyof typeof AssessmentReplacementPartOrderByRelevanceFieldEnum]
+
+
+  export const SupplierOrderByRelevanceFieldEnum: {
+    id: 'id',
+    name: 'name',
+    website: 'website'
+  };
+
+  export type SupplierOrderByRelevanceFieldEnum = (typeof SupplierOrderByRelevanceFieldEnum)[keyof typeof SupplierOrderByRelevanceFieldEnum]
+
+
+  export const SupplierPartPriceOrderByRelevanceFieldEnum: {
+    id: 'id',
+    supplierId: 'supplierId',
+    partName: 'partName',
+    vehicleMake: 'vehicleMake',
+    vehicleModel: 'vehicleModel',
+    partNumber: 'partNumber',
+    currency: 'currency',
+    availability: 'availability',
+    brand: 'brand',
+    condition: 'condition',
+    url: 'url',
+    source: 'source'
+  };
+
+  export type SupplierPartPriceOrderByRelevanceFieldEnum = (typeof SupplierPartPriceOrderByRelevanceFieldEnum)[keyof typeof SupplierPartPriceOrderByRelevanceFieldEnum]
+
+
+  export const PartPriceOrderByRelevanceFieldEnum: {
+    id: 'id',
+    make: 'make',
+    model: 'model',
+    partName: 'partName',
+    partNumber: 'partNumber',
+    supplier: 'supplier',
+    currency: 'currency',
+    condition: 'condition',
+    source: 'source'
+  };
+
+  export type PartPriceOrderByRelevanceFieldEnum = (typeof PartPriceOrderByRelevanceFieldEnum)[keyof typeof PartPriceOrderByRelevanceFieldEnum]
+
+
+  export const InspectionItemOrderByRelevanceFieldEnum: {
+    id: 'id',
+    item: 'item',
+    notes: 'notes',
+    assessmentId: 'assessmentId'
+  };
+
+  export type InspectionItemOrderByRelevanceFieldEnum = (typeof InspectionItemOrderByRelevanceFieldEnum)[keyof typeof InspectionItemOrderByRelevanceFieldEnum]
 
 
   /**
@@ -15772,6 +15543,7 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     assessments?: AssessmentOrderByRelationAggregateInput
+    _relevance?: UserOrderByRelevanceInput
   }
 
   export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -15867,6 +15639,7 @@ export namespace Prisma {
     damagedParts?: AssessmentDamagedPartOrderByRelationAggregateInput
     replacementParts?: AssessmentReplacementPartOrderByRelationAggregateInput
     inspectionItems?: InspectionItemOrderByRelationAggregateInput
+    _relevance?: AssessmentOrderByRelevanceInput
   }
 
   export type AssessmentWhereUniqueInput = Prisma.AtLeast<{
@@ -15973,6 +15746,7 @@ export namespace Prisma {
     assessmentId?: SortOrder
     createdAt?: SortOrder
     assessment?: AssessmentOrderByWithRelationInput
+    _relevance?: AssessmentImageOrderByRelevanceInput
   }
 
   export type AssessmentImageWhereUniqueInput = Prisma.AtLeast<{
@@ -16036,6 +15810,7 @@ export namespace Prisma {
     id?: SortOrder
     name?: SortOrder
     models?: VehicleModelOrderByRelationAggregateInput
+    _relevance?: VehicleMakeOrderByRelevanceInput
   }
 
   export type VehicleMakeWhereUniqueInput = Prisma.AtLeast<{
@@ -16080,6 +15855,7 @@ export namespace Prisma {
     makeId?: SortOrder
     make?: VehicleMakeOrderByWithRelationInput
     variants?: VehicleVariantOrderByRelationAggregateInput
+    _relevance?: VehicleModelOrderByRelevanceInput
   }
 
   export type VehicleModelWhereUniqueInput = Prisma.AtLeast<{
@@ -16129,6 +15905,7 @@ export namespace Prisma {
     modelId?: SortOrder
     model?: VehicleModelOrderByWithRelationInput
     parts?: VehiclePartOrderByRelationAggregateInput
+    _relevance?: VehicleVariantOrderByRelevanceInput
   }
 
   export type VehicleVariantWhereUniqueInput = Prisma.AtLeast<{
@@ -16190,6 +15967,7 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     variant?: VehicleVariantOrderByWithRelationInput
+    _relevance?: VehiclePartOrderByRelevanceInput
   }
 
   export type VehiclePartWhereUniqueInput = Prisma.AtLeast<{
@@ -16264,6 +16042,7 @@ export namespace Prisma {
     assessmentId?: SortOrder
     createdAt?: SortOrder
     assessment?: AssessmentOrderByWithRelationInput
+    _relevance?: AssessmentDamagedPartOrderByRelevanceInput
   }
 
   export type AssessmentDamagedPartWhereUniqueInput = Prisma.AtLeast<{
@@ -16332,6 +16111,7 @@ export namespace Prisma {
     assessmentId?: SortOrder
     createdAt?: SortOrder
     assessment?: AssessmentOrderByWithRelationInput
+    _relevance?: AssessmentReplacementPartOrderByRelevanceInput
   }
 
   export type AssessmentReplacementPartWhereUniqueInput = Prisma.AtLeast<{
@@ -16391,6 +16171,7 @@ export namespace Prisma {
     NOT?: SupplierWhereInput | SupplierWhereInput[]
     id?: StringFilter<"Supplier"> | string
     name?: StringFilter<"Supplier"> | string
+    website?: StringNullableFilter<"Supplier"> | string | null
     createdAt?: DateTimeFilter<"Supplier"> | Date | string
     prices?: SupplierPartPriceListRelationFilter
   }
@@ -16398,8 +16179,10 @@ export namespace Prisma {
   export type SupplierOrderByWithRelationInput = {
     id?: SortOrder
     name?: SortOrder
+    website?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     prices?: SupplierPartPriceOrderByRelationAggregateInput
+    _relevance?: SupplierOrderByRelevanceInput
   }
 
   export type SupplierWhereUniqueInput = Prisma.AtLeast<{
@@ -16408,6 +16191,7 @@ export namespace Prisma {
     AND?: SupplierWhereInput | SupplierWhereInput[]
     OR?: SupplierWhereInput[]
     NOT?: SupplierWhereInput | SupplierWhereInput[]
+    website?: StringNullableFilter<"Supplier"> | string | null
     createdAt?: DateTimeFilter<"Supplier"> | Date | string
     prices?: SupplierPartPriceListRelationFilter
   }, "id" | "name">
@@ -16415,6 +16199,7 @@ export namespace Prisma {
   export type SupplierOrderByWithAggregationInput = {
     id?: SortOrder
     name?: SortOrder
+    website?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     _count?: SupplierCountOrderByAggregateInput
     _max?: SupplierMaxOrderByAggregateInput
@@ -16427,6 +16212,7 @@ export namespace Prisma {
     NOT?: SupplierScalarWhereWithAggregatesInput | SupplierScalarWhereWithAggregatesInput[]
     id?: StringWithAggregatesFilter<"Supplier"> | string
     name?: StringWithAggregatesFilter<"Supplier"> | string
+    website?: StringNullableWithAggregatesFilter<"Supplier"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"Supplier"> | Date | string
   }
 
@@ -16439,8 +16225,17 @@ export namespace Prisma {
     partName?: StringFilter<"SupplierPartPrice"> | string
     vehicleMake?: StringNullableFilter<"SupplierPartPrice"> | string | null
     vehicleModel?: StringNullableFilter<"SupplierPartPrice"> | string | null
+    vehicleYear?: IntNullableFilter<"SupplierPartPrice"> | number | null
+    partNumber?: StringNullableFilter<"SupplierPartPrice"> | string | null
     price?: FloatFilter<"SupplierPartPrice"> | number
+    currency?: StringFilter<"SupplierPartPrice"> | string
+    availability?: StringFilter<"SupplierPartPrice"> | string
+    brand?: StringNullableFilter<"SupplierPartPrice"> | string | null
+    condition?: StringFilter<"SupplierPartPrice"> | string
+    url?: StringNullableFilter<"SupplierPartPrice"> | string | null
+    source?: StringFilter<"SupplierPartPrice"> | string
     createdAt?: DateTimeFilter<"SupplierPartPrice"> | Date | string
+    updatedAt?: DateTimeFilter<"SupplierPartPrice"> | Date | string
     supplier?: XOR<SupplierScalarRelationFilter, SupplierWhereInput>
   }
 
@@ -16450,9 +16245,19 @@ export namespace Prisma {
     partName?: SortOrder
     vehicleMake?: SortOrderInput | SortOrder
     vehicleModel?: SortOrderInput | SortOrder
+    vehicleYear?: SortOrderInput | SortOrder
+    partNumber?: SortOrderInput | SortOrder
     price?: SortOrder
+    currency?: SortOrder
+    availability?: SortOrder
+    brand?: SortOrderInput | SortOrder
+    condition?: SortOrder
+    url?: SortOrderInput | SortOrder
+    source?: SortOrder
     createdAt?: SortOrder
+    updatedAt?: SortOrder
     supplier?: SupplierOrderByWithRelationInput
+    _relevance?: SupplierPartPriceOrderByRelevanceInput
   }
 
   export type SupplierPartPriceWhereUniqueInput = Prisma.AtLeast<{
@@ -16465,8 +16270,17 @@ export namespace Prisma {
     partName?: StringFilter<"SupplierPartPrice"> | string
     vehicleMake?: StringNullableFilter<"SupplierPartPrice"> | string | null
     vehicleModel?: StringNullableFilter<"SupplierPartPrice"> | string | null
+    vehicleYear?: IntNullableFilter<"SupplierPartPrice"> | number | null
+    partNumber?: StringNullableFilter<"SupplierPartPrice"> | string | null
     price?: FloatFilter<"SupplierPartPrice"> | number
+    currency?: StringFilter<"SupplierPartPrice"> | string
+    availability?: StringFilter<"SupplierPartPrice"> | string
+    brand?: StringNullableFilter<"SupplierPartPrice"> | string | null
+    condition?: StringFilter<"SupplierPartPrice"> | string
+    url?: StringNullableFilter<"SupplierPartPrice"> | string | null
+    source?: StringFilter<"SupplierPartPrice"> | string
     createdAt?: DateTimeFilter<"SupplierPartPrice"> | Date | string
+    updatedAt?: DateTimeFilter<"SupplierPartPrice"> | Date | string
     supplier?: XOR<SupplierScalarRelationFilter, SupplierWhereInput>
   }, "id" | "supplierId_partName_vehicleMake_vehicleModel">
 
@@ -16476,8 +16290,17 @@ export namespace Prisma {
     partName?: SortOrder
     vehicleMake?: SortOrderInput | SortOrder
     vehicleModel?: SortOrderInput | SortOrder
+    vehicleYear?: SortOrderInput | SortOrder
+    partNumber?: SortOrderInput | SortOrder
     price?: SortOrder
+    currency?: SortOrder
+    availability?: SortOrder
+    brand?: SortOrderInput | SortOrder
+    condition?: SortOrder
+    url?: SortOrderInput | SortOrder
+    source?: SortOrder
     createdAt?: SortOrder
+    updatedAt?: SortOrder
     _count?: SupplierPartPriceCountOrderByAggregateInput
     _avg?: SupplierPartPriceAvgOrderByAggregateInput
     _max?: SupplierPartPriceMaxOrderByAggregateInput
@@ -16494,8 +16317,112 @@ export namespace Prisma {
     partName?: StringWithAggregatesFilter<"SupplierPartPrice"> | string
     vehicleMake?: StringNullableWithAggregatesFilter<"SupplierPartPrice"> | string | null
     vehicleModel?: StringNullableWithAggregatesFilter<"SupplierPartPrice"> | string | null
+    vehicleYear?: IntNullableWithAggregatesFilter<"SupplierPartPrice"> | number | null
+    partNumber?: StringNullableWithAggregatesFilter<"SupplierPartPrice"> | string | null
     price?: FloatWithAggregatesFilter<"SupplierPartPrice"> | number
+    currency?: StringWithAggregatesFilter<"SupplierPartPrice"> | string
+    availability?: StringWithAggregatesFilter<"SupplierPartPrice"> | string
+    brand?: StringNullableWithAggregatesFilter<"SupplierPartPrice"> | string | null
+    condition?: StringWithAggregatesFilter<"SupplierPartPrice"> | string
+    url?: StringNullableWithAggregatesFilter<"SupplierPartPrice"> | string | null
+    source?: StringWithAggregatesFilter<"SupplierPartPrice"> | string
     createdAt?: DateTimeWithAggregatesFilter<"SupplierPartPrice"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"SupplierPartPrice"> | Date | string
+  }
+
+  export type PartPriceWhereInput = {
+    AND?: PartPriceWhereInput | PartPriceWhereInput[]
+    OR?: PartPriceWhereInput[]
+    NOT?: PartPriceWhereInput | PartPriceWhereInput[]
+    id?: StringFilter<"PartPrice"> | string
+    make?: StringFilter<"PartPrice"> | string
+    model?: StringFilter<"PartPrice"> | string
+    year?: IntNullableFilter<"PartPrice"> | number | null
+    partName?: StringFilter<"PartPrice"> | string
+    partNumber?: StringNullableFilter<"PartPrice"> | string | null
+    supplier?: StringFilter<"PartPrice"> | string
+    price?: FloatFilter<"PartPrice"> | number
+    currency?: StringFilter<"PartPrice"> | string
+    condition?: StringFilter<"PartPrice"> | string
+    source?: StringFilter<"PartPrice"> | string
+    createdAt?: DateTimeFilter<"PartPrice"> | Date | string
+    updatedAt?: DateTimeFilter<"PartPrice"> | Date | string
+  }
+
+  export type PartPriceOrderByWithRelationInput = {
+    id?: SortOrder
+    make?: SortOrder
+    model?: SortOrder
+    year?: SortOrderInput | SortOrder
+    partName?: SortOrder
+    partNumber?: SortOrderInput | SortOrder
+    supplier?: SortOrder
+    price?: SortOrder
+    currency?: SortOrder
+    condition?: SortOrder
+    source?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _relevance?: PartPriceOrderByRelevanceInput
+  }
+
+  export type PartPriceWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: PartPriceWhereInput | PartPriceWhereInput[]
+    OR?: PartPriceWhereInput[]
+    NOT?: PartPriceWhereInput | PartPriceWhereInput[]
+    make?: StringFilter<"PartPrice"> | string
+    model?: StringFilter<"PartPrice"> | string
+    year?: IntNullableFilter<"PartPrice"> | number | null
+    partName?: StringFilter<"PartPrice"> | string
+    partNumber?: StringNullableFilter<"PartPrice"> | string | null
+    supplier?: StringFilter<"PartPrice"> | string
+    price?: FloatFilter<"PartPrice"> | number
+    currency?: StringFilter<"PartPrice"> | string
+    condition?: StringFilter<"PartPrice"> | string
+    source?: StringFilter<"PartPrice"> | string
+    createdAt?: DateTimeFilter<"PartPrice"> | Date | string
+    updatedAt?: DateTimeFilter<"PartPrice"> | Date | string
+  }, "id">
+
+  export type PartPriceOrderByWithAggregationInput = {
+    id?: SortOrder
+    make?: SortOrder
+    model?: SortOrder
+    year?: SortOrderInput | SortOrder
+    partName?: SortOrder
+    partNumber?: SortOrderInput | SortOrder
+    supplier?: SortOrder
+    price?: SortOrder
+    currency?: SortOrder
+    condition?: SortOrder
+    source?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: PartPriceCountOrderByAggregateInput
+    _avg?: PartPriceAvgOrderByAggregateInput
+    _max?: PartPriceMaxOrderByAggregateInput
+    _min?: PartPriceMinOrderByAggregateInput
+    _sum?: PartPriceSumOrderByAggregateInput
+  }
+
+  export type PartPriceScalarWhereWithAggregatesInput = {
+    AND?: PartPriceScalarWhereWithAggregatesInput | PartPriceScalarWhereWithAggregatesInput[]
+    OR?: PartPriceScalarWhereWithAggregatesInput[]
+    NOT?: PartPriceScalarWhereWithAggregatesInput | PartPriceScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"PartPrice"> | string
+    make?: StringWithAggregatesFilter<"PartPrice"> | string
+    model?: StringWithAggregatesFilter<"PartPrice"> | string
+    year?: IntNullableWithAggregatesFilter<"PartPrice"> | number | null
+    partName?: StringWithAggregatesFilter<"PartPrice"> | string
+    partNumber?: StringNullableWithAggregatesFilter<"PartPrice"> | string | null
+    supplier?: StringWithAggregatesFilter<"PartPrice"> | string
+    price?: FloatWithAggregatesFilter<"PartPrice"> | number
+    currency?: StringWithAggregatesFilter<"PartPrice"> | string
+    condition?: StringWithAggregatesFilter<"PartPrice"> | string
+    source?: StringWithAggregatesFilter<"PartPrice"> | string
+    createdAt?: DateTimeWithAggregatesFilter<"PartPrice"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"PartPrice"> | Date | string
   }
 
   export type InspectionItemWhereInput = {
@@ -16519,6 +16446,7 @@ export namespace Prisma {
     assessmentId?: SortOrder
     createdAt?: SortOrder
     assessment?: AssessmentOrderByWithRelationInput
+    _relevance?: InspectionItemOrderByRelevanceInput
   }
 
   export type InspectionItemWhereUniqueInput = Prisma.AtLeast<{
@@ -17251,6 +17179,7 @@ export namespace Prisma {
   export type SupplierCreateInput = {
     id?: string
     name: string
+    website?: string | null
     createdAt?: Date | string
     prices?: SupplierPartPriceCreateNestedManyWithoutSupplierInput
   }
@@ -17258,6 +17187,7 @@ export namespace Prisma {
   export type SupplierUncheckedCreateInput = {
     id?: string
     name: string
+    website?: string | null
     createdAt?: Date | string
     prices?: SupplierPartPriceUncheckedCreateNestedManyWithoutSupplierInput
   }
@@ -17265,6 +17195,7 @@ export namespace Prisma {
   export type SupplierUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    website?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     prices?: SupplierPartPriceUpdateManyWithoutSupplierNestedInput
   }
@@ -17272,6 +17203,7 @@ export namespace Prisma {
   export type SupplierUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    website?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     prices?: SupplierPartPriceUncheckedUpdateManyWithoutSupplierNestedInput
   }
@@ -17279,18 +17211,21 @@ export namespace Prisma {
   export type SupplierCreateManyInput = {
     id?: string
     name: string
+    website?: string | null
     createdAt?: Date | string
   }
 
   export type SupplierUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    website?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type SupplierUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    website?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -17299,8 +17234,17 @@ export namespace Prisma {
     partName: string
     vehicleMake?: string | null
     vehicleModel?: string | null
+    vehicleYear?: number | null
+    partNumber?: string | null
     price: number
+    currency?: string
+    availability?: string
+    brand?: string | null
+    condition?: string
+    url?: string | null
+    source?: string
     createdAt?: Date | string
+    updatedAt?: Date | string
     supplier: SupplierCreateNestedOneWithoutPricesInput
   }
 
@@ -17310,8 +17254,17 @@ export namespace Prisma {
     partName: string
     vehicleMake?: string | null
     vehicleModel?: string | null
+    vehicleYear?: number | null
+    partNumber?: string | null
     price: number
+    currency?: string
+    availability?: string
+    brand?: string | null
+    condition?: string
+    url?: string | null
+    source?: string
     createdAt?: Date | string
+    updatedAt?: Date | string
   }
 
   export type SupplierPartPriceUpdateInput = {
@@ -17319,8 +17272,17 @@ export namespace Prisma {
     partName?: StringFieldUpdateOperationsInput | string
     vehicleMake?: NullableStringFieldUpdateOperationsInput | string | null
     vehicleModel?: NullableStringFieldUpdateOperationsInput | string | null
+    vehicleYear?: NullableIntFieldUpdateOperationsInput | number | null
+    partNumber?: NullableStringFieldUpdateOperationsInput | string | null
     price?: FloatFieldUpdateOperationsInput | number
+    currency?: StringFieldUpdateOperationsInput | string
+    availability?: StringFieldUpdateOperationsInput | string
+    brand?: NullableStringFieldUpdateOperationsInput | string | null
+    condition?: StringFieldUpdateOperationsInput | string
+    url?: NullableStringFieldUpdateOperationsInput | string | null
+    source?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     supplier?: SupplierUpdateOneRequiredWithoutPricesNestedInput
   }
 
@@ -17330,8 +17292,17 @@ export namespace Prisma {
     partName?: StringFieldUpdateOperationsInput | string
     vehicleMake?: NullableStringFieldUpdateOperationsInput | string | null
     vehicleModel?: NullableStringFieldUpdateOperationsInput | string | null
+    vehicleYear?: NullableIntFieldUpdateOperationsInput | number | null
+    partNumber?: NullableStringFieldUpdateOperationsInput | string | null
     price?: FloatFieldUpdateOperationsInput | number
+    currency?: StringFieldUpdateOperationsInput | string
+    availability?: StringFieldUpdateOperationsInput | string
+    brand?: NullableStringFieldUpdateOperationsInput | string | null
+    condition?: StringFieldUpdateOperationsInput | string
+    url?: NullableStringFieldUpdateOperationsInput | string | null
+    source?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type SupplierPartPriceCreateManyInput = {
@@ -17340,8 +17311,17 @@ export namespace Prisma {
     partName: string
     vehicleMake?: string | null
     vehicleModel?: string | null
+    vehicleYear?: number | null
+    partNumber?: string | null
     price: number
+    currency?: string
+    availability?: string
+    brand?: string | null
+    condition?: string
+    url?: string | null
+    source?: string
     createdAt?: Date | string
+    updatedAt?: Date | string
   }
 
   export type SupplierPartPriceUpdateManyMutationInput = {
@@ -17349,8 +17329,17 @@ export namespace Prisma {
     partName?: StringFieldUpdateOperationsInput | string
     vehicleMake?: NullableStringFieldUpdateOperationsInput | string | null
     vehicleModel?: NullableStringFieldUpdateOperationsInput | string | null
+    vehicleYear?: NullableIntFieldUpdateOperationsInput | number | null
+    partNumber?: NullableStringFieldUpdateOperationsInput | string | null
     price?: FloatFieldUpdateOperationsInput | number
+    currency?: StringFieldUpdateOperationsInput | string
+    availability?: StringFieldUpdateOperationsInput | string
+    brand?: NullableStringFieldUpdateOperationsInput | string | null
+    condition?: StringFieldUpdateOperationsInput | string
+    url?: NullableStringFieldUpdateOperationsInput | string | null
+    source?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type SupplierPartPriceUncheckedUpdateManyInput = {
@@ -17359,8 +17348,129 @@ export namespace Prisma {
     partName?: StringFieldUpdateOperationsInput | string
     vehicleMake?: NullableStringFieldUpdateOperationsInput | string | null
     vehicleModel?: NullableStringFieldUpdateOperationsInput | string | null
+    vehicleYear?: NullableIntFieldUpdateOperationsInput | number | null
+    partNumber?: NullableStringFieldUpdateOperationsInput | string | null
     price?: FloatFieldUpdateOperationsInput | number
+    currency?: StringFieldUpdateOperationsInput | string
+    availability?: StringFieldUpdateOperationsInput | string
+    brand?: NullableStringFieldUpdateOperationsInput | string | null
+    condition?: StringFieldUpdateOperationsInput | string
+    url?: NullableStringFieldUpdateOperationsInput | string | null
+    source?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PartPriceCreateInput = {
+    id?: string
+    make: string
+    model: string
+    year?: number | null
+    partName: string
+    partNumber?: string | null
+    supplier: string
+    price: number
+    currency?: string
+    condition?: string
+    source?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type PartPriceUncheckedCreateInput = {
+    id?: string
+    make: string
+    model: string
+    year?: number | null
+    partName: string
+    partNumber?: string | null
+    supplier: string
+    price: number
+    currency?: string
+    condition?: string
+    source?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type PartPriceUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    make?: StringFieldUpdateOperationsInput | string
+    model?: StringFieldUpdateOperationsInput | string
+    year?: NullableIntFieldUpdateOperationsInput | number | null
+    partName?: StringFieldUpdateOperationsInput | string
+    partNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    supplier?: StringFieldUpdateOperationsInput | string
+    price?: FloatFieldUpdateOperationsInput | number
+    currency?: StringFieldUpdateOperationsInput | string
+    condition?: StringFieldUpdateOperationsInput | string
+    source?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PartPriceUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    make?: StringFieldUpdateOperationsInput | string
+    model?: StringFieldUpdateOperationsInput | string
+    year?: NullableIntFieldUpdateOperationsInput | number | null
+    partName?: StringFieldUpdateOperationsInput | string
+    partNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    supplier?: StringFieldUpdateOperationsInput | string
+    price?: FloatFieldUpdateOperationsInput | number
+    currency?: StringFieldUpdateOperationsInput | string
+    condition?: StringFieldUpdateOperationsInput | string
+    source?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PartPriceCreateManyInput = {
+    id?: string
+    make: string
+    model: string
+    year?: number | null
+    partName: string
+    partNumber?: string | null
+    supplier: string
+    price: number
+    currency?: string
+    condition?: string
+    source?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type PartPriceUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    make?: StringFieldUpdateOperationsInput | string
+    model?: StringFieldUpdateOperationsInput | string
+    year?: NullableIntFieldUpdateOperationsInput | number | null
+    partName?: StringFieldUpdateOperationsInput | string
+    partNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    supplier?: StringFieldUpdateOperationsInput | string
+    price?: FloatFieldUpdateOperationsInput | number
+    currency?: StringFieldUpdateOperationsInput | string
+    condition?: StringFieldUpdateOperationsInput | string
+    source?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PartPriceUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    make?: StringFieldUpdateOperationsInput | string
+    model?: StringFieldUpdateOperationsInput | string
+    year?: NullableIntFieldUpdateOperationsInput | number | null
+    partName?: StringFieldUpdateOperationsInput | string
+    partNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    supplier?: StringFieldUpdateOperationsInput | string
+    price?: FloatFieldUpdateOperationsInput | number
+    currency?: StringFieldUpdateOperationsInput | string
+    condition?: StringFieldUpdateOperationsInput | string
+    source?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type InspectionItemCreateInput = {
@@ -17436,6 +17546,7 @@ export namespace Prisma {
     contains?: string | StringFieldRefInput<$PrismaModel>
     startsWith?: string | StringFieldRefInput<$PrismaModel>
     endsWith?: string | StringFieldRefInput<$PrismaModel>
+    search?: string
     not?: NestedStringFilter<$PrismaModel> | string
   }
 
@@ -17458,6 +17569,12 @@ export namespace Prisma {
 
   export type AssessmentOrderByRelationAggregateInput = {
     _count?: SortOrder
+  }
+
+  export type UserOrderByRelevanceInput = {
+    fields: UserOrderByRelevanceFieldEnum | UserOrderByRelevanceFieldEnum[]
+    sort: SortOrder
+    search: string
   }
 
   export type UserCountOrderByAggregateInput = {
@@ -17501,6 +17618,7 @@ export namespace Prisma {
     contains?: string | StringFieldRefInput<$PrismaModel>
     startsWith?: string | StringFieldRefInput<$PrismaModel>
     endsWith?: string | StringFieldRefInput<$PrismaModel>
+    search?: string
     not?: NestedStringWithAggregatesFilter<$PrismaModel> | string
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedStringFilter<$PrismaModel>
@@ -17532,6 +17650,7 @@ export namespace Prisma {
     contains?: string | StringFieldRefInput<$PrismaModel>
     startsWith?: string | StringFieldRefInput<$PrismaModel>
     endsWith?: string | StringFieldRefInput<$PrismaModel>
+    search?: string
     not?: NestedStringNullableFilter<$PrismaModel> | string | null
   }
 
@@ -17583,6 +17702,12 @@ export namespace Prisma {
 
   export type InspectionItemOrderByRelationAggregateInput = {
     _count?: SortOrder
+  }
+
+  export type AssessmentOrderByRelevanceInput = {
+    fields: AssessmentOrderByRelevanceFieldEnum | AssessmentOrderByRelevanceFieldEnum[]
+    sort: SortOrder
+    search: string
   }
 
   export type AssessmentCountOrderByAggregateInput = {
@@ -17659,6 +17784,7 @@ export namespace Prisma {
     contains?: string | StringFieldRefInput<$PrismaModel>
     startsWith?: string | StringFieldRefInput<$PrismaModel>
     endsWith?: string | StringFieldRefInput<$PrismaModel>
+    search?: string
     not?: NestedStringNullableWithAggregatesFilter<$PrismaModel> | string | null
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedStringNullableFilter<$PrismaModel>
@@ -17679,6 +17805,12 @@ export namespace Prisma {
   export type AssessmentScalarRelationFilter = {
     is?: AssessmentWhereInput
     isNot?: AssessmentWhereInput
+  }
+
+  export type AssessmentImageOrderByRelevanceInput = {
+    fields: AssessmentImageOrderByRelevanceFieldEnum | AssessmentImageOrderByRelevanceFieldEnum[]
+    sort: SortOrder
+    search: string
   }
 
   export type AssessmentImageCountOrderByAggregateInput = {
@@ -17753,6 +17885,12 @@ export namespace Prisma {
     _count?: SortOrder
   }
 
+  export type VehicleMakeOrderByRelevanceInput = {
+    fields: VehicleMakeOrderByRelevanceFieldEnum | VehicleMakeOrderByRelevanceFieldEnum[]
+    sort: SortOrder
+    search: string
+  }
+
   export type VehicleMakeCountOrderByAggregateInput = {
     id?: SortOrder
     name?: SortOrder
@@ -17781,6 +17919,12 @@ export namespace Prisma {
 
   export type VehicleVariantOrderByRelationAggregateInput = {
     _count?: SortOrder
+  }
+
+  export type VehicleModelOrderByRelevanceInput = {
+    fields: VehicleModelOrderByRelevanceFieldEnum | VehicleModelOrderByRelevanceFieldEnum[]
+    sort: SortOrder
+    search: string
   }
 
   export type VehicleModelNameMakeIdCompoundUniqueInput = {
@@ -17819,6 +17963,12 @@ export namespace Prisma {
 
   export type VehiclePartOrderByRelationAggregateInput = {
     _count?: SortOrder
+  }
+
+  export type VehicleVariantOrderByRelevanceInput = {
+    fields: VehicleVariantOrderByRelevanceFieldEnum | VehicleVariantOrderByRelevanceFieldEnum[]
+    sort: SortOrder
+    search: string
   }
 
   export type VehicleVariantNameModelIdCompoundUniqueInput = {
@@ -17863,6 +18013,12 @@ export namespace Prisma {
   export type VehicleVariantNullableScalarRelationFilter = {
     is?: VehicleVariantWhereInput | null
     isNot?: VehicleVariantWhereInput | null
+  }
+
+  export type VehiclePartOrderByRelevanceInput = {
+    fields: VehiclePartOrderByRelevanceFieldEnum | VehiclePartOrderByRelevanceFieldEnum[]
+    sort: SortOrder
+    search: string
   }
 
   export type VehiclePartCountOrderByAggregateInput = {
@@ -17938,6 +18094,12 @@ export namespace Prisma {
     _max?: NestedBoolFilter<$PrismaModel>
   }
 
+  export type AssessmentDamagedPartOrderByRelevanceInput = {
+    fields: AssessmentDamagedPartOrderByRelevanceFieldEnum | AssessmentDamagedPartOrderByRelevanceFieldEnum[]
+    sort: SortOrder
+    search: string
+  }
+
   export type AssessmentDamagedPartCountOrderByAggregateInput = {
     id?: SortOrder
     name?: SortOrder
@@ -17963,6 +18125,12 @@ export namespace Prisma {
     confirmed?: SortOrder
     assessmentId?: SortOrder
     createdAt?: SortOrder
+  }
+
+  export type AssessmentReplacementPartOrderByRelevanceInput = {
+    fields: AssessmentReplacementPartOrderByRelevanceFieldEnum | AssessmentReplacementPartOrderByRelevanceFieldEnum[]
+    sort: SortOrder
+    search: string
   }
 
   export type AssessmentReplacementPartCountOrderByAggregateInput = {
@@ -18026,27 +18194,53 @@ export namespace Prisma {
     _count?: SortOrder
   }
 
+  export type SupplierOrderByRelevanceInput = {
+    fields: SupplierOrderByRelevanceFieldEnum | SupplierOrderByRelevanceFieldEnum[]
+    sort: SortOrder
+    search: string
+  }
+
   export type SupplierCountOrderByAggregateInput = {
     id?: SortOrder
     name?: SortOrder
+    website?: SortOrder
     createdAt?: SortOrder
   }
 
   export type SupplierMaxOrderByAggregateInput = {
     id?: SortOrder
     name?: SortOrder
+    website?: SortOrder
     createdAt?: SortOrder
   }
 
   export type SupplierMinOrderByAggregateInput = {
     id?: SortOrder
     name?: SortOrder
+    website?: SortOrder
     createdAt?: SortOrder
+  }
+
+  export type IntNullableFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | null
+    notIn?: number[] | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableFilter<$PrismaModel> | number | null
   }
 
   export type SupplierScalarRelationFilter = {
     is?: SupplierWhereInput
     isNot?: SupplierWhereInput
+  }
+
+  export type SupplierPartPriceOrderByRelevanceInput = {
+    fields: SupplierPartPriceOrderByRelevanceFieldEnum | SupplierPartPriceOrderByRelevanceFieldEnum[]
+    sort: SortOrder
+    search: string
   }
 
   export type SupplierPartPriceSupplierIdPartNameVehicleMakeVehicleModelCompoundUniqueInput = {
@@ -18062,11 +18256,21 @@ export namespace Prisma {
     partName?: SortOrder
     vehicleMake?: SortOrder
     vehicleModel?: SortOrder
+    vehicleYear?: SortOrder
+    partNumber?: SortOrder
     price?: SortOrder
+    currency?: SortOrder
+    availability?: SortOrder
+    brand?: SortOrder
+    condition?: SortOrder
+    url?: SortOrder
+    source?: SortOrder
     createdAt?: SortOrder
+    updatedAt?: SortOrder
   }
 
   export type SupplierPartPriceAvgOrderByAggregateInput = {
+    vehicleYear?: SortOrder
     price?: SortOrder
   }
 
@@ -18076,8 +18280,17 @@ export namespace Prisma {
     partName?: SortOrder
     vehicleMake?: SortOrder
     vehicleModel?: SortOrder
+    vehicleYear?: SortOrder
+    partNumber?: SortOrder
     price?: SortOrder
+    currency?: SortOrder
+    availability?: SortOrder
+    brand?: SortOrder
+    condition?: SortOrder
+    url?: SortOrder
+    source?: SortOrder
     createdAt?: SortOrder
+    updatedAt?: SortOrder
   }
 
   export type SupplierPartPriceMinOrderByAggregateInput = {
@@ -18086,12 +18299,108 @@ export namespace Prisma {
     partName?: SortOrder
     vehicleMake?: SortOrder
     vehicleModel?: SortOrder
+    vehicleYear?: SortOrder
+    partNumber?: SortOrder
     price?: SortOrder
+    currency?: SortOrder
+    availability?: SortOrder
+    brand?: SortOrder
+    condition?: SortOrder
+    url?: SortOrder
+    source?: SortOrder
     createdAt?: SortOrder
+    updatedAt?: SortOrder
   }
 
   export type SupplierPartPriceSumOrderByAggregateInput = {
+    vehicleYear?: SortOrder
     price?: SortOrder
+  }
+
+  export type IntNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | null
+    notIn?: number[] | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedFloatNullableFilter<$PrismaModel>
+    _sum?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedIntNullableFilter<$PrismaModel>
+    _max?: NestedIntNullableFilter<$PrismaModel>
+  }
+
+  export type PartPriceOrderByRelevanceInput = {
+    fields: PartPriceOrderByRelevanceFieldEnum | PartPriceOrderByRelevanceFieldEnum[]
+    sort: SortOrder
+    search: string
+  }
+
+  export type PartPriceCountOrderByAggregateInput = {
+    id?: SortOrder
+    make?: SortOrder
+    model?: SortOrder
+    year?: SortOrder
+    partName?: SortOrder
+    partNumber?: SortOrder
+    supplier?: SortOrder
+    price?: SortOrder
+    currency?: SortOrder
+    condition?: SortOrder
+    source?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type PartPriceAvgOrderByAggregateInput = {
+    year?: SortOrder
+    price?: SortOrder
+  }
+
+  export type PartPriceMaxOrderByAggregateInput = {
+    id?: SortOrder
+    make?: SortOrder
+    model?: SortOrder
+    year?: SortOrder
+    partName?: SortOrder
+    partNumber?: SortOrder
+    supplier?: SortOrder
+    price?: SortOrder
+    currency?: SortOrder
+    condition?: SortOrder
+    source?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type PartPriceMinOrderByAggregateInput = {
+    id?: SortOrder
+    make?: SortOrder
+    model?: SortOrder
+    year?: SortOrder
+    partName?: SortOrder
+    partNumber?: SortOrder
+    supplier?: SortOrder
+    price?: SortOrder
+    currency?: SortOrder
+    condition?: SortOrder
+    source?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type PartPriceSumOrderByAggregateInput = {
+    year?: SortOrder
+    price?: SortOrder
+  }
+
+  export type InspectionItemOrderByRelevanceInput = {
+    fields: InspectionItemOrderByRelevanceFieldEnum | InspectionItemOrderByRelevanceFieldEnum[]
+    sort: SortOrder
+    search: string
   }
 
   export type InspectionItemCountOrderByAggregateInput = {
@@ -18639,6 +18948,14 @@ export namespace Prisma {
     connect?: SupplierWhereUniqueInput
   }
 
+  export type NullableIntFieldUpdateOperationsInput = {
+    set?: number | null
+    increment?: number
+    decrement?: number
+    multiply?: number
+    divide?: number
+  }
+
   export type SupplierUpdateOneRequiredWithoutPricesNestedInput = {
     create?: XOR<SupplierCreateWithoutPricesInput, SupplierUncheckedCreateWithoutPricesInput>
     connectOrCreate?: SupplierCreateOrConnectWithoutPricesInput
@@ -18672,6 +18989,7 @@ export namespace Prisma {
     contains?: string | StringFieldRefInput<$PrismaModel>
     startsWith?: string | StringFieldRefInput<$PrismaModel>
     endsWith?: string | StringFieldRefInput<$PrismaModel>
+    search?: string
     not?: NestedStringFilter<$PrismaModel> | string
   }
 
@@ -18697,6 +19015,7 @@ export namespace Prisma {
     contains?: string | StringFieldRefInput<$PrismaModel>
     startsWith?: string | StringFieldRefInput<$PrismaModel>
     endsWith?: string | StringFieldRefInput<$PrismaModel>
+    search?: string
     not?: NestedStringWithAggregatesFilter<$PrismaModel> | string
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedStringFilter<$PrismaModel>
@@ -18739,6 +19058,7 @@ export namespace Prisma {
     contains?: string | StringFieldRefInput<$PrismaModel>
     startsWith?: string | StringFieldRefInput<$PrismaModel>
     endsWith?: string | StringFieldRefInput<$PrismaModel>
+    search?: string
     not?: NestedStringNullableFilter<$PrismaModel> | string | null
   }
 
@@ -18753,6 +19073,7 @@ export namespace Prisma {
     contains?: string | StringFieldRefInput<$PrismaModel>
     startsWith?: string | StringFieldRefInput<$PrismaModel>
     endsWith?: string | StringFieldRefInput<$PrismaModel>
+    search?: string
     not?: NestedStringNullableWithAggregatesFilter<$PrismaModel> | string | null
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedStringNullableFilter<$PrismaModel>
@@ -18826,6 +19147,33 @@ export namespace Prisma {
     _max?: NestedBoolFilter<$PrismaModel>
   }
 
+  export type NestedIntNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | null
+    notIn?: number[] | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedFloatNullableFilter<$PrismaModel>
+    _sum?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedIntNullableFilter<$PrismaModel>
+    _max?: NestedIntNullableFilter<$PrismaModel>
+  }
+
+  export type NestedFloatNullableFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel> | null
+    in?: number[] | null
+    notIn?: number[] | null
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatNullableFilter<$PrismaModel> | number | null
+  }
+
   export type AssessmentCreateWithoutUserInput = {
     id?: string
     assessmentNumber: string
@@ -18881,6 +19229,7 @@ export namespace Prisma {
 
   export type AssessmentCreateManyUserInputEnvelope = {
     data: AssessmentCreateManyUserInput | AssessmentCreateManyUserInput[]
+    skipDuplicates?: boolean
   }
 
   export type AssessmentUpsertWithWhereUniqueWithoutUserInput = {
@@ -18977,6 +19326,7 @@ export namespace Prisma {
 
   export type AssessmentImageCreateManyAssessmentInputEnvelope = {
     data: AssessmentImageCreateManyAssessmentInput | AssessmentImageCreateManyAssessmentInput[]
+    skipDuplicates?: boolean
   }
 
   export type AssessmentDamagedPartCreateWithoutAssessmentInput = {
@@ -19002,6 +19352,7 @@ export namespace Prisma {
 
   export type AssessmentDamagedPartCreateManyAssessmentInputEnvelope = {
     data: AssessmentDamagedPartCreateManyAssessmentInput | AssessmentDamagedPartCreateManyAssessmentInput[]
+    skipDuplicates?: boolean
   }
 
   export type AssessmentReplacementPartCreateWithoutAssessmentInput = {
@@ -19035,6 +19386,7 @@ export namespace Prisma {
 
   export type AssessmentReplacementPartCreateManyAssessmentInputEnvelope = {
     data: AssessmentReplacementPartCreateManyAssessmentInput | AssessmentReplacementPartCreateManyAssessmentInput[]
+    skipDuplicates?: boolean
   }
 
   export type InspectionItemCreateWithoutAssessmentInput = {
@@ -19060,6 +19412,7 @@ export namespace Prisma {
 
   export type InspectionItemCreateManyAssessmentInputEnvelope = {
     data: InspectionItemCreateManyAssessmentInput | InspectionItemCreateManyAssessmentInput[]
+    skipDuplicates?: boolean
   }
 
   export type UserUpsertWithoutAssessmentsInput = {
@@ -19343,6 +19696,7 @@ export namespace Prisma {
 
   export type VehicleModelCreateManyMakeInputEnvelope = {
     data: VehicleModelCreateManyMakeInput | VehicleModelCreateManyMakeInput[]
+    skipDuplicates?: boolean
   }
 
   export type VehicleModelUpsertWithWhereUniqueWithoutMakeInput = {
@@ -19404,6 +19758,7 @@ export namespace Prisma {
 
   export type VehicleVariantCreateManyModelInputEnvelope = {
     data: VehicleVariantCreateManyModelInput | VehicleVariantCreateManyModelInput[]
+    skipDuplicates?: boolean
   }
 
   export type VehicleMakeUpsertWithoutModelsInput = {
@@ -19500,6 +19855,7 @@ export namespace Prisma {
 
   export type VehiclePartCreateManyVariantInputEnvelope = {
     data: VehiclePartCreateManyVariantInput | VehiclePartCreateManyVariantInput[]
+    skipDuplicates?: boolean
   }
 
   export type VehicleModelUpsertWithoutVariantsInput = {
@@ -19826,8 +20182,17 @@ export namespace Prisma {
     partName: string
     vehicleMake?: string | null
     vehicleModel?: string | null
+    vehicleYear?: number | null
+    partNumber?: string | null
     price: number
+    currency?: string
+    availability?: string
+    brand?: string | null
+    condition?: string
+    url?: string | null
+    source?: string
     createdAt?: Date | string
+    updatedAt?: Date | string
   }
 
   export type SupplierPartPriceUncheckedCreateWithoutSupplierInput = {
@@ -19835,8 +20200,17 @@ export namespace Prisma {
     partName: string
     vehicleMake?: string | null
     vehicleModel?: string | null
+    vehicleYear?: number | null
+    partNumber?: string | null
     price: number
+    currency?: string
+    availability?: string
+    brand?: string | null
+    condition?: string
+    url?: string | null
+    source?: string
     createdAt?: Date | string
+    updatedAt?: Date | string
   }
 
   export type SupplierPartPriceCreateOrConnectWithoutSupplierInput = {
@@ -19846,6 +20220,7 @@ export namespace Prisma {
 
   export type SupplierPartPriceCreateManySupplierInputEnvelope = {
     data: SupplierPartPriceCreateManySupplierInput | SupplierPartPriceCreateManySupplierInput[]
+    skipDuplicates?: boolean
   }
 
   export type SupplierPartPriceUpsertWithWhereUniqueWithoutSupplierInput = {
@@ -19873,19 +20248,30 @@ export namespace Prisma {
     partName?: StringFilter<"SupplierPartPrice"> | string
     vehicleMake?: StringNullableFilter<"SupplierPartPrice"> | string | null
     vehicleModel?: StringNullableFilter<"SupplierPartPrice"> | string | null
+    vehicleYear?: IntNullableFilter<"SupplierPartPrice"> | number | null
+    partNumber?: StringNullableFilter<"SupplierPartPrice"> | string | null
     price?: FloatFilter<"SupplierPartPrice"> | number
+    currency?: StringFilter<"SupplierPartPrice"> | string
+    availability?: StringFilter<"SupplierPartPrice"> | string
+    brand?: StringNullableFilter<"SupplierPartPrice"> | string | null
+    condition?: StringFilter<"SupplierPartPrice"> | string
+    url?: StringNullableFilter<"SupplierPartPrice"> | string | null
+    source?: StringFilter<"SupplierPartPrice"> | string
     createdAt?: DateTimeFilter<"SupplierPartPrice"> | Date | string
+    updatedAt?: DateTimeFilter<"SupplierPartPrice"> | Date | string
   }
 
   export type SupplierCreateWithoutPricesInput = {
     id?: string
     name: string
+    website?: string | null
     createdAt?: Date | string
   }
 
   export type SupplierUncheckedCreateWithoutPricesInput = {
     id?: string
     name: string
+    website?: string | null
     createdAt?: Date | string
   }
 
@@ -19908,12 +20294,14 @@ export namespace Prisma {
   export type SupplierUpdateWithoutPricesInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    website?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type SupplierUncheckedUpdateWithoutPricesInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    website?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -20370,8 +20758,17 @@ export namespace Prisma {
     partName: string
     vehicleMake?: string | null
     vehicleModel?: string | null
+    vehicleYear?: number | null
+    partNumber?: string | null
     price: number
+    currency?: string
+    availability?: string
+    brand?: string | null
+    condition?: string
+    url?: string | null
+    source?: string
     createdAt?: Date | string
+    updatedAt?: Date | string
   }
 
   export type SupplierPartPriceUpdateWithoutSupplierInput = {
@@ -20379,8 +20776,17 @@ export namespace Prisma {
     partName?: StringFieldUpdateOperationsInput | string
     vehicleMake?: NullableStringFieldUpdateOperationsInput | string | null
     vehicleModel?: NullableStringFieldUpdateOperationsInput | string | null
+    vehicleYear?: NullableIntFieldUpdateOperationsInput | number | null
+    partNumber?: NullableStringFieldUpdateOperationsInput | string | null
     price?: FloatFieldUpdateOperationsInput | number
+    currency?: StringFieldUpdateOperationsInput | string
+    availability?: StringFieldUpdateOperationsInput | string
+    brand?: NullableStringFieldUpdateOperationsInput | string | null
+    condition?: StringFieldUpdateOperationsInput | string
+    url?: NullableStringFieldUpdateOperationsInput | string | null
+    source?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type SupplierPartPriceUncheckedUpdateWithoutSupplierInput = {
@@ -20388,8 +20794,17 @@ export namespace Prisma {
     partName?: StringFieldUpdateOperationsInput | string
     vehicleMake?: NullableStringFieldUpdateOperationsInput | string | null
     vehicleModel?: NullableStringFieldUpdateOperationsInput | string | null
+    vehicleYear?: NullableIntFieldUpdateOperationsInput | number | null
+    partNumber?: NullableStringFieldUpdateOperationsInput | string | null
     price?: FloatFieldUpdateOperationsInput | number
+    currency?: StringFieldUpdateOperationsInput | string
+    availability?: StringFieldUpdateOperationsInput | string
+    brand?: NullableStringFieldUpdateOperationsInput | string | null
+    condition?: StringFieldUpdateOperationsInput | string
+    url?: NullableStringFieldUpdateOperationsInput | string | null
+    source?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type SupplierPartPriceUncheckedUpdateManyWithoutSupplierInput = {
@@ -20397,8 +20812,17 @@ export namespace Prisma {
     partName?: StringFieldUpdateOperationsInput | string
     vehicleMake?: NullableStringFieldUpdateOperationsInput | string | null
     vehicleModel?: NullableStringFieldUpdateOperationsInput | string | null
+    vehicleYear?: NullableIntFieldUpdateOperationsInput | number | null
+    partNumber?: NullableStringFieldUpdateOperationsInput | string | null
     price?: FloatFieldUpdateOperationsInput | number
+    currency?: StringFieldUpdateOperationsInput | string
+    availability?: StringFieldUpdateOperationsInput | string
+    brand?: NullableStringFieldUpdateOperationsInput | string | null
+    condition?: StringFieldUpdateOperationsInput | string
+    url?: NullableStringFieldUpdateOperationsInput | string | null
+    source?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
 

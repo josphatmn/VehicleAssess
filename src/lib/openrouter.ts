@@ -1,4 +1,8 @@
+import { getSupplierPrices, type SupplierQuote } from "@/lib/suppliers";
+
 const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
+
+const CURRENCY_CODE = process.env.NEXT_PUBLIC_CURRENCY || "KES";
 
 const SYSTEM_PROMPT = `You are an expert automotive insurance assessor.
 
@@ -20,9 +24,6 @@ For each damaged part provide:
 - damageSeverity: one of "Minor", "Moderate", "Severe", "Critical"
 - estimatedQuantity: number of units needed (always a number, default 1)
 - estimatedLaborHours: hours of labor needed
-- pricing_options: array of 2-4 pricing options from different Kenyan auto parts suppliers. Use your knowledge of the Kenyan auto parts market to suggest realistic KES prices from known suppliers (e.g. Toyota Kenya, Ng Auto Spares, AutoKenya, Car & General, Galaxy Auto, Avenge Auto, etc.). Each option should have:
-  - supplier: supplier name
-  - price: estimated price in KES (Kenyan Shillings)
 
 **Step 3 - Overall assessment:**
 - Overall damage severity
@@ -32,7 +33,7 @@ For each damaged part provide:
 - Whether this is a possible total loss
 - List of structural concerns
 - List of recommendations
-- Estimated total repair cost (USD)
+- Estimated total repair cost (${CURRENCY_CODE})
 - Estimated total labor hours
 
 Always return ONLY valid JSON matching this exact structure. Do not use markdown. Do not wrap in code blocks.
@@ -63,10 +64,7 @@ Always return ONLY valid JSON matching this exact structure. Do not use markdown
       "damageType": "",
       "damageSeverity": "",
       "estimatedQuantity": 1,
-      "estimatedLaborHours": 0,
-      "pricing_options": [
-        { "supplier": "", "price": 0 }
-      ]
+      "estimatedLaborHours": 0
     }
   ],
   "structural_concerns": [],
@@ -106,6 +104,34 @@ export interface AIAnalysisResult {
   }[];
   structural_concerns: string[];
   recommendations: string[];
+}
+
+async function enrichWithSupplierPrices(result: AIAnalysisResult): Promise<void> {
+  if (!result.replacement_parts?.length) return;
+
+  const vehicleYear = result.vehicle.year ? parseInt(result.vehicle.year, 10) : undefined;
+
+  const enrichments = await Promise.allSettled(
+    result.replacement_parts.map(async (part) => {
+      const quotes = await getSupplierPrices({
+        make: result.vehicle.make,
+        model: result.vehicle.model,
+        year: vehicleYear,
+        partName: part.partName,
+      });
+
+      part.pricing_options = quotes.map((q: SupplierQuote) => ({
+        supplier: q.supplier,
+        price: q.price,
+      }));
+    })
+  );
+
+  for (const part of result.replacement_parts) {
+    if (!part.pricing_options?.length) {
+      part.pricing_options = [];
+    }
+  }
 }
 
 export async function analyzeImages(
@@ -171,61 +197,18 @@ export async function analyzeImages(
 
   let jsonStr = jsonMatch[0];
 
-  // Try parsing as-is first
+  let result: AIAnalysisResult;
   try {
-    const result: AIAnalysisResult = JSON.parse(jsonStr);
-    ensurePricingOptions(result);
-    return result;
+    result = JSON.parse(jsonStr);
   } catch {
-    // Fix common JSON issues from LLMs
     jsonStr = jsonStr
-      .replace(/,\s*([\]}])/g, "$1")       // trailing commas
-      .replace(/\n/g, " ")                   // newlines inside strings
-      .replace(/:\s*""(\s*[,}\]])/g, ': ""$1'); // malformed empty strings
-    const result: AIAnalysisResult = JSON.parse(jsonStr);
-    ensurePricingOptions(result);
-    return result;
+      .replace(/,\s*([\]}])/g, "$1")
+      .replace(/\n/g, " ")
+      .replace(/:\s*""(\s*[,}\]])/g, ': ""$1');
+    result = JSON.parse(jsonStr);
   }
-}
 
-const KENYAN_SUPPLIERS = ["Toyota Kenya", "Ng Auto Spares", "Car & General", "Galaxy Auto", "Avenge Auto", "AutoKenya"];
+  await enrichWithSupplierPrices(result);
 
-function estimatePartPrice(partName: string): number {
-  const lower = partName.toLowerCase();
-  if (lower.includes("bumper")) return 25000;
-  if (lower.includes("headlight") || lower.includes("head lamp")) return 18000;
-  if (lower.includes("taillight") || lower.includes("tail lamp")) return 12000;
-  if (lower.includes("fender")) return 15000;
-  if (lower.includes("hood") || lower.includes("bonnet")) return 20000;
-  if (lower.includes("grille") || lower.includes("grill")) return 10000;
-  if (lower.includes("mirror")) return 8000;
-  if (lower.includes("windshield") || lower.includes("windscreen")) return 30000;
-  if (lower.includes("door")) return 22000;
-  if (lower.includes("quarter panel")) return 18000;
-  if (lower.includes("roof")) return 25000;
-  if (lower.includes("splash") || lower.includes("liner")) return 5000;
-  if (lower.includes("bracket")) return 4000;
-  if (lower.includes("sensor")) return 15000;
-  if (lower.includes("airbag")) return 35000;
-  if (lower.includes("radiator")) return 15000;
-  if (lower.includes("condenser")) return 12000;
-  if (lower.includes("steering")) return 20000;
-  if (lower.includes("suspension") || lower.includes("strut")) return 18000;
-  if (lower.includes("exhaust")) return 15000;
-  return 12000;
-}
-
-function ensurePricingOptions(result: AIAnalysisResult) {
-  if (!result.replacement_parts?.length) return;
-
-  for (const part of result.replacement_parts) {
-    if (!part.pricing_options || !part.pricing_options.length) {
-      const basePrice = estimatePartPrice(part.partName);
-      const variance = [0.7, 0.85, 1.0, 1.15];
-      part.pricing_options = KENYAN_SUPPLIERS.slice(0, 4).map((supplier, i) => ({
-        supplier,
-        price: Math.round(basePrice * variance[i]),
-      }));
-    }
-  }
+  return result;
 }

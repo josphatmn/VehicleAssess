@@ -25,6 +25,7 @@ import { ArrowLeft, Printer, CheckCircle } from "lucide-react";
 import Link from "next/link";
 import { updateAssessment } from "@/actions/assessments";
 import { toast } from "sonner";
+import { formatCurrency } from "@/lib/currency";
 
 interface AssessmentDetailProps {
   assessment: {
@@ -345,7 +346,7 @@ export function AssessmentDetail({ assessment }: AssessmentDetailProps) {
         <Card>
           <CardHeader>
             <CardTitle>
-              Replacement Parts - Total: ${totalCost.toFixed(2)}
+              Replacement Parts - Total: {formatCurrency(totalCost)}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -367,9 +368,9 @@ export function AssessmentDetail({ assessment }: AssessmentDetailProps) {
                       {part.partNumber || "-"}
                     </TableCell>
                     <TableCell>{part.quantity}</TableCell>
-                    <TableCell>${part.unitPrice.toFixed(2)}</TableCell>
+                    <TableCell>{formatCurrency(part.unitPrice)}</TableCell>
                     <TableCell className="font-medium">
-                      ${part.subtotal.toFixed(2)}
+                      {formatCurrency(part.subtotal)}
                     </TableCell>
                   </TableRow>
                 ))}

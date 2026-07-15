@@ -114,6 +114,9 @@ Prisma.NullTypes = NullTypes
  */
 
 exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
+  ReadUncommitted: 'ReadUncommitted',
+  ReadCommitted: 'ReadCommitted',
+  RepeatableRead: 'RepeatableRead',
   Serializable: 'Serializable'
 });
 
@@ -215,6 +218,7 @@ exports.Prisma.AssessmentReplacementPartScalarFieldEnum = {
 exports.Prisma.SupplierScalarFieldEnum = {
   id: 'id',
   name: 'name',
+  website: 'website',
   createdAt: 'createdAt'
 };
 
@@ -224,8 +228,33 @@ exports.Prisma.SupplierPartPriceScalarFieldEnum = {
   partName: 'partName',
   vehicleMake: 'vehicleMake',
   vehicleModel: 'vehicleModel',
+  vehicleYear: 'vehicleYear',
+  partNumber: 'partNumber',
   price: 'price',
-  createdAt: 'createdAt'
+  currency: 'currency',
+  availability: 'availability',
+  brand: 'brand',
+  condition: 'condition',
+  url: 'url',
+  source: 'source',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.PartPriceScalarFieldEnum = {
+  id: 'id',
+  make: 'make',
+  model: 'model',
+  year: 'year',
+  partName: 'partName',
+  partNumber: 'partNumber',
+  supplier: 'supplier',
+  price: 'price',
+  currency: 'currency',
+  condition: 'condition',
+  source: 'source',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 };
 
 exports.Prisma.InspectionItemScalarFieldEnum = {
@@ -242,9 +271,125 @@ exports.Prisma.SortOrder = {
   desc: 'desc'
 };
 
+exports.Prisma.UserOrderByRelevanceFieldEnum = {
+  id: 'id',
+  name: 'name',
+  email: 'email',
+  password: 'password',
+  role: 'role'
+};
+
 exports.Prisma.NullsOrder = {
   first: 'first',
   last: 'last'
+};
+
+exports.Prisma.AssessmentOrderByRelevanceFieldEnum = {
+  id: 'id',
+  assessmentNumber: 'assessmentNumber',
+  status: 'status',
+  customerName: 'customerName',
+  customerPhone: 'customerPhone',
+  customerEmail: 'customerEmail',
+  insuranceCompany: 'insuranceCompany',
+  claimNumber: 'claimNumber',
+  registrationNumber: 'registrationNumber',
+  vin: 'vin',
+  odometer: 'odometer',
+  vehicleNotes: 'vehicleNotes',
+  aiRawResponse: 'aiRawResponse',
+  verifiedVehicleJson: 'verifiedVehicleJson',
+  verifiedDamageJson: 'verifiedDamageJson',
+  userId: 'userId'
+};
+
+exports.Prisma.AssessmentImageOrderByRelevanceFieldEnum = {
+  id: 'id',
+  filename: 'filename',
+  originalName: 'originalName',
+  path: 'path',
+  mimeType: 'mimeType',
+  assessmentId: 'assessmentId'
+};
+
+exports.Prisma.VehicleMakeOrderByRelevanceFieldEnum = {
+  id: 'id',
+  name: 'name'
+};
+
+exports.Prisma.VehicleModelOrderByRelevanceFieldEnum = {
+  id: 'id',
+  name: 'name',
+  makeId: 'makeId'
+};
+
+exports.Prisma.VehicleVariantOrderByRelevanceFieldEnum = {
+  id: 'id',
+  name: 'name',
+  modelId: 'modelId'
+};
+
+exports.Prisma.VehiclePartOrderByRelevanceFieldEnum = {
+  id: 'id',
+  partNumber: 'partNumber',
+  name: 'name',
+  category: 'category',
+  variantId: 'variantId'
+};
+
+exports.Prisma.AssessmentDamagedPartOrderByRelevanceFieldEnum = {
+  id: 'id',
+  name: 'name',
+  severity: 'severity',
+  assessmentId: 'assessmentId'
+};
+
+exports.Prisma.AssessmentReplacementPartOrderByRelevanceFieldEnum = {
+  id: 'id',
+  partName: 'partName',
+  partNumber: 'partNumber',
+  vehiclePartId: 'vehiclePartId',
+  assessmentId: 'assessmentId'
+};
+
+exports.Prisma.SupplierOrderByRelevanceFieldEnum = {
+  id: 'id',
+  name: 'name',
+  website: 'website'
+};
+
+exports.Prisma.SupplierPartPriceOrderByRelevanceFieldEnum = {
+  id: 'id',
+  supplierId: 'supplierId',
+  partName: 'partName',
+  vehicleMake: 'vehicleMake',
+  vehicleModel: 'vehicleModel',
+  partNumber: 'partNumber',
+  currency: 'currency',
+  availability: 'availability',
+  brand: 'brand',
+  condition: 'condition',
+  url: 'url',
+  source: 'source'
+};
+
+exports.Prisma.PartPriceOrderByRelevanceFieldEnum = {
+  id: 'id',
+  make: 'make',
+  model: 'model',
+  partName: 'partName',
+  partNumber: 'partNumber',
+  supplier: 'supplier',
+  currency: 'currency',
+  condition: 'condition',
+  source: 'source'
+};
+
+exports.Prisma.InspectionItemOrderByRelevanceFieldEnum = {
+  id: 'id',
+  item: 'item',
+  notes: 'notes',
+  assessmentId: 'assessmentId'
 };
 
 
@@ -260,6 +405,7 @@ exports.Prisma.ModelName = {
   AssessmentReplacementPart: 'AssessmentReplacementPart',
   Supplier: 'Supplier',
   SupplierPartPrice: 'SupplierPartPrice',
+  PartPrice: 'PartPrice',
   InspectionItem: 'InspectionItem'
 };
 
