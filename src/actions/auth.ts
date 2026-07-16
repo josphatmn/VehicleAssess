@@ -29,8 +29,15 @@ export async function login(
       password: validated.data.password,
       redirect: false,
     });
-  } catch {
-    return { error: "Invalid email or password" };
+  } catch (e: unknown) {
+    const message =
+      e instanceof Error ? e.message : String(e);
+    console.error("Login failed:", message);
+
+    if (message.includes("CredentialsSignin")) {
+      return { error: "Invalid email or password" };
+    }
+    return { error: `Login failed: ${message}` };
   }
 
   redirect("/dashboard");
@@ -73,7 +80,8 @@ export async function register(
       password,
       redirect: false,
     });
-  } catch {
+  } catch (e: unknown) {
+    console.error("Auto-login after register failed:", e instanceof Error ? e.message : e);
     return { success: true };
   }
 
