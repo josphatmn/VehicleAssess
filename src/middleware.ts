@@ -7,12 +7,6 @@ export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   if (pathname === "/" || publicPaths.some((p) => pathname.startsWith(p))) {
-    if (pathname === "/login") {
-      const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
-      if (token) {
-        return NextResponse.redirect(new URL("/dashboard", req.url));
-      }
-    }
     return NextResponse.next();
   }
 

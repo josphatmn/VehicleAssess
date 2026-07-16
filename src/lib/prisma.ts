@@ -17,6 +17,7 @@ function createPrismaClient() {
     user: parsed.username,
     password: parsed.password,
     database: parsed.pathname.replace(/^\//, ""),
+    allowPublicKeyRetrieval: true,
   });
   return new PrismaClient({ adapter });
 }
