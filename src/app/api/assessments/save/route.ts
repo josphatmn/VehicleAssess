@@ -122,6 +122,7 @@ export async function PATCH(req: NextRequest) {
       if (customer.fullName !== undefined) updateData.customerName = customer.fullName;
       if (customer.phone !== undefined) updateData.customerPhone = customer.phone;
       if (customer.email !== undefined) updateData.customerEmail = customer.email;
+      if (customer.address !== undefined) updateData.customerAddress = customer.address;
     }
 
     if (vehicle) {

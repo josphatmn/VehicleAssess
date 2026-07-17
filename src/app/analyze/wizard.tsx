@@ -204,7 +204,7 @@ export default function AnalyzeWizard() {
         fullName: a.customerName || "",
         phone: a.customerPhone || "",
         email: a.customerEmail || "",
-        address: "",
+        address: a.customerAddress || "",
       });
 
       if (a.images?.length) {
@@ -628,6 +628,8 @@ export default function AnalyzeWizard() {
     if (!result) return;
     setDownloadingPdf(true);
     try {
+      await savePartsNow();
+
       const res = await fetch("/api/reports/pdf", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -730,6 +732,26 @@ export default function AnalyzeWizard() {
         }),
       });
     }, 800);
+  };
+
+  const savePartsNow = async () => {
+    if (!assessmentId) return;
+    if (savePartsTimerRef.current) clearTimeout(savePartsTimerRef.current);
+    await fetch("/api/assessments/save", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: assessmentId,
+        parts: editableParts.map((p) => ({
+          partName: p.partName,
+          quantity: p.quantity,
+          unitPrice: p.unitPrice,
+          labourCost: p.labourCost,
+          subtotal: p.quantity * p.unitPrice,
+          found: p.unitPrice > 0,
+        })),
+      }),
+    });
   };
 
   const openCustomerModal = () => {
