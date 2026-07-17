@@ -100,6 +100,7 @@ export interface AIAnalysisResult {
     pricing_options: {
       supplier: string;
       price: number;
+      currency: string;
     }[];
   }[];
   structural_concerns: string[];
@@ -123,6 +124,7 @@ async function enrichWithSupplierPrices(result: AIAnalysisResult): Promise<void>
       part.pricing_options = quotes.map((q: SupplierQuote) => ({
         supplier: q.supplier,
         price: q.price,
+        currency: CURRENCY_CODE,
       }));
     })
   );

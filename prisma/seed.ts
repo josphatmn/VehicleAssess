@@ -411,6 +411,49 @@ async function main() {
     }
   }
 
+  const suppliers = [
+    { name: "Toyota Kenya (CFAO Mobility Kenya)", website: "https://toyota.co.ke", location: "Nairobi" },
+    { name: "Commercial Motor Spares (CMS)", website: "https://cms.co.ke", location: "Nairobi" },
+    { name: "Car Parts Kenya", website: "https://carparts.co.ke", location: "Nairobi" },
+    { name: "KM Auto Spares", website: "https://kmautospares.co.ke", location: "Nairobi" },
+    { name: "Auto Market Kenya", website: null, location: "Nairobi" },
+    { name: "Doukan", website: "https://doukan.co.ke", location: "Nairobi" },
+    { name: "HIQ Auto Parts", website: null, location: "Nairobi" },
+    { name: "Rev Auto Parts", website: "https://revauto.co.ke", location: "Nairobi" },
+    { name: "Spares Kenya", website: null, location: "Nairobi" },
+    { name: "Turtle Auto Emporium", website: null, location: "Nairobi" },
+    { name: "Garizili", website: null, location: "Nairobi" },
+    { name: "AutoXpress Kenya", website: "https://autoxpress.co.ke", location: "Nairobi" },
+    { name: "Car & General", website: "https://carandgeneral.com", location: "Nairobi" },
+    { name: "Kingsway Tyres", website: null, location: "Nairobi" },
+    { name: "Isuzu East Africa", website: "https://isuzu.co.ke", location: "Nairobi" },
+    { name: "DT Dobie Kenya", website: "https://dtdobie.co.ke", location: "Nairobi" },
+    { name: "Simba Corporation", website: "https://simbacorporation.com", location: "Nairobi" },
+    { name: "CMC Motors Group", website: "https://cmcmotors.com", location: "Nairobi" },
+    { name: "Ryce East Africa", website: "https://ryceafrica.com", location: "Nairobi" },
+    { name: "Bavaria Auto", website: "https://bavariaauto.co.ke", location: "Nairobi" },
+    { name: "NG Auto Spares", website: null, location: "Nairobi" },
+    { name: "Galaxy Auto", website: null, location: "Nairobi" },
+    { name: "Avenge Auto", website: null, location: "Nairobi" },
+    { name: "Japan Auto Parts Kenya", website: null, location: "Nairobi" },
+    { name: "MotorHub Kenya", website: null, location: "Nairobi" },
+    { name: "Auto Zone Kenya", website: null, location: "Nairobi" },
+    { name: "Kenya Auto Bazaar", website: null, location: "Nairobi" },
+    { name: "Prime Auto Parts", website: null, location: "Nairobi" },
+    { name: "Genuine Auto Parts Kenya", website: null, location: "Nairobi" },
+    { name: "AutoKenya", website: null, location: "Nairobi" },
+  ];
+
+  for (const supplier of suppliers) {
+    await prisma.supplier.upsert({
+      where: { name: supplier.name },
+      update: { website: supplier.website, location: supplier.location },
+      create: supplier,
+    });
+  }
+
+  console.log("Suppliers seeded");
+
   console.log("Database seeded successfully!");
 }
 

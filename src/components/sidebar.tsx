@@ -15,6 +15,7 @@ import {
   LogOut,
   Shield,
   ChevronLeft,
+  Store,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -29,6 +30,7 @@ const adminNav = [
   { href: "/admin/models", label: "Vehicle Models", icon: Car },
   { href: "/admin/variants", label: "Vehicle Variants", icon: Car },
   { href: "/admin/parts", label: "Parts Catalog", icon: Wrench },
+  { href: "/admin/suppliers", label: "Suppliers", icon: Store },
   { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ];

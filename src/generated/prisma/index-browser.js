@@ -219,7 +219,14 @@ exports.Prisma.SupplierScalarFieldEnum = {
   id: 'id',
   name: 'name',
   website: 'website',
-  createdAt: 'createdAt'
+  location: 'location',
+  contactPerson: 'contactPerson',
+  phone: 'phone',
+  email: 'email',
+  description: 'description',
+  isActive: 'isActive',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 };
 
 exports.Prisma.SupplierPartPriceScalarFieldEnum = {

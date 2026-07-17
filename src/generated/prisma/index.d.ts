@@ -12404,21 +12404,42 @@ export namespace Prisma {
     id: string | null
     name: string | null
     website: string | null
+    location: string | null
+    contactPerson: string | null
+    phone: string | null
+    email: string | null
+    description: string | null
+    isActive: boolean | null
     createdAt: Date | null
+    updatedAt: Date | null
   }
 
   export type SupplierMaxAggregateOutputType = {
     id: string | null
     name: string | null
     website: string | null
+    location: string | null
+    contactPerson: string | null
+    phone: string | null
+    email: string | null
+    description: string | null
+    isActive: boolean | null
     createdAt: Date | null
+    updatedAt: Date | null
   }
 
   export type SupplierCountAggregateOutputType = {
     id: number
     name: number
     website: number
+    location: number
+    contactPerson: number
+    phone: number
+    email: number
+    description: number
+    isActive: number
     createdAt: number
+    updatedAt: number
     _all: number
   }
 
@@ -12427,21 +12448,42 @@ export namespace Prisma {
     id?: true
     name?: true
     website?: true
+    location?: true
+    contactPerson?: true
+    phone?: true
+    email?: true
+    description?: true
+    isActive?: true
     createdAt?: true
+    updatedAt?: true
   }
 
   export type SupplierMaxAggregateInputType = {
     id?: true
     name?: true
     website?: true
+    location?: true
+    contactPerson?: true
+    phone?: true
+    email?: true
+    description?: true
+    isActive?: true
     createdAt?: true
+    updatedAt?: true
   }
 
   export type SupplierCountAggregateInputType = {
     id?: true
     name?: true
     website?: true
+    location?: true
+    contactPerson?: true
+    phone?: true
+    email?: true
+    description?: true
+    isActive?: true
     createdAt?: true
+    updatedAt?: true
     _all?: true
   }
 
@@ -12521,7 +12563,14 @@ export namespace Prisma {
     id: string
     name: string
     website: string | null
+    location: string | null
+    contactPerson: string | null
+    phone: string | null
+    email: string | null
+    description: string | null
+    isActive: boolean
     createdAt: Date
+    updatedAt: Date
     _count: SupplierCountAggregateOutputType | null
     _min: SupplierMinAggregateOutputType | null
     _max: SupplierMaxAggregateOutputType | null
@@ -12545,7 +12594,14 @@ export namespace Prisma {
     id?: boolean
     name?: boolean
     website?: boolean
+    location?: boolean
+    contactPerson?: boolean
+    phone?: boolean
+    email?: boolean
+    description?: boolean
+    isActive?: boolean
     createdAt?: boolean
+    updatedAt?: boolean
     prices?: boolean | Supplier$pricesArgs<ExtArgs>
     _count?: boolean | SupplierCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["supplier"]>
@@ -12554,24 +12610,45 @@ export namespace Prisma {
     id?: boolean
     name?: boolean
     website?: boolean
+    location?: boolean
+    contactPerson?: boolean
+    phone?: boolean
+    email?: boolean
+    description?: boolean
+    isActive?: boolean
     createdAt?: boolean
+    updatedAt?: boolean
   }, ExtArgs["result"]["supplier"]>
 
   export type SupplierSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     name?: boolean
     website?: boolean
+    location?: boolean
+    contactPerson?: boolean
+    phone?: boolean
+    email?: boolean
+    description?: boolean
+    isActive?: boolean
     createdAt?: boolean
+    updatedAt?: boolean
   }, ExtArgs["result"]["supplier"]>
 
   export type SupplierSelectScalar = {
     id?: boolean
     name?: boolean
     website?: boolean
+    location?: boolean
+    contactPerson?: boolean
+    phone?: boolean
+    email?: boolean
+    description?: boolean
+    isActive?: boolean
     createdAt?: boolean
+    updatedAt?: boolean
   }
 
-  export type SupplierOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "website" | "createdAt", ExtArgs["result"]["supplier"]>
+  export type SupplierOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "website" | "location" | "contactPerson" | "phone" | "email" | "description" | "isActive" | "createdAt" | "updatedAt", ExtArgs["result"]["supplier"]>
   export type SupplierInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     prices?: boolean | Supplier$pricesArgs<ExtArgs>
     _count?: boolean | SupplierCountOutputTypeDefaultArgs<ExtArgs>
@@ -12588,7 +12665,14 @@ export namespace Prisma {
       id: string
       name: string
       website: string | null
+      location: string | null
+      contactPerson: string | null
+      phone: string | null
+      email: string | null
+      description: string | null
+      isActive: boolean
       createdAt: Date
+      updatedAt: Date
     }, ExtArgs["result"]["supplier"]>
     composites: {}
   }
@@ -13016,7 +13100,14 @@ export namespace Prisma {
     readonly id: FieldRef<"Supplier", 'String'>
     readonly name: FieldRef<"Supplier", 'String'>
     readonly website: FieldRef<"Supplier", 'String'>
+    readonly location: FieldRef<"Supplier", 'String'>
+    readonly contactPerson: FieldRef<"Supplier", 'String'>
+    readonly phone: FieldRef<"Supplier", 'String'>
+    readonly email: FieldRef<"Supplier", 'String'>
+    readonly description: FieldRef<"Supplier", 'String'>
+    readonly isActive: FieldRef<"Supplier", 'Boolean'>
     readonly createdAt: FieldRef<"Supplier", 'DateTime'>
+    readonly updatedAt: FieldRef<"Supplier", 'DateTime'>
   }
     
 
@@ -17054,7 +17145,14 @@ export namespace Prisma {
     id: 'id',
     name: 'name',
     website: 'website',
-    createdAt: 'createdAt'
+    location: 'location',
+    contactPerson: 'contactPerson',
+    phone: 'phone',
+    email: 'email',
+    description: 'description',
+    isActive: 'isActive',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
   };
 
   export type SupplierScalarFieldEnum = (typeof SupplierScalarFieldEnum)[keyof typeof SupplierScalarFieldEnum]
@@ -17851,7 +17949,14 @@ export namespace Prisma {
     id?: StringFilter<"Supplier"> | string
     name?: StringFilter<"Supplier"> | string
     website?: StringNullableFilter<"Supplier"> | string | null
+    location?: StringNullableFilter<"Supplier"> | string | null
+    contactPerson?: StringNullableFilter<"Supplier"> | string | null
+    phone?: StringNullableFilter<"Supplier"> | string | null
+    email?: StringNullableFilter<"Supplier"> | string | null
+    description?: StringNullableFilter<"Supplier"> | string | null
+    isActive?: BoolFilter<"Supplier"> | boolean
     createdAt?: DateTimeFilter<"Supplier"> | Date | string
+    updatedAt?: DateTimeFilter<"Supplier"> | Date | string
     prices?: SupplierPartPriceListRelationFilter
   }
 
@@ -17859,7 +17964,14 @@ export namespace Prisma {
     id?: SortOrder
     name?: SortOrder
     website?: SortOrderInput | SortOrder
+    location?: SortOrderInput | SortOrder
+    contactPerson?: SortOrderInput | SortOrder
+    phone?: SortOrderInput | SortOrder
+    email?: SortOrderInput | SortOrder
+    description?: SortOrderInput | SortOrder
+    isActive?: SortOrder
     createdAt?: SortOrder
+    updatedAt?: SortOrder
     prices?: SupplierPartPriceOrderByRelationAggregateInput
   }
 
@@ -17870,7 +17982,14 @@ export namespace Prisma {
     OR?: SupplierWhereInput[]
     NOT?: SupplierWhereInput | SupplierWhereInput[]
     website?: StringNullableFilter<"Supplier"> | string | null
+    location?: StringNullableFilter<"Supplier"> | string | null
+    contactPerson?: StringNullableFilter<"Supplier"> | string | null
+    phone?: StringNullableFilter<"Supplier"> | string | null
+    email?: StringNullableFilter<"Supplier"> | string | null
+    description?: StringNullableFilter<"Supplier"> | string | null
+    isActive?: BoolFilter<"Supplier"> | boolean
     createdAt?: DateTimeFilter<"Supplier"> | Date | string
+    updatedAt?: DateTimeFilter<"Supplier"> | Date | string
     prices?: SupplierPartPriceListRelationFilter
   }, "id" | "name">
 
@@ -17878,7 +17997,14 @@ export namespace Prisma {
     id?: SortOrder
     name?: SortOrder
     website?: SortOrderInput | SortOrder
+    location?: SortOrderInput | SortOrder
+    contactPerson?: SortOrderInput | SortOrder
+    phone?: SortOrderInput | SortOrder
+    email?: SortOrderInput | SortOrder
+    description?: SortOrderInput | SortOrder
+    isActive?: SortOrder
     createdAt?: SortOrder
+    updatedAt?: SortOrder
     _count?: SupplierCountOrderByAggregateInput
     _max?: SupplierMaxOrderByAggregateInput
     _min?: SupplierMinOrderByAggregateInput
@@ -17891,7 +18017,14 @@ export namespace Prisma {
     id?: StringWithAggregatesFilter<"Supplier"> | string
     name?: StringWithAggregatesFilter<"Supplier"> | string
     website?: StringNullableWithAggregatesFilter<"Supplier"> | string | null
+    location?: StringNullableWithAggregatesFilter<"Supplier"> | string | null
+    contactPerson?: StringNullableWithAggregatesFilter<"Supplier"> | string | null
+    phone?: StringNullableWithAggregatesFilter<"Supplier"> | string | null
+    email?: StringNullableWithAggregatesFilter<"Supplier"> | string | null
+    description?: StringNullableWithAggregatesFilter<"Supplier"> | string | null
+    isActive?: BoolWithAggregatesFilter<"Supplier"> | boolean
     createdAt?: DateTimeWithAggregatesFilter<"Supplier"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"Supplier"> | Date | string
   }
 
   export type SupplierPartPriceWhereInput = {
@@ -18855,7 +18988,14 @@ export namespace Prisma {
     id?: string
     name: string
     website?: string | null
+    location?: string | null
+    contactPerson?: string | null
+    phone?: string | null
+    email?: string | null
+    description?: string | null
+    isActive?: boolean
     createdAt?: Date | string
+    updatedAt?: Date | string
     prices?: SupplierPartPriceCreateNestedManyWithoutSupplierInput
   }
 
@@ -18863,7 +19003,14 @@ export namespace Prisma {
     id?: string
     name: string
     website?: string | null
+    location?: string | null
+    contactPerson?: string | null
+    phone?: string | null
+    email?: string | null
+    description?: string | null
+    isActive?: boolean
     createdAt?: Date | string
+    updatedAt?: Date | string
     prices?: SupplierPartPriceUncheckedCreateNestedManyWithoutSupplierInput
   }
 
@@ -18871,7 +19018,14 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     website?: NullableStringFieldUpdateOperationsInput | string | null
+    location?: NullableStringFieldUpdateOperationsInput | string | null
+    contactPerson?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     prices?: SupplierPartPriceUpdateManyWithoutSupplierNestedInput
   }
 
@@ -18879,7 +19033,14 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     website?: NullableStringFieldUpdateOperationsInput | string | null
+    location?: NullableStringFieldUpdateOperationsInput | string | null
+    contactPerson?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     prices?: SupplierPartPriceUncheckedUpdateManyWithoutSupplierNestedInput
   }
 
@@ -18887,21 +19048,42 @@ export namespace Prisma {
     id?: string
     name: string
     website?: string | null
+    location?: string | null
+    contactPerson?: string | null
+    phone?: string | null
+    email?: string | null
+    description?: string | null
+    isActive?: boolean
     createdAt?: Date | string
+    updatedAt?: Date | string
   }
 
   export type SupplierUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     website?: NullableStringFieldUpdateOperationsInput | string | null
+    location?: NullableStringFieldUpdateOperationsInput | string | null
+    contactPerson?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type SupplierUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     website?: NullableStringFieldUpdateOperationsInput | string | null
+    location?: NullableStringFieldUpdateOperationsInput | string | null
+    contactPerson?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type SupplierPartPriceCreateInput = {
@@ -19819,21 +20001,42 @@ export namespace Prisma {
     id?: SortOrder
     name?: SortOrder
     website?: SortOrder
+    location?: SortOrder
+    contactPerson?: SortOrder
+    phone?: SortOrder
+    email?: SortOrder
+    description?: SortOrder
+    isActive?: SortOrder
     createdAt?: SortOrder
+    updatedAt?: SortOrder
   }
 
   export type SupplierMaxOrderByAggregateInput = {
     id?: SortOrder
     name?: SortOrder
     website?: SortOrder
+    location?: SortOrder
+    contactPerson?: SortOrder
+    phone?: SortOrder
+    email?: SortOrder
+    description?: SortOrder
+    isActive?: SortOrder
     createdAt?: SortOrder
+    updatedAt?: SortOrder
   }
 
   export type SupplierMinOrderByAggregateInput = {
     id?: SortOrder
     name?: SortOrder
     website?: SortOrder
+    location?: SortOrder
+    contactPerson?: SortOrder
+    phone?: SortOrder
+    email?: SortOrder
+    description?: SortOrder
+    isActive?: SortOrder
     createdAt?: SortOrder
+    updatedAt?: SortOrder
   }
 
   export type IntNullableFilter<$PrismaModel = never> = {
@@ -21858,14 +22061,28 @@ export namespace Prisma {
     id?: string
     name: string
     website?: string | null
+    location?: string | null
+    contactPerson?: string | null
+    phone?: string | null
+    email?: string | null
+    description?: string | null
+    isActive?: boolean
     createdAt?: Date | string
+    updatedAt?: Date | string
   }
 
   export type SupplierUncheckedCreateWithoutPricesInput = {
     id?: string
     name: string
     website?: string | null
+    location?: string | null
+    contactPerson?: string | null
+    phone?: string | null
+    email?: string | null
+    description?: string | null
+    isActive?: boolean
     createdAt?: Date | string
+    updatedAt?: Date | string
   }
 
   export type SupplierCreateOrConnectWithoutPricesInput = {
@@ -21888,14 +22105,28 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     website?: NullableStringFieldUpdateOperationsInput | string | null
+    location?: NullableStringFieldUpdateOperationsInput | string | null
+    contactPerson?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type SupplierUncheckedUpdateWithoutPricesInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     website?: NullableStringFieldUpdateOperationsInput | string | null
+    location?: NullableStringFieldUpdateOperationsInput | string | null
+    contactPerson?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type AssessmentCreateWithoutInspectionItemsInput = {

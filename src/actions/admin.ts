@@ -224,3 +224,58 @@ export async function deleteUser(id: string) {
   await prisma.user.delete({ where: { id } });
   revalidatePath("/admin/users");
 }
+
+export async function getSuppliers() {
+  return prisma.supplier.findMany({
+    orderBy: { name: "asc" },
+    include: {
+      _count: { select: { prices: true } },
+    },
+  });
+}
+
+export async function createSupplier(data: {
+  name: string;
+  website?: string;
+  location?: string;
+  contactPerson?: string;
+  phone?: string;
+  email?: string;
+  description?: string;
+}) {
+  const supplier = await prisma.supplier.create({ data });
+  revalidatePath("/admin/suppliers");
+  return supplier;
+}
+
+export async function updateSupplier(
+  id: string,
+  data: {
+    name: string;
+    website?: string;
+    location?: string;
+    contactPerson?: string;
+    phone?: string;
+    email?: string;
+    description?: string;
+    isActive: boolean;
+  }
+) {
+  const supplier = await prisma.supplier.update({ where: { id }, data });
+  revalidatePath("/admin/suppliers");
+  return supplier;
+}
+
+export async function deleteSupplier(id: string) {
+  await prisma.supplier.delete({ where: { id } });
+  revalidatePath("/admin/suppliers");
+}
+
+export async function toggleSupplierActive(id: string, isActive: boolean) {
+  const supplier = await prisma.supplier.update({
+    where: { id },
+    data: { isActive },
+  });
+  revalidatePath("/admin/suppliers");
+  return supplier;
+}

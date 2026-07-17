@@ -138,11 +138,18 @@ model AssessmentReplacementPart {
 }
 
 model Supplier {
-  id        String              @id @default(cuid())
-  name      String
-  website   String?
-  createdAt DateTime            @default(now())
-  prices    SupplierPartPrice[]
+  id            String              @id @default(cuid())
+  name          String
+  website       String?
+  location      String?
+  contactPerson String?
+  phone         String?
+  email         String?
+  description   String?
+  isActive      Boolean             @default(true)
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  prices        SupplierPartPrice[]
 
   @@unique([name])
 }

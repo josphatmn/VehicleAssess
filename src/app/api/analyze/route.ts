@@ -13,13 +13,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (images.length > 10) {
-      return NextResponse.json(
-        { error: "Maximum 10 images allowed" },
-        { status: 400 }
-      );
-    }
-
     const result = await analyzeImages(images);
     return NextResponse.json(result);
   } catch (error) {

@@ -22,7 +22,7 @@ export function Step3UploadImages() {
       const validFiles = Array.from(newFiles).filter((f) =>
         ["image/jpeg", "image/png", "image/webp"].includes(f.type)
       );
-      const combined = [...step3Files, ...validFiles].slice(0, 10);
+      const combined = [...step3Files, ...validFiles];
       setStep3Files(combined);
     },
     [step3Files, setStep3Files]
@@ -46,7 +46,7 @@ export function Step3UploadImages() {
       <CardHeader>
         <CardTitle>Upload Images</CardTitle>
         <CardDescription>
-          Upload accident photos (JPG, PNG, WEBP). Minimum 1, maximum 10 images.
+          Upload accident photos (JPG, PNG, WEBP). Minimum 1 image required.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -86,7 +86,7 @@ export function Step3UploadImages() {
         {step3Files.length > 0 && (
           <div className="space-y-2">
             <p className="text-sm font-medium">
-              {step3Files.length} of 10 images selected
+              {step3Files.length} image{step3Files.length !== 1 ? "s" : ""} selected
             </p>
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
               {step3Files.map((file, index) => (
