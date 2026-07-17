@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import PDFDocument from "pdfkit";
 import { PassThrough } from "stream";
+import { promises as fs } from "fs";
+import path from "path";
 import { CURRENCY, formatCurrency } from "@/lib/currency";
 
 interface PartRow {
@@ -215,19 +217,32 @@ export async function POST(request: NextRequest) {
       doc.moveDown(0.5);
 
       const imgMargin = 50;
-      const gap = 10;
-      const imgWidth = (545 - imgMargin * 2 - gap) / 2;
-      const imgHeight = 200;
+      const gap = 8;
+      const cols = 3;
+      const imgWidth = (545 - imgMargin * 2 - gap * (cols - 1)) / cols;
+      const imgHeight = 150;
       let x = imgMargin;
       let y = doc.y;
       let col = 0;
 
       for (let i = 0; i < images.length; i++) {
         const dataUrl = images[i];
-        const match = dataUrl.match(/^data:image\/(\w+);base64,(.+)$/);
-        if (!match) continue;
+        let imgBuffer: Buffer | null = null;
 
-        const imgBuffer = Buffer.from(match[2], "base64");
+        if (dataUrl.startsWith("data:image")) {
+          const b64Index = dataUrl.indexOf("base64,");
+          if (b64Index !== -1) {
+            const b64 = dataUrl.substring(b64Index + 7).trim();
+            imgBuffer = Buffer.from(b64, "base64");
+          }
+        } else if (dataUrl.startsWith("/uploads/")) {
+          try {
+            const filePath = path.join(process.cwd(), "public", dataUrl);
+            imgBuffer = await fs.readFile(filePath);
+          } catch { /* file not found */ }
+        }
+
+        if (!imgBuffer || imgBuffer.length < 100) continue;
 
         if (y + imgHeight + 20 > 792) {
           doc.addPage();
@@ -239,7 +254,7 @@ export async function POST(request: NextRequest) {
         try {
           doc.image(imgBuffer, x, y, { width: imgWidth, height: imgHeight, fit: [imgWidth, imgHeight] });
         } catch {
-          doc.fontSize(8).fillColor("#999999").text(`[Image ${i + 1} - could not render]`, x, y + imgHeight / 2);
+          doc.fontSize(8).fillColor("#999999").text(`[Image ${i + 1}]`, x, y + imgHeight / 2);
         }
 
         doc.fillColor("#666666").fontSize(7).font("Helvetica")
@@ -247,7 +262,7 @@ export async function POST(request: NextRequest) {
         doc.fillColor("#000000");
 
         col++;
-        if (col >= 2) {
+        if (col >= cols) {
           col = 0;
           x = imgMargin;
           y += imgHeight + 22;

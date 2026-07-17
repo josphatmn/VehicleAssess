@@ -3,7 +3,6 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { promises as fs } from "fs";
 import path from "path";
-import { v4 as uuid } from "uuid";
 
 function generateAssessmentNumber(): string {
   const year = new Date().getFullYear();
@@ -64,31 +63,22 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
-
     if (images?.length) {
-      await fs.mkdir(UPLOAD_DIR, { recursive: true });
       const imageData = [];
       for (let i = 0; i < images.length; i++) {
         const img = images[i];
         const dataUrl = typeof img === "string" ? img : img.dataUrl || img.src || "";
         if (!dataUrl) continue;
 
-        const base64 = dataUrl.includes(",") ? dataUrl.split(",")[1] : dataUrl;
         const mimeMatch = dataUrl.match(/data:([^;]+)/);
         const mimeType = mimeMatch ? mimeMatch[1] : "image/jpeg";
-        const ext = mimeType.includes("png") ? ".png" : mimeType.includes("webp") ? ".webp" : ".jpeg";
-        const filename = `${uuid()}${ext}`;
-        const buffer = Buffer.from(base64, "base64");
-
-        await fs.writeFile(path.join(UPLOAD_DIR, filename), buffer);
 
         imageData.push({
-          filename,
-          originalName: `photo-${i + 1}${ext}`,
-          path: `/uploads/${filename}`,
+          filename: `photo-${i + 1}`,
+          originalName: `photo-${i + 1}`,
+          path: dataUrl,
           mimeType,
-          size: buffer.length,
+          size: Math.round((dataUrl.length * 3) / 4),
           sortOrder: i,
           assessmentId: assessment.id,
         });
@@ -174,12 +164,14 @@ export async function PATCH(req: NextRequest) {
       updateData.verifiedDamageJson = JSON.stringify(damage);
     }
 
-    if (structural_concerns || recommendations) {
-      const aiRaw = existing.aiRawResponse ? JSON.parse(existing.aiRawResponse) : {};
-      if (structural_concerns) aiRaw.structural_concerns = structural_concerns;
-      if (recommendations) aiRaw.recommendations = recommendations;
-      if (vehicle) aiRaw.vehicle = vehicle;
-      if (damage) aiRaw.damage = damage;
+    const aiRaw = existing.aiRawResponse ? JSON.parse(existing.aiRawResponse) : {};
+    let aiRawUpdated = false;
+    if (structural_concerns) { aiRaw.structural_concerns = structural_concerns; aiRawUpdated = true; }
+    if (recommendations) { aiRaw.recommendations = recommendations; aiRawUpdated = true; }
+    if (vehicle) { aiRaw.vehicle = vehicle; aiRawUpdated = true; }
+    if (damage) { aiRaw.damage = damage; aiRawUpdated = true; }
+    if (parts !== undefined) { aiRaw.replacement_parts = parts.map((p: { partName: string; quantity: number }) => ({ partName: p.partName, estimatedQuantity: p.quantity, damageType: "Dent", damageSeverity: "Moderate" })); aiRawUpdated = true; }
+    if (aiRawUpdated) {
       updateData.aiRawResponse = JSON.stringify(aiRaw);
     }
 
@@ -224,8 +216,10 @@ export async function PATCH(req: NextRequest) {
     if (removeImage) {
       const img = await prisma.assessmentImage.findFirst({ where: { assessmentId: id, path: removeImage } });
       if (img) {
-        const filePath = path.join(process.cwd(), "public", img.path);
-        await fs.unlink(filePath).catch(() => {});
+        if (img.path.startsWith("/uploads/")) {
+          const filePath = path.join(process.cwd(), "public", img.path);
+          await fs.unlink(filePath).catch(() => {});
+        }
         await prisma.assessmentImage.delete({ where: { id: img.id } });
       }
     }

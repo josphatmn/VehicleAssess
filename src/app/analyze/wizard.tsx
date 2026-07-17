@@ -128,6 +128,7 @@ export default function AnalyzeWizard() {
   const [structuralForm, setStructuralForm] = useState<string[]>([]);
   const [recommendationsForm, setRecommendationsForm] = useState<string[]>([]);
   const [savingModal, setSavingModal] = useState(false);
+  const [savingParts, setSavingParts] = useState(false);
 
   const [editableParts, setEditableParts] = useState<Array<{
     partName: string;
@@ -154,6 +155,7 @@ export default function AnalyzeWizard() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const vehiclePhotoInputRef = useRef<HTMLInputElement>(null);
+  const savePartsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const setStep = useCallback(
     (s: Step, id?: string | null) => {
@@ -237,22 +239,32 @@ export default function AnalyzeWizard() {
         const vehicleMake = vJson.make || confirmedVehicle.make;
         const vehicleModel = vJson.model || confirmedVehicle.model;
 
-        const parts = (a.replacementParts || []).length > 0
-          ? a.replacementParts
-          : (raw.replacement_parts || []).map((p: DetectedPart) => ({
+        const rawParts = raw.replacement_parts || [];
+        const savedParts = a.replacementParts || [];
+        const partsForLookup = rawParts.length > 0
+          ? rawParts
+          : savedParts.map((p: { partName: string; quantity?: number }) => ({
+              partName: p.partName,
+              estimatedQuantity: p.quantity || 1,
+              pricing_options: [],
+            }));
+
+        const parts = savedParts.length > 0
+          ? savedParts
+          : rawParts.map((p: DetectedPart) => ({
               partName: p.partName,
               quantity: p.estimatedQuantity || 1,
               unitPrice: 0,
               labourCost: 0,
             }));
 
-        if (parts.length) {
+        if (partsForLookup.length) {
           try {
             const pricesRes = await fetch("/api/parts/prices", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
-                parts: (raw.replacement_parts || []).map((p: DetectedPart) => ({
+                parts: partsForLookup.map((p: { partName: string; estimatedQuantity?: number; pricing_options?: Array<{ supplier: string; price: number }> }) => ({
                   partName: p.partName,
                   vehicleMake: vehicleMake || undefined,
                   vehicleModel: vehicleModel || undefined,
@@ -318,6 +330,9 @@ export default function AnalyzeWizard() {
     setEditableParts((prev) => {
       const updated = [...prev];
       updated[idx] = { ...updated[idx], [field]: value };
+      if (field === "quantity" || field === "unitPrice" || field === "labourCost") {
+        autoSaveParts(updated);
+      }
       return updated;
     });
   };
@@ -333,12 +348,17 @@ export default function AnalyzeWizard() {
         selectedSupplier: supplierName,
         unitPrice: match?.price || 0,
       };
+      autoSaveParts(updated);
       return updated;
     });
   };
 
   const removeEditablePart = (idx: number) => {
-    setEditableParts((prev) => prev.filter((_, i) => i !== idx));
+    setEditableParts((prev) => {
+      const updated = prev.filter((_, i) => i !== idx);
+      autoSaveParts(updated);
+      return updated;
+    });
   };
 
   const addEditablePart = () => {
@@ -656,6 +676,45 @@ export default function AnalyzeWizard() {
     return res.ok;
   };
 
+  const saveParts = async () => {
+    if (!assessmentId) return;
+    setSavingParts(true);
+    const ok = await patchAssessment({
+      parts: editableParts.map((p) => ({
+        partName: p.partName,
+        quantity: p.quantity,
+        unitPrice: p.unitPrice,
+        labourCost: p.labourCost,
+        subtotal: p.quantity * p.unitPrice,
+        found: p.unitPrice > 0,
+      })),
+    });
+    setSavingParts(false);
+    toast[ok ? "success" : "error"](ok ? "Parts saved" : "Failed to save parts");
+  };
+
+  const autoSaveParts = (parts: typeof editableParts) => {
+    if (!assessmentId) return;
+    if (savePartsTimerRef.current) clearTimeout(savePartsTimerRef.current);
+    savePartsTimerRef.current = setTimeout(async () => {
+      await fetch("/api/assessments/save", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: assessmentId,
+          parts: parts.map((p) => ({
+            partName: p.partName,
+            quantity: p.quantity,
+            unitPrice: p.unitPrice,
+            labourCost: p.labourCost,
+            subtotal: p.quantity * p.unitPrice,
+            found: p.unitPrice > 0,
+          })),
+        }),
+      });
+    }, 800);
+  };
+
   const openCustomerModal = () => {
     setCustomerForm({ ...customerInfo });
     setCustomerModalOpen(true);
@@ -699,32 +758,29 @@ export default function AnalyzeWizard() {
     const arr = Array.from(newFiles).filter((f) => f.type.startsWith("image/"));
     if (!arr.length) return;
 
-    const formData = new FormData();
-    arr.forEach((f) => formData.append("files", f));
-
     try {
-      const res = await fetch("/api/upload", { method: "POST", body: formData });
-      if (!res.ok) throw new Error("Upload failed");
-      const { files: uploaded } = await res.json();
+      const dataUrls = await Promise.all(
+        arr.map((f) => new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onload = (ev) => resolve(ev.target?.result as string);
+          reader.readAsDataURL(f);
+        }))
+      );
 
-      for (let i = 0; i < uploaded.length; i++) {
-        const f = uploaded[i];
+      for (let i = 0; i < dataUrls.length; i++) {
+        const mimeMatch = dataUrls[i].match(/data:([^;]+)/);
+        const mimeType = mimeMatch ? mimeMatch[1] : "image/jpeg";
         await fetch("/api/assessments/save", {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             id: assessmentId,
-            addImage: { filename: f.filename, originalName: f.originalName, path: f.path, mimeType: f.mimeType, size: f.size, sortOrder: previews.length + i },
+            addImage: { filename: `photo-${previews.length + i + 1}`, originalName: arr[i].name, path: dataUrls[i], mimeType, size: arr[i].size, sortOrder: previews.length + i },
           }),
         });
       }
 
-      arr.forEach((f) => {
-        const reader = new FileReader();
-        reader.onload = (ev) => setPreviews((prev) => [...prev, ev.target?.result as string]);
-        reader.readAsDataURL(f);
-      });
-
+      setPreviews((prev) => [...prev, ...dataUrls]);
       toast.success(`${arr.length} photo${arr.length > 1 ? "s" : ""} added`);
     } catch {
       toast.error("Failed to upload photos");
@@ -739,7 +795,7 @@ export default function AnalyzeWizard() {
     }
 
     const src = previews[idx];
-    if (src && src.startsWith("/uploads/")) {
+    if (src) {
       try {
         await fetch("/api/assessments/save", {
           method: "PATCH",
@@ -1130,6 +1186,12 @@ export default function AnalyzeWizard() {
                 </h2>
                 <div className="flex items-center gap-2">
                   {catalogueLoading && <Loader2 className="w-4 h-4 animate-spin text-gray-400" />}
+                  {assessmentId && editableParts.length > 0 && (
+                    <button onClick={saveParts} disabled={savingParts}
+                      className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-white bg-gray-900 rounded-lg hover:bg-gray-800 transition disabled:opacity-50">
+                      {savingParts ? <Loader2 className="w-3 h-3 animate-spin" /> : null} Save
+                    </button>
+                  )}
                   <button onClick={addEditablePart}
                     className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition">
                     + Add Part
