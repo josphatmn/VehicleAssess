@@ -19,9 +19,12 @@ import {
   Pencil,
   Download,
   Package,
+  Plus,
+  Trash2,
 } from "lucide-react";
 import { useSession } from "@/hooks/use-session";
 import { Navbar } from "@/components/navbar";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { CURRENCY, formatCurrency } from "@/lib/currency";
 
@@ -113,6 +116,19 @@ export default function AnalyzeWizard() {
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
   const [loadingAssessment, setLoadingAssessment] = useState(false);
 
+  const [customerModalOpen, setCustomerModalOpen] = useState(false);
+  const [vehicleModalOpen, setVehicleModalOpen] = useState(false);
+  const [summaryModalOpen, setSummaryModalOpen] = useState(false);
+  const [structuralModalOpen, setStructuralModalOpen] = useState(false);
+  const [recommendationsModalOpen, setRecommendationsModalOpen] = useState(false);
+
+  const [customerForm, setCustomerForm] = useState({ fullName: "", phone: "", email: "", address: "" });
+  const [vehicleForm, setVehicleForm] = useState<VehicleInfo>({ make: "", model: "", variant: "", year: "", body_type: "", color: "", registration: "", confidence: 0 });
+  const [summaryForm, setSummaryForm] = useState({ summary: "", severity: "", structural_damage: false, rollover: false, possible_total_loss: false, estimated_total_cost: 0, estimated_total_labor_hours: 0 });
+  const [structuralForm, setStructuralForm] = useState<string[]>([]);
+  const [recommendationsForm, setRecommendationsForm] = useState<string[]>([]);
+  const [savingModal, setSavingModal] = useState(false);
+
   const [editableParts, setEditableParts] = useState<Array<{
     partName: string;
     damageType: string;
@@ -137,6 +153,7 @@ export default function AnalyzeWizard() {
   });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const vehiclePhotoInputRef = useRef<HTMLInputElement>(null);
 
   const setStep = useCallback(
     (s: Step, id?: string | null) => {
@@ -186,6 +203,10 @@ export default function AnalyzeWizard() {
         email: a.customerEmail || "",
         address: "",
       });
+
+      if (a.images?.length) {
+        setPreviews(a.images.sort((a: { sortOrder: number }, b: { sortOrder: number }) => a.sortOrder - b.sortOrder).map((img: { path: string }) => img.path));
+      }
 
       if (a.registrationNumber || a.vehicleNotes) {
         const vJson = a.verifiedVehicleJson ? JSON.parse(a.verifiedVehicleJson) : {};
@@ -401,6 +422,7 @@ export default function AnalyzeWizard() {
             })),
             structural_concerns: data.structural_concerns,
             recommendations: data.recommendations,
+            images: previews,
           }),
         });
         if (saveRes.ok) {
@@ -622,6 +644,171 @@ export default function AnalyzeWizard() {
     setCustomerInfo({ fullName: "", phone: "", email: "", address: "" });
     setConfirmedVehicle({ make: "", model: "", variant: "", year: "", body_type: "", color: "", registration: "", confidence: 0 });
     setAssessmentId(null);
+  };
+
+  const patchAssessment = async (payload: Record<string, unknown>) => {
+    if (!assessmentId) return false;
+    const res = await fetch("/api/assessments/save", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: assessmentId, ...payload }),
+    });
+    return res.ok;
+  };
+
+  const openCustomerModal = () => {
+    setCustomerForm({ ...customerInfo });
+    setCustomerModalOpen(true);
+  };
+
+  const saveCustomer = async () => {
+    setSavingModal(true);
+    const ok = await patchAssessment({ customer: customerForm });
+    setSavingModal(false);
+    if (ok) {
+      setCustomerInfo({ ...customerForm });
+      setCustomerModalOpen(false);
+      toast.success("Customer info updated");
+    } else {
+      toast.error("Failed to update customer info");
+    }
+  };
+
+  const openVehicleModal = () => {
+    setVehicleForm({ ...confirmedVehicle });
+    setVehicleModalOpen(true);
+  };
+
+  const saveVehicle = async () => {
+    setSavingModal(true);
+    const ok = await patchAssessment({ vehicle: vehicleForm });
+    setSavingModal(false);
+    if (ok) {
+      setConfirmedVehicle({ ...vehicleForm });
+      setVehicleModalOpen(false);
+      toast.success("Vehicle details updated");
+    } else {
+      toast.error("Failed to update vehicle details");
+    }
+  };
+
+  const addVehiclePhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newFiles = e.target.files;
+    if (!newFiles?.length || !assessmentId) return;
+
+    const arr = Array.from(newFiles).filter((f) => f.type.startsWith("image/"));
+    if (!arr.length) return;
+
+    const formData = new FormData();
+    arr.forEach((f) => formData.append("files", f));
+
+    try {
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      if (!res.ok) throw new Error("Upload failed");
+      const { files: uploaded } = await res.json();
+
+      for (let i = 0; i < uploaded.length; i++) {
+        const f = uploaded[i];
+        await fetch("/api/assessments/save", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: assessmentId,
+            addImage: { filename: f.filename, originalName: f.originalName, path: f.path, mimeType: f.mimeType, size: f.size, sortOrder: previews.length + i },
+          }),
+        });
+      }
+
+      arr.forEach((f) => {
+        const reader = new FileReader();
+        reader.onload = (ev) => setPreviews((prev) => [...prev, ev.target?.result as string]);
+        reader.readAsDataURL(f);
+      });
+
+      toast.success(`${arr.length} photo${arr.length > 1 ? "s" : ""} added`);
+    } catch {
+      toast.error("Failed to upload photos");
+    }
+    if (vehiclePhotoInputRef.current) vehiclePhotoInputRef.current.value = "";
+  };
+
+  const removeVehiclePhoto = async (idx: number) => {
+    if (!assessmentId) {
+      setPreviews((prev) => prev.filter((_, i) => i !== idx));
+      return;
+    }
+
+    const src = previews[idx];
+    if (src && src.startsWith("/uploads/")) {
+      try {
+        await fetch("/api/assessments/save", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: assessmentId, removeImage: src }),
+        });
+      } catch { /* non-blocking */ }
+    }
+    setPreviews((prev) => prev.filter((_, i) => i !== idx));
+    toast.success("Photo removed");
+  };
+
+  const openSummaryModal = () => {
+    if (result) {
+      setSummaryForm({ ...result.damage });
+    }
+    setSummaryModalOpen(true);
+  };
+
+  const saveSummary = async () => {
+    if (!result) return;
+    setSavingModal(true);
+    const ok = await patchAssessment({ damage: summaryForm });
+    setSavingModal(false);
+    if (ok) {
+      setResult({ ...result, damage: summaryForm });
+      setSummaryModalOpen(false);
+      toast.success("Summary updated");
+    } else {
+      toast.error("Failed to update summary");
+    }
+  };
+
+  const openStructuralModal = () => {
+    setStructuralForm([...(result?.structural_concerns || [])]);
+    setStructuralModalOpen(true);
+  };
+
+  const saveStructural = async () => {
+    if (!result) return;
+    setSavingModal(true);
+    const ok = await patchAssessment({ structural_concerns: structuralForm });
+    setSavingModal(false);
+    if (ok) {
+      setResult({ ...result, structural_concerns: structuralForm });
+      setStructuralModalOpen(false);
+      toast.success("Structural concerns updated");
+    } else {
+      toast.error("Failed to update structural concerns");
+    }
+  };
+
+  const openRecommendationsModal = () => {
+    setRecommendationsForm([...(result?.recommendations || [])]);
+    setRecommendationsModalOpen(true);
+  };
+
+  const saveRecommendations = async () => {
+    if (!result) return;
+    setSavingModal(true);
+    const ok = await patchAssessment({ recommendations: recommendationsForm });
+    setSavingModal(false);
+    if (ok) {
+      setResult({ ...result, recommendations: recommendationsForm });
+      setRecommendationsModalOpen(false);
+      toast.success("Recommendations updated");
+    } else {
+      toast.error("Failed to update recommendations");
+    }
   };
 
   const stepOrder: Step[] = ["details", "upload", "analyze", "confirm", "results"];
@@ -862,7 +1049,10 @@ export default function AnalyzeWizard() {
 
             {/* Customer Info */}
             <div className="mt-6 bg-white rounded-2xl border border-gray-100 p-6">
-              <h2 className="font-semibold text-gray-900 mb-3">Customer</h2>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="font-semibold text-gray-900">Customer</h2>
+                <button onClick={openCustomerModal} className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"><Pencil className="w-3 h-3" /> Edit</button>
+              </div>
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div><span className="text-gray-400">Name:</span> <span className="font-medium text-gray-900 ml-1">{customerInfo.fullName}</span></div>
                 <div><span className="text-gray-400">Phone:</span> <span className="font-medium text-gray-900 ml-1">{customerInfo.phone}</span></div>
@@ -873,7 +1063,10 @@ export default function AnalyzeWizard() {
 
             {/* Vehicle Details + Photos */}
             <div className="mt-6 bg-white rounded-2xl border border-gray-100 p-6">
-              <h2 className="font-semibold text-gray-900 mb-3">Vehicle Details</h2>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="font-semibold text-gray-900">Vehicle Details</h2>
+                <button onClick={openVehicleModal} className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"><Pencil className="w-3 h-3" /> Edit</button>
+              </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
                 {confirmedVehicle.make && <div><span className="text-gray-400">Make:</span> <span className="font-medium text-gray-900 ml-1">{confirmedVehicle.make}</span></div>}
                 {confirmedVehicle.model && <div><span className="text-gray-400">Model:</span> <span className="font-medium text-gray-900 ml-1">{confirmedVehicle.model}</span></div>}
@@ -903,7 +1096,10 @@ export default function AnalyzeWizard() {
 
             {/* Summary */}
             <div className="mt-6 bg-white rounded-2xl border border-gray-100 p-6">
-              <h2 className="font-semibold text-gray-900">Summary</h2>
+              <div className="flex items-center justify-between">
+                <h2 className="font-semibold text-gray-900">Summary</h2>
+                <button onClick={openSummaryModal} className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"><Pencil className="w-3 h-3" /> Edit</button>
+              </div>
               <p className="mt-2 text-sm text-gray-600 leading-relaxed">{result.damage.summary}</p>
               {/*<div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <div className="bg-gray-50 rounded-xl p-3">
@@ -1106,28 +1302,38 @@ export default function AnalyzeWizard() {
             </div>
 
             {/* Structural Concerns */}
-            {result.structural_concerns?.length > 0 && (
-              <div className="mt-6 bg-amber-50 rounded-2xl border border-amber-100 p-6">
+            <div className="mt-6 bg-amber-50 rounded-2xl border border-amber-100 p-6">
+              <div className="flex items-center justify-between">
                 <h2 className="font-semibold text-amber-800 flex items-center gap-2"><AlertCircle className="w-4 h-4" /> Structural Concerns</h2>
+                <button onClick={openStructuralModal} className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-amber-600 hover:text-amber-800 hover:bg-amber-100 rounded-lg transition"><Pencil className="w-3 h-3" /> Edit</button>
+              </div>
+              {result.structural_concerns?.length > 0 ? (
                 <ul className="mt-3 space-y-1.5">
                   {result.structural_concerns.map((c, i) => (
                     <li key={i} className="text-sm text-amber-700 flex items-start gap-2"><span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />{c}</li>
                   ))}
                 </ul>
-              </div>
-            )}
+              ) : (
+                <p className="mt-2 text-sm text-amber-600 italic">No structural concerns identified</p>
+              )}
+            </div>
 
             {/* Recommendations */}
-            {result.recommendations?.length > 0 && (
-              <div className="mt-6 bg-blue-50 rounded-2xl border border-blue-100 p-6">
+            <div className="mt-6 bg-blue-50 rounded-2xl border border-blue-100 p-6">
+              <div className="flex items-center justify-between">
                 <h2 className="font-semibold text-blue-800 flex items-center gap-2"><FileText className="w-4 h-4" /> Recommendations</h2>
+                <button onClick={openRecommendationsModal} className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-100 rounded-lg transition"><Pencil className="w-3 h-3" /> Edit</button>
+              </div>
+              {result.recommendations?.length > 0 ? (
                 <ul className="mt-3 space-y-1.5">
                   {result.recommendations.map((r, i) => (
                     <li key={i} className="text-sm text-blue-700 flex items-start gap-2"><span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0" />{r}</li>
                   ))}
                 </ul>
-              </div>
-            )}
+              ) : (
+                <p className="mt-2 text-sm text-blue-600 italic">No recommendations</p>
+              )}
+            </div>
 
             {/* AI Notice */}
             <div className="mt-8 bg-gray-100 rounded-xl p-4 flex items-start gap-3">
@@ -1151,6 +1357,253 @@ export default function AnalyzeWizard() {
           </div>
         )}
       </div>
+
+      {/* ===== EDIT MODALS ===== */}
+
+      {/* Customer Info Modal */}
+      <Dialog open={customerModalOpen} onOpenChange={setCustomerModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Customer Info</DialogTitle>
+            <DialogDescription>Update the customer contact details for this assessment.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
+              <input type="text" value={customerForm.fullName} onChange={(e) => setCustomerForm({ ...customerForm, fullName: e.target.value })}
+                className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition bg-white" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Phone *</label>
+              <input type="tel" value={customerForm.phone} onChange={(e) => setCustomerForm({ ...customerForm, phone: e.target.value })}
+                className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition bg-white" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <input type="email" value={customerForm.email} onChange={(e) => setCustomerForm({ ...customerForm, email: e.target.value })}
+                className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition bg-white" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+              <input type="text" value={customerForm.address} onChange={(e) => setCustomerForm({ ...customerForm, address: e.target.value })}
+                className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition bg-white" />
+            </div>
+          </div>
+          <DialogFooter>
+            <button onClick={() => setCustomerModalOpen(false)} className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition">Cancel</button>
+            <button onClick={saveCustomer} disabled={savingModal || !customerForm.fullName.trim() || !customerForm.phone.trim()}
+              className="px-4 py-2 text-sm font-semibold text-white bg-gray-900 rounded-lg hover:bg-gray-800 transition disabled:opacity-50 inline-flex items-center gap-2">
+              {savingModal && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Save Changes
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Vehicle Details Modal */}
+      <Dialog open={vehicleModalOpen} onOpenChange={setVehicleModalOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Edit Vehicle Details</DialogTitle>
+            <DialogDescription>Update the detected vehicle information.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Make</label>
+                <input type="text" value={vehicleForm.make} onChange={(e) => setVehicleForm({ ...vehicleForm, make: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition bg-white" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Model</label>
+                <input type="text" value={vehicleForm.model} onChange={(e) => setVehicleForm({ ...vehicleForm, model: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition bg-white" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Variant</label>
+                <input type="text" value={vehicleForm.variant} onChange={(e) => setVehicleForm({ ...vehicleForm, variant: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition bg-white" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Year</label>
+                <input type="text" value={vehicleForm.year} onChange={(e) => setVehicleForm({ ...vehicleForm, year: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition bg-white" />
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Body Type</label>
+                <input type="text" value={vehicleForm.body_type} onChange={(e) => setVehicleForm({ ...vehicleForm, body_type: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition bg-white" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Color</label>
+                <input type="text" value={vehicleForm.color} onChange={(e) => setVehicleForm({ ...vehicleForm, color: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition bg-white" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Registration</label>
+                <input type="text" value={vehicleForm.registration} onChange={(e) => setVehicleForm({ ...vehicleForm, registration: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition bg-white" />
+              </div>
+            </div>
+            <div className="pt-2 border-t border-gray-100">
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-xs font-medium text-gray-500">Photos ({previews.length})</label>
+                <button type="button" onClick={() => vehiclePhotoInputRef.current?.click()}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition">
+                  <Camera className="w-3 h-3" /> Add Photo
+                </button>
+                <input ref={vehiclePhotoInputRef} type="file" accept="image/*" multiple className="hidden" onChange={addVehiclePhoto} />
+              </div>
+              {previews.length > 0 ? (
+                <div className="grid grid-cols-4 gap-2">
+                  {previews.map((src, i) => (
+                    <div key={i} className="relative group rounded-lg overflow-hidden aspect-square bg-gray-100">
+                      <img src={src} alt="" className="w-full h-full object-cover" />
+                      <button type="button" onClick={() => removeVehiclePhoto(i)}
+                        className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-gray-400 italic">No photos uploaded</p>
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <button onClick={() => setVehicleModalOpen(false)} className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition">Cancel</button>
+            <button onClick={saveVehicle} disabled={savingModal}
+              className="px-4 py-2 text-sm font-semibold text-white bg-gray-900 rounded-lg hover:bg-gray-800 transition disabled:opacity-50 inline-flex items-center gap-2">
+              {savingModal && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Save Changes
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Summary / Damage Info Modal */}
+      <Dialog open={summaryModalOpen} onOpenChange={setSummaryModalOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Edit Damage Summary</DialogTitle>
+            <DialogDescription>Update the damage assessment summary and severity.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Damage Summary</label>
+              <textarea rows={4} value={summaryForm.summary} onChange={(e) => setSummaryForm({ ...summaryForm, summary: e.target.value })}
+                className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition bg-white resize-none" />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Severity</label>
+                <select value={summaryForm.severity} onChange={(e) => setSummaryForm({ ...summaryForm, severity: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition bg-white">
+                  {["Minor", "Moderate", "Severe", "Critical"].map((s) => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Estimated Cost ({CURRENCY})</label>
+                <input type="number" min="0" step="0.01" value={summaryForm.estimated_total_cost || ""} onChange={(e) => setSummaryForm({ ...summaryForm, estimated_total_cost: parseFloat(e.target.value) || 0 })}
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition bg-white" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Est. Labor Hours</label>
+                <input type="number" min="0" step="0.5" value={summaryForm.estimated_total_labor_hours || ""} onChange={(e) => setSummaryForm({ ...summaryForm, estimated_total_labor_hours: parseFloat(e.target.value) || 0 })}
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition bg-white" />
+              </div>
+              <div className="flex items-end gap-4">
+                <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                  <input type="checkbox" checked={summaryForm.structural_damage} onChange={(e) => setSummaryForm({ ...summaryForm, structural_damage: e.target.checked })}
+                    className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                  Structural Damage
+                </label>
+                <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                  <input type="checkbox" checked={summaryForm.possible_total_loss} onChange={(e) => setSummaryForm({ ...summaryForm, possible_total_loss: e.target.checked })}
+                    className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                  Total Loss
+                </label>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <button onClick={() => setSummaryModalOpen(false)} className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition">Cancel</button>
+            <button onClick={saveSummary} disabled={savingModal}
+              className="px-4 py-2 text-sm font-semibold text-white bg-gray-900 rounded-lg hover:bg-gray-800 transition disabled:opacity-50 inline-flex items-center gap-2">
+              {savingModal && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Save Changes
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Structural Concerns Modal */}
+      <Dialog open={structuralModalOpen} onOpenChange={setStructuralModalOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Edit Structural Concerns</DialogTitle>
+            <DialogDescription>Add, remove, or modify structural concerns identified in the assessment.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            {structuralForm.map((concern, i) => (
+              <div key={i} className="flex items-start gap-2">
+                <span className="mt-2 w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
+                <input type="text" value={concern} onChange={(e) => { const updated = [...structuralForm]; updated[i] = e.target.value; setStructuralForm(updated); }}
+                  className="flex-1 px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition bg-white" placeholder="Concern description" />
+                <button onClick={() => setStructuralForm(structuralForm.filter((_, idx) => idx !== i))}
+                  className="mt-1.5 p-1 text-gray-300 hover:text-red-500 transition"><Trash2 className="w-4 h-4" /></button>
+              </div>
+            ))}
+            <button onClick={() => setStructuralForm([...structuralForm, ""])}
+              className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-amber-700 bg-amber-100 rounded-lg hover:bg-amber-200 transition">
+              <Plus className="w-3 h-3" /> Add Concern
+            </button>
+          </div>
+          <DialogFooter>
+            <button onClick={() => setStructuralModalOpen(false)} className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition">Cancel</button>
+            <button onClick={saveStructural} disabled={savingModal}
+              className="px-4 py-2 text-sm font-semibold text-white bg-gray-900 rounded-lg hover:bg-gray-800 transition disabled:opacity-50 inline-flex items-center gap-2">
+              {savingModal && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Save Changes
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Recommendations Modal */}
+      <Dialog open={recommendationsModalOpen} onOpenChange={setRecommendationsModalOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Edit Recommendations</DialogTitle>
+            <DialogDescription>Add, remove, or modify the recommendations for this assessment.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            {recommendationsForm.map((rec, i) => (
+              <div key={i} className="flex items-start gap-2">
+                <span className="mt-2 w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0" />
+                <input type="text" value={rec} onChange={(e) => { const updated = [...recommendationsForm]; updated[i] = e.target.value; setRecommendationsForm(updated); }}
+                  className="flex-1 px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition bg-white" placeholder="Recommendation" />
+                <button onClick={() => setRecommendationsForm(recommendationsForm.filter((_, idx) => idx !== i))}
+                  className="mt-1.5 p-1 text-gray-300 hover:text-red-500 transition"><Trash2 className="w-4 h-4" /></button>
+              </div>
+            ))}
+            <button onClick={() => setRecommendationsForm([...recommendationsForm, ""])}
+              className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-blue-700 bg-blue-100 rounded-lg hover:bg-blue-200 transition">
+              <Plus className="w-3 h-3" /> Add Recommendation
+            </button>
+          </div>
+          <DialogFooter>
+            <button onClick={() => setRecommendationsModalOpen(false)} className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition">Cancel</button>
+            <button onClick={saveRecommendations} disabled={savingModal}
+              className="px-4 py-2 text-sm font-semibold text-white bg-gray-900 rounded-lg hover:bg-gray-800 transition disabled:opacity-50 inline-flex items-center gap-2">
+              {savingModal && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Save Changes
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Lightbox */}
       {lightboxImage && (

@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { promises as fs } from "fs";
+import path from "path";
+import { v4 as uuid } from "uuid";
 
 function generateAssessmentNumber(): string {
   const year = new Date().getFullYear();
@@ -25,6 +28,7 @@ export async function POST(req: NextRequest) {
       parts,
       structural_concerns,
       recommendations,
+      images,
     } = body;
 
     if (!customer?.fullName || !customer?.phone) {
@@ -52,12 +56,47 @@ export async function POST(req: NextRequest) {
           damage,
           structural_concerns,
           recommendations,
+          replacement_parts: parts || [],
         }),
         verifiedVehicleJson: JSON.stringify(vehicle),
         verifiedDamageJson: JSON.stringify(damage),
         userId: session.user.id,
       },
     });
+
+    const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
+
+    if (images?.length) {
+      await fs.mkdir(UPLOAD_DIR, { recursive: true });
+      const imageData = [];
+      for (let i = 0; i < images.length; i++) {
+        const img = images[i];
+        const dataUrl = typeof img === "string" ? img : img.dataUrl || img.src || "";
+        if (!dataUrl) continue;
+
+        const base64 = dataUrl.includes(",") ? dataUrl.split(",")[1] : dataUrl;
+        const mimeMatch = dataUrl.match(/data:([^;]+)/);
+        const mimeType = mimeMatch ? mimeMatch[1] : "image/jpeg";
+        const ext = mimeType.includes("png") ? ".png" : mimeType.includes("webp") ? ".webp" : ".jpeg";
+        const filename = `${uuid()}${ext}`;
+        const buffer = Buffer.from(base64, "base64");
+
+        await fs.writeFile(path.join(UPLOAD_DIR, filename), buffer);
+
+        imageData.push({
+          filename,
+          originalName: `photo-${i + 1}${ext}`,
+          path: `/uploads/${filename}`,
+          mimeType,
+          size: buffer.length,
+          sortOrder: i,
+          assessmentId: assessment.id,
+        });
+      }
+      if (imageData.length) {
+        await prisma.assessmentImage.createMany({ data: imageData });
+      }
+    }
 
     if (parts?.length) {
       await prisma.assessmentReplacementPart.createMany({
@@ -100,7 +139,7 @@ export async function PATCH(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { id, vehicle, damage, parts, structural_concerns, recommendations } = body;
+    const { id, customer, vehicle, damage, parts, structural_concerns, recommendations, addImage, removeImage } = body;
 
     if (!id) {
       return NextResponse.json({ error: "Assessment ID is required" }, { status: 400 });
@@ -116,6 +155,12 @@ export async function PATCH(req: NextRequest) {
     }
 
     const updateData: Record<string, string | null> = {};
+
+    if (customer) {
+      if (customer.fullName !== undefined) updateData.customerName = customer.fullName;
+      if (customer.phone !== undefined) updateData.customerPhone = customer.phone;
+      if (customer.email !== undefined) updateData.customerEmail = customer.email;
+    }
 
     if (vehicle) {
       updateData.registrationNumber = vehicle.registration || existing.registrationNumber;
@@ -159,6 +204,29 @@ export async function PATCH(req: NextRequest) {
             assessmentId: id,
           })),
         });
+      }
+    }
+
+    if (addImage) {
+      await prisma.assessmentImage.create({
+        data: {
+          filename: addImage.filename,
+          originalName: addImage.originalName,
+          path: addImage.path,
+          mimeType: addImage.mimeType,
+          size: addImage.size,
+          sortOrder: addImage.sortOrder ?? 0,
+          assessmentId: id,
+        },
+      });
+    }
+
+    if (removeImage) {
+      const img = await prisma.assessmentImage.findFirst({ where: { assessmentId: id, path: removeImage } });
+      if (img) {
+        const filePath = path.join(process.cwd(), "public", img.path);
+        await fs.unlink(filePath).catch(() => {});
+        await prisma.assessmentImage.delete({ where: { id: img.id } });
       }
     }
 
