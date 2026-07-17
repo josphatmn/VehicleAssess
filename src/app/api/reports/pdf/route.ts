@@ -229,7 +229,15 @@ export async function POST(request: NextRequest) {
         const dataUrl = images[i];
         let imgBuffer: Buffer | null = null;
 
-        if (dataUrl.startsWith("data:image")) {
+        if (dataUrl.startsWith("http")) {
+          try {
+            const resp = await fetch(dataUrl);
+            if (resp.ok) {
+              const arr = await resp.arrayBuffer();
+              imgBuffer = Buffer.from(arr);
+            }
+          } catch { /* fetch failed */ }
+        } else if (dataUrl.startsWith("data:image")) {
           const b64Index = dataUrl.indexOf("base64,");
           if (b64Index !== -1) {
             const b64 = dataUrl.substring(b64Index + 7).trim();

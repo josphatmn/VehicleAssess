@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { promises as fs } from "fs";
-import path from "path";
 
 function generateAssessmentNumber(): string {
   const year = new Date().getFullYear();
@@ -27,7 +25,6 @@ export async function POST(req: NextRequest) {
       parts,
       structural_concerns,
       recommendations,
-      images,
     } = body;
 
     if (!customer?.fullName || !customer?.phone) {
@@ -62,31 +59,6 @@ export async function POST(req: NextRequest) {
         userId: session.user.id,
       },
     });
-
-    if (images?.length) {
-      const imageData = [];
-      for (let i = 0; i < images.length; i++) {
-        const img = images[i];
-        const dataUrl = typeof img === "string" ? img : img.dataUrl || img.src || "";
-        if (!dataUrl) continue;
-
-        const mimeMatch = dataUrl.match(/data:([^;]+)/);
-        const mimeType = mimeMatch ? mimeMatch[1] : "image/jpeg";
-
-        imageData.push({
-          filename: `photo-${i + 1}`,
-          originalName: `photo-${i + 1}`,
-          path: dataUrl,
-          mimeType,
-          size: Math.round((dataUrl.length * 3) / 4),
-          sortOrder: i,
-          assessmentId: assessment.id,
-        });
-      }
-      if (imageData.length) {
-        await prisma.assessmentImage.createMany({ data: imageData });
-      }
-    }
 
     if (parts?.length) {
       await prisma.assessmentReplacementPart.createMany({
@@ -129,7 +101,7 @@ export async function PATCH(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { id, customer, vehicle, damage, parts, structural_concerns, recommendations, addImage, removeImage } = body;
+    const { id, customer, vehicle, damage, parts, structural_concerns, recommendations, addImage, removeImage, images } = body;
 
     if (!id) {
       return NextResponse.json({ error: "Assessment ID is required" }, { status: 400 });
@@ -213,13 +185,24 @@ export async function PATCH(req: NextRequest) {
       });
     }
 
+    if (images?.length) {
+      await prisma.assessmentImage.deleteMany({ where: { assessmentId: id } });
+      await prisma.assessmentImage.createMany({
+        data: images.map((img: { filename: string; originalName: string; path: string; mimeType: string; size: number; sortOrder: number }) => ({
+          filename: img.filename,
+          originalName: img.originalName,
+          path: img.path,
+          mimeType: img.mimeType,
+          size: img.size,
+          sortOrder: img.sortOrder,
+          assessmentId: id,
+        })),
+      });
+    }
+
     if (removeImage) {
       const img = await prisma.assessmentImage.findFirst({ where: { assessmentId: id, path: removeImage } });
       if (img) {
-        if (img.path.startsWith("/uploads/")) {
-          const filePath = path.join(process.cwd(), "public", img.path);
-          await fs.unlink(filePath).catch(() => {});
-        }
         await prisma.assessmentImage.delete({ where: { id: img.id } });
       }
     }

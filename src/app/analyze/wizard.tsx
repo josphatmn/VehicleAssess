@@ -27,6 +27,7 @@ import { Navbar } from "@/components/navbar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { CURRENCY, formatCurrency } from "@/lib/currency";
+import { uploadImages as supabaseUpload, deleteImage as supabaseDelete } from "@/lib/supabase";
 
 interface DetectedPart {
   partName: string;
@@ -313,16 +314,15 @@ export default function AnalyzeWizard() {
   const handleFiles = useCallback((newFiles: FileList | File[]) => {
     const arr = Array.from(newFiles).filter((f) => f.type.startsWith("image/"));
     setFiles((prev) => [...prev, ...arr]);
-    arr.forEach((f) => {
-      const reader = new FileReader();
-      reader.onload = (e) => setPreviews((prev) => [...prev, e.target?.result as string]);
-      reader.readAsDataURL(f);
-    });
+    setPreviews((prev) => [...prev, ...arr.map((f) => URL.createObjectURL(f))]);
   }, []);
 
   const removeFile = (idx: number) => {
     setFiles((prev) => prev.filter((_, i) => i !== idx));
-    setPreviews((prev) => prev.filter((_, i) => i !== idx));
+    setPreviews((prev) => {
+      URL.revokeObjectURL(prev[idx]);
+      return prev.filter((_, i) => i !== idx);
+    });
   };
 
   // Part editing functions
@@ -422,7 +422,6 @@ export default function AnalyzeWizard() {
       setResult(data);
       setConfirmedVehicle(data.vehicle);
 
-      // Auto-save assessment to DB
       let savedId: string | null = null;
       try {
         const saveRes = await fetch("/api/assessments/save", {
@@ -442,13 +441,31 @@ export default function AnalyzeWizard() {
             })),
             structural_concerns: data.structural_concerns,
             recommendations: data.recommendations,
-            images: previews,
           }),
         });
         if (saveRes.ok) {
           const saved = await saveRes.json();
           savedId = saved.id;
           setAssessmentId(saved.id);
+
+          const imageUrls = await supabaseUpload(files, saved.id);
+          setPreviews(imageUrls);
+
+          await fetch("/api/assessments/save", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              id: saved.id,
+              images: imageUrls.map((url, i) => ({
+                filename: `photo-${i + 1}`,
+                originalName: files[i].name,
+                path: url,
+                mimeType: files[i].type,
+                size: files[i].size,
+                sortOrder: i,
+              })),
+            }),
+          });
         }
       } catch {
         // Non-blocking — user can still proceed
@@ -759,28 +776,21 @@ export default function AnalyzeWizard() {
     if (!arr.length) return;
 
     try {
-      const dataUrls = await Promise.all(
-        arr.map((f) => new Promise<string>((resolve) => {
-          const reader = new FileReader();
-          reader.onload = (ev) => resolve(ev.target?.result as string);
-          reader.readAsDataURL(f);
-        }))
-      );
+      const startIdx = previews.length;
+      const imageUrls = await supabaseUpload(arr, assessmentId);
 
-      for (let i = 0; i < dataUrls.length; i++) {
-        const mimeMatch = dataUrls[i].match(/data:([^;]+)/);
-        const mimeType = mimeMatch ? mimeMatch[1] : "image/jpeg";
+      for (let i = 0; i < imageUrls.length; i++) {
         await fetch("/api/assessments/save", {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             id: assessmentId,
-            addImage: { filename: `photo-${previews.length + i + 1}`, originalName: arr[i].name, path: dataUrls[i], mimeType, size: arr[i].size, sortOrder: previews.length + i },
+            addImage: { filename: `photo-${startIdx + i + 1}`, originalName: arr[i].name, path: imageUrls[i], mimeType: arr[i].type, size: arr[i].size, sortOrder: startIdx + i },
           }),
         });
       }
 
-      setPreviews((prev) => [...prev, ...dataUrls]);
+      setPreviews((prev) => [...prev, ...imageUrls]);
       toast.success(`${arr.length} photo${arr.length > 1 ? "s" : ""} added`);
     } catch {
       toast.error("Failed to upload photos");
@@ -789,13 +799,16 @@ export default function AnalyzeWizard() {
   };
 
   const removeVehiclePhoto = async (idx: number) => {
-    if (!assessmentId) {
-      setPreviews((prev) => prev.filter((_, i) => i !== idx));
-      return;
-    }
-
     const src = previews[idx];
-    if (src) {
+
+    if (assessmentId && src && src.includes("supabase")) {
+      try {
+        const url = new URL(src);
+        const pathParts = url.pathname.split("/object/public/vehicle-images/");
+        if (pathParts[1]) {
+          await supabaseDelete(pathParts[1]);
+        }
+      } catch { /* non-blocking */ }
       try {
         await fetch("/api/assessments/save", {
           method: "PATCH",
@@ -804,6 +817,7 @@ export default function AnalyzeWizard() {
         });
       } catch { /* non-blocking */ }
     }
+
     setPreviews((prev) => prev.filter((_, i) => i !== idx));
     toast.success("Photo removed");
   };
