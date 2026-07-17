@@ -2,9 +2,9 @@
 
 import { loginSchema } from "@/lib/validations";
 import { signIn } from "@/lib/auth";
-import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { AuthError } from "next-auth";
 
 export type LoginState = {
   error?: string;
@@ -27,20 +27,14 @@ export async function login(
     await signIn("credentials", {
       email: validated.data.email,
       password: validated.data.password,
-      redirect: false,
+      redirectTo: "/dashboard",
     });
-  } catch (e: unknown) {
-    const message =
-      e instanceof Error ? e.message : String(e);
-    console.error("Login failed:", message);
-
-    if (message.includes("CredentialsSignin")) {
+  } catch (error) {
+    if (error instanceof AuthError) {
       return { error: "Invalid email or password" };
     }
-    return { error: `Login failed: ${message}` };
+    throw error;
   }
-
-  redirect("/dashboard");
 }
 
 export type RegisterState = {
@@ -78,12 +72,12 @@ export async function register(
     await signIn("credentials", {
       email,
       password,
-      redirect: false,
+      redirectTo: "/dashboard",
     });
-  } catch (e: unknown) {
-    console.error("Auto-login after register failed:", e instanceof Error ? e.message : e);
-    return { success: true };
+  } catch (error) {
+    if (error instanceof AuthError) {
+      return { success: true };
+    }
+    throw error;
   }
-
-  redirect("/dashboard");
 }

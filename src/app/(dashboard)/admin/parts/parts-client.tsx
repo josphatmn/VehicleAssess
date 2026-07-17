@@ -17,6 +17,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { CURRENCY } from "@/lib/currency";
 import {
   Dialog,
   DialogContent,
@@ -195,10 +196,7 @@ export function PartsClient({
   }
 
   function formatCurrency(value: number) {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "ZAR",
-    }).format(value);
+    return `${CURRENCY} ${value.toLocaleString()}`;
   }
 
   return (
@@ -265,7 +263,7 @@ export function PartsClient({
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="add-unitPrice">Unit Price (ZAR)</Label>
+                  <Label htmlFor="add-unitPrice">Unit Price ({CURRENCY})</Label>
                   <Input
                     id="add-unitPrice"
                     type="number"
@@ -279,7 +277,7 @@ export function PartsClient({
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="add-labourCost">Labour Cost (ZAR)</Label>
+                  <Label htmlFor="add-labourCost">Labour Cost ({CURRENCY})</Label>
                   <Input
                     id="add-labourCost"
                     type="number"
@@ -482,7 +480,7 @@ export function PartsClient({
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="edit-unitPrice">Unit Price (ZAR)</Label>
+                <Label htmlFor="edit-unitPrice">Unit Price ({CURRENCY})</Label>
                 <Input
                   id="edit-unitPrice"
                   type="number"
@@ -496,7 +494,7 @@ export function PartsClient({
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="edit-labourCost">Labour Cost (ZAR)</Label>
+                <Label htmlFor="edit-labourCost">Labour Cost ({CURRENCY})</Label>
                 <Input
                   id="edit-labourCost"
                   type="number"
