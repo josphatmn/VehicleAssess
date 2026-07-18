@@ -182,11 +182,34 @@ export default function AnalyzeWizard() {
   useEffect(() => {
     if (didMountRef.current) return;
     didMountRef.current = true;
-    const id = searchParams.get("id");
-    const urlStep = searchParams.get("step") || "";
-    if (id) {
-      loadAssessment(id, urlStep);
-    }
+
+    const init = async () => {
+      const id = searchParams.get("id");
+      const urlStep = searchParams.get("step") || "";
+      const reference = searchParams.get("reference");
+
+      // Auto-verify Paystack callback BEFORE loading assessment
+      if (reference && id) {
+        setPaying(true);
+        try {
+          const res = await fetch(`/api/paystack/verify?reference=${reference}`);
+          const data = await res.json();
+          if (data.verified) {
+            setPaid(true);
+            toast.success("Payment confirmed!");
+          }
+        } catch {
+          // ignore
+        }
+        setPaying(false);
+        window.history.replaceState({}, "", `/analyze?step=results&id=${id}`);
+      }
+
+      if (id) {
+        loadAssessment(id, urlStep || (reference ? "results" : undefined));
+      }
+    };
+    init();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -670,37 +693,11 @@ export default function AnalyzeWizard() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Payment init failed");
 
-      const script = document.createElement("script");
-      script.src = "https://js.paystack.co/v1/inline.js";
-      script.onload = () => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const handler = (window as any).PaystackPop.setup({
-          key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || "pk_test_08605a5144f1f466bc203fd77282352535cc0699",
-          email: user.email,
-          amount: data.amount * 100,
-          currency: "KES",
-          ref: data.reference,
-          onClose: () => { setPaying(false); },
-          callback: async (response: { reference: string }) => {
-            try {
-              const verifyRes = await fetch(`/api/paystack/verify?reference=${response.reference}`);
-              const verifyData = await verifyRes.json();
-              if (verifyData.verified) {
-                setPaid(true);
-                toast.success("Payment successful!");
-                goToResults();
-              } else {
-                toast.error("Payment verification failed");
-              }
-            } catch {
-              toast.error("Could not verify payment");
-            }
-            setPaying(false);
-          },
-        });
-        handler.openIframe();
-      };
-      document.body.appendChild(script);
+      if (data.authorization_url) {
+        window.location.href = data.authorization_url;
+      } else {
+        throw new Error("No payment URL returned");
+      }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Payment failed");
       setPaying(false);
