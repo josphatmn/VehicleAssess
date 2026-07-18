@@ -120,6 +120,10 @@ export default function AnalyzeWizard() {
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
   const [loadingAssessment, setLoadingAssessment] = useState(false);
 
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState({ done: 0, total: 0 });
+  const [deletingIdx, setDeletingIdx] = useState<number | null>(null);
+
   const [paymentAmount, setPaymentAmount] = useState<number>(500);
   const [paying, setPaying] = useState(false);
   const [paid, setPaid] = useState(false);
@@ -877,46 +881,70 @@ export default function AnalyzeWizard() {
     const arr = Array.from(newFiles).filter((f) => f.type.startsWith("image/"));
     if (!arr.length) return;
 
+    // Show local previews immediately
+    const localUrls = arr.map((f) => URL.createObjectURL(f));
+    setPreviews((prev) => [...prev, ...localUrls]);
+
+    setUploading(true);
+    setUploadProgress({ done: 0, total: arr.length });
+
     try {
-      const startIdx = previews.length;
       const imageUrls = await supabaseUpload(arr, assessmentId);
 
       for (let i = 0; i < imageUrls.length; i++) {
+        setUploadProgress({ done: i + 1, total: arr.length });
         await fetch("/api/assessments/save", {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             id: assessmentId,
-            addImage: { filename: `photo-${startIdx + i + 1}`, originalName: arr[i].name, path: imageUrls[i], mimeType: arr[i].type, size: arr[i].size, sortOrder: startIdx + i },
+            addImage: { filename: `photo-${previews.length + i + 1}`, originalName: arr[i].name, path: imageUrls[i], mimeType: arr[i].type, size: arr[i].size, sortOrder: previews.length + i },
           }),
         });
       }
 
-      setPreviews((prev) => [...prev, ...imageUrls]);
+      // Replace local blob URLs with actual URLs
+      setPreviews((prev) => {
+        const updated = [...prev];
+        for (let i = 0; i < imageUrls.length; i++) {
+          updated[previews.length + i] = imageUrls[i];
+        }
+        return updated;
+      });
       toast.success(`${arr.length} photo${arr.length > 1 ? "s" : ""} added`);
     } catch {
+      // Remove the local previews on failure
+      setPreviews((prev) => prev.slice(0, prev.length - arr.length));
+      localUrls.forEach((u) => URL.revokeObjectURL(u));
       toast.error("Failed to upload photos");
+    } finally {
+      setUploading(false);
+      setUploadProgress({ done: 0, total: 0 });
     }
     if (vehiclePhotoInputRef.current) vehiclePhotoInputRef.current.value = "";
   };
 
   const removeVehiclePhoto = async (idx: number) => {
     const src = previews[idx];
+    if (!src) return;
 
-    if (assessmentId && src) {
-      try {
-        await supabaseDelete(src);
-      } catch { /* non-blocking */ }
-      try {
-        await fetch("/api/assessments/save", {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id: assessmentId, removeImage: src }),
-        });
-      } catch { /* non-blocking */ }
+    // Remove immediately (optimistic)
+    setDeletingIdx(idx);
+    setPreviews((prev) => prev.filter((_, i) => i !== idx));
+
+    // Cleanup in background
+    if (assessmentId && src && !src.startsWith("blob:")) {
+      supabaseDelete(src).catch(() => {});
+      fetch("/api/assessments/save", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: assessmentId, removeImage: src }),
+      }).catch(() => {});
+    } else if (src.startsWith("blob:")) {
+      URL.revokeObjectURL(src);
     }
 
-    setPreviews((prev) => prev.filter((_, i) => i !== idx));
+    setDeletingIdx(null);
     toast.success("Photo removed");
   };
 
@@ -1658,26 +1686,42 @@ export default function AnalyzeWizard() {
                   className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition bg-white" />
               </div>
             </div>
-            <div className="pt-2 border-t border-gray-100">
+              <div className="pt-2 border-t border-gray-100">
               <div className="flex items-center justify-between mb-2">
                 <label className="text-xs font-medium text-gray-500">Photos ({previews.length})</label>
-                <button type="button" onClick={() => vehiclePhotoInputRef.current?.click()}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition">
-                  <Camera className="w-3 h-3" /> Add Photo
-                </button>
+                {uploading ? (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-blue-600 bg-blue-50 rounded-lg">
+                    <Loader2 className="w-3 h-3 animate-spin" /> Uploading {uploadProgress.done}/{uploadProgress.total}
+                  </span>
+                ) : (
+                  <button type="button" onClick={() => vehiclePhotoInputRef.current?.click()}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition">
+                    <Camera className="w-3 h-3" /> Add Photo
+                  </button>
+                )}
                 <input ref={vehiclePhotoInputRef} type="file" accept="image/*" multiple className="hidden" onChange={addVehiclePhoto} />
               </div>
               {previews.length > 0 ? (
                 <div className="grid grid-cols-4 gap-2">
-                  {previews.map((src, i) => (
-                    <div key={i} className="relative group rounded-lg overflow-hidden aspect-square bg-gray-100">
-                      <img src={src} alt="" className="w-full h-full object-cover" />
-                      <button type="button" onClick={() => removeVehiclePhoto(i)}
-                        className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
-                        <X className="w-3 h-3" />
-                      </button>
-                    </div>
-                  ))}
+                  {previews.map((src, i) => {
+                    const isBlob = src.startsWith("blob:");
+                    return (
+                      <div key={i} className="relative group rounded-lg overflow-hidden aspect-square bg-gray-100">
+                        <img src={src} alt="" className="w-full h-full object-cover" />
+                        {isBlob && (
+                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                            <Loader2 className="w-5 h-5 text-white animate-spin" />
+                          </div>
+                        )}
+                        {!uploading && (
+                          <button type="button" onClick={() => removeVehiclePhoto(i)}
+                            className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+                            <X className="w-3 h-3" />
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               ) : (
                 <p className="text-xs text-gray-400 italic">No photos uploaded</p>

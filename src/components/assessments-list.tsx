@@ -171,7 +171,7 @@ export function AssessmentsList({ initialData }: { initialData: PaginatedResult 
                         {new Date(a.createdAt).toLocaleDateString()}
                       </TableCell>
                       <TableCell className="text-right">
-                        <Link href={`/assessments/${a.id}`}>
+                        <Link href={`/analyze?step=results&id=${a.id}`}>
                           <Button variant="ghost" size="sm">
                             <Eye className="h-4 w-4" />
                           </Button>
