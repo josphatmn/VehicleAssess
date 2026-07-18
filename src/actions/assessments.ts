@@ -19,7 +19,7 @@ export async function getDashboardStats() {
   const where =
     session.user.role === "ADMIN" ? {} : { userId: session.user.id };
 
-  const [totalAssessments, pendingVerification, completedAssessments] =
+  const [totalAssessments, pendingVerification, completedAssessments, paidCount, revenueResult] =
     await Promise.all([
       prisma.assessment.count({ where }),
       prisma.assessment.count({
@@ -28,9 +28,22 @@ export async function getDashboardStats() {
       prisma.assessment.count({
         where: { ...where, status: "COMPLETED" },
       }),
+      prisma.assessment.count({
+        where: { ...where, paid: true },
+      }),
+      prisma.assessment.aggregate({
+        where: { ...where, paid: true },
+        _sum: { paymentAmount: true },
+      }),
     ]);
 
-  return { totalAssessments, pendingVerification, completedAssessments };
+  return {
+    totalAssessments,
+    pendingVerification,
+    completedAssessments,
+    paidCount,
+    totalRevenue: revenueResult._sum.paymentAmount || 0,
+  };
 }
 
 export async function getRecentAssessments() {
@@ -328,6 +341,64 @@ export async function completeAssessment(assessmentId: string) {
 
   revalidatePath("/dashboard");
   revalidatePath(`/assessments/${assessmentId}`);
+}
+
+export async function getPayments(params: {
+  search?: string;
+  page?: number;
+  limit?: number;
+}) {
+  const session = await auth();
+  if (!session?.user) throw new Error("Unauthorized");
+
+  const { search, page = 1, limit = 20 } = params;
+  const skip = (page - 1) * limit;
+
+  const where: Record<string, unknown> = { paid: true };
+
+  if (session.user.role !== "ADMIN") {
+    where.userId = session.user.id;
+  }
+
+  if (search) {
+    where.OR = [
+      { assessmentNumber: { contains: search } },
+      { customerName: { contains: search } },
+      { paymentRef: { contains: search } },
+    ];
+  }
+
+  const [payments, total] = await Promise.all([
+    prisma.assessment.findMany({
+      where,
+      orderBy: { paymentDate: "desc" },
+      skip,
+      take: limit,
+      select: {
+        id: true,
+        assessmentNumber: true,
+        customerName: true,
+        status: true,
+        paid: true,
+        paymentRef: true,
+        paymentAmount: true,
+        paymentDate: true,
+        createdAt: true,
+      },
+    }),
+    prisma.assessment.count({ where }),
+  ]);
+
+  return {
+    payments: payments.map((p) => ({
+      ...p,
+      paymentDate: p.paymentDate?.toISOString() || null,
+      createdAt: p.createdAt.toISOString(),
+    })),
+    total,
+    totalPages: Math.ceil(total / limit),
+    currentPage: page,
+  };
 }
 
 export async function deleteAssessment(id: string) {

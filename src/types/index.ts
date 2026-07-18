@@ -63,6 +63,8 @@ export interface DashboardStats {
   totalAssessments: number;
   pendingVerification: number;
   completedAssessments: number;
+  paidCount: number;
+  totalRevenue: number;
 }
 
 export interface AssessmentListItem {

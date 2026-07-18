@@ -10,10 +10,10 @@ interface AppShellProps {
 
 export function AppShell({ children, userRole, userName }: AppShellProps) {
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex h-screen overflow-hidden bg-gray-50/50">
       <Sidebar userRole={userRole} userName={userName} />
       <main className="flex-1 overflow-y-auto">
-        <div className="p-6">{children}</div>
+        <div className="mx-auto max-w-6xl px-6 py-8">{children}</div>
       </main>
     </div>
   );
