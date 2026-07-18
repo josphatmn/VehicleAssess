@@ -206,13 +206,23 @@ export async function createUser(data: {
   password: string;
   role: string;
 }) {
-  const bcrypt = await import("bcryptjs");
-  const hashedPassword = await bcrypt.hash(data.password, 10);
+  const { createClient } = await import("@/lib/supabase/server");
+  const supabase = await createClient();
+
+  const { data: authData, error } = await supabase.auth.admin.createUser({
+    email: data.email,
+    password: data.password,
+    email_confirm: true,
+    user_metadata: { name: data.name },
+  });
+
+  if (error) throw new Error(error.message);
+
   const user = await prisma.user.create({
     data: {
+      supabaseUserId: authData.user.id,
       name: data.name,
       email: data.email,
-      password: hashedPassword,
       role: data.role,
     },
   });
@@ -221,6 +231,12 @@ export async function createUser(data: {
 }
 
 export async function deleteUser(id: string) {
+  const user = await prisma.user.findUnique({ where: { id } });
+  if (user?.supabaseUserId) {
+    const { createClient } = await import("@/lib/supabase/server");
+    const supabase = await createClient();
+    await supabase.auth.admin.deleteUser(user.supabaseUserId);
+  }
   await prisma.user.delete({ where: { id } });
   revalidatePath("/admin/users");
 }

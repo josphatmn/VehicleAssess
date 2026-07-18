@@ -375,7 +375,7 @@ export default function AnalyzeWizard() {
     }
 
     try {
-      const sessionRes = await fetch("/api/auth/session");
+      const sessionRes = await fetch("/api/auth/me");
       const session = await sessionRes.json();
       if (!session?.user) {
         toast.error("Please log in to analyze images");
@@ -823,13 +823,9 @@ export default function AnalyzeWizard() {
   const removeVehiclePhoto = async (idx: number) => {
     const src = previews[idx];
 
-    if (assessmentId && src && src.includes("supabase")) {
+    if (assessmentId && src) {
       try {
-        const url = new URL(src);
-        const pathParts = url.pathname.split("/object/public/vehicle-images/");
-        if (pathParts[1]) {
-          await supabaseDelete(pathParts[1]);
-        }
+        await supabaseDelete(src);
       } catch { /* non-blocking */ }
       try {
         await fetch("/api/assessments/save", {

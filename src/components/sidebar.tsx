@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { signOut } from "next-auth/react";
+import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
@@ -16,6 +17,7 @@ import {
   Shield,
   ChevronLeft,
   Store,
+  User,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -42,6 +44,7 @@ interface SidebarProps {
 
 export function Sidebar({ userRole, userName }: SidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
 
   return (
@@ -125,8 +128,20 @@ export function Sidebar({ userRole, userName }: SidebarProps) {
         {!collapsed && (
           <p className="text-sm font-medium truncate mb-2">{userName}</p>
         )}
+        <Link
+          href="/profile"
+          className={cn(
+            "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+            pathname === "/profile"
+              ? "bg-primary text-primary-foreground"
+              : "text-muted-foreground hover:bg-muted hover:text-foreground"
+          )}
+        >
+          <User className="h-4 w-4" />
+          {!collapsed && <span>Profile</span>}
+        </Link>
         <button
-          onClick={() => signOut({ callbackUrl: "/login" })}
+          onClick={async () => { const s = createClient(); await s.auth.signOut(); router.push("/login"); router.refresh(); }}
           className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
         >
           <LogOut className="h-4 w-4" />

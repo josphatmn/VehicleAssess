@@ -1,13 +1,12 @@
 "use server";
 
 import { loginSchema } from "@/lib/validations";
-import { signIn } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
-import bcrypt from "bcryptjs";
-import { AuthError } from "next-auth";
 
 export type LoginState = {
   error?: string;
+  success?: boolean;
 } | undefined;
 
 export async function login(
@@ -23,18 +22,17 @@ export async function login(
     return { error: "Please enter valid credentials" };
   }
 
-  try {
-    await signIn("credentials", {
-      email: validated.data.email,
-      password: validated.data.password,
-      redirectTo: "/dashboard",
-    });
-  } catch (error) {
-    if (error instanceof AuthError) {
-      return { error: "Invalid email or password" };
-    }
-    throw error;
+  const supabase = await createClient();
+  const { error } = await supabase.auth.signInWithPassword({
+    email: validated.data.email,
+    password: validated.data.password,
+  });
+
+  if (error) {
+    return { error: "Invalid email or password" };
   }
+
+  return { success: true };
 }
 
 export type RegisterState = {
@@ -58,26 +56,34 @@ export async function register(
     return { error: "Password must be at least 6 characters" };
   }
 
-  const existing = await prisma.user.findUnique({ where: { email } });
-  if (existing) {
-    return { error: "An account with this email already exists" };
-  }
+  const supabase = await createClient();
 
-  const hashed = await bcrypt.hash(password, 10);
-  await prisma.user.create({
-    data: { name, email, password: hashed, role: "ASSESSOR" },
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: { data: { name } },
   });
 
-  try {
-    await signIn("credentials", {
-      email,
-      password,
-      redirectTo: "/dashboard",
-    });
-  } catch (error) {
-    if (error instanceof AuthError) {
-      return { success: true };
-    }
-    throw error;
+  if (error) {
+    return { error: error.message };
   }
+
+  if (data.user) {
+    const existing = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!existing) {
+      await prisma.user.create({
+        data: {
+          supabaseUserId: data.user.id,
+          name,
+          email,
+          role: "ASSESSOR",
+        },
+      });
+    }
+  }
+
+  return { success: true };
 }

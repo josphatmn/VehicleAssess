@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 interface SessionUser {
+  id: string;
   name: string;
   email: string;
   role: string;
@@ -13,8 +14,8 @@ export function useSession() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/auth/session")
-      .then((r) => r.json())
+    fetch("/api/auth/me")
+      .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
         if (data?.user) setUser(data.user);
       })

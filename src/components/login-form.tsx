@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { login } from "@/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +18,11 @@ import Link from "next/link";
 
 export function LoginForm() {
   const [state, action, pending] = useActionState(login, undefined);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (state?.success) router.push("/dashboard");
+  }, [state, router]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/30">

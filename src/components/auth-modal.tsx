@@ -20,14 +20,12 @@ export function AuthModal({ open, onClose, defaultTab = "login" }: AuthModalProp
   }, [defaultTab]);
 
   useEffect(() => {
-    if (loginState === undefined && !loginPending) return;
-    if (loginState && !loginState.error) onClose();
-  }, [loginState, loginPending, onClose]);
+    if (loginState?.success) onClose();
+  }, [loginState, onClose]);
 
   useEffect(() => {
-    if (registerState === undefined && !registerPending) return;
     if (registerState?.success) onClose();
-  }, [registerState, registerPending, onClose]);
+  }, [registerState, onClose]);
 
   useEffect(() => {
     if (!open) return;

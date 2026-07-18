@@ -2,53 +2,89 @@ import "dotenv/config";
 import { PrismaClient } from "../src/generated/prisma";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Pool } from "pg";
-import bcrypt from "bcryptjs";
+import { createClient } from "@supabase/supabase-js";
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+const supabase = serviceKey
+  ? createClient(supabaseUrl, serviceKey)
+  : null;
+
+async function ensureSupabaseUser(
+  email: string,
+  password: string,
+  name: string
+): Promise<string | null> {
+  if (!supabase) {
+    console.log(`  [skip] No SUPABASE_SERVICE_ROLE_KEY — cannot create auth user for ${email}`);
+    return null;
+  }
+
+  const { data: existing } = await supabase.auth.admin.listUsers();
+  const found = existing?.users?.find((u) => u.email === email);
+  if (found) {
+    console.log(`  [exists] Auth user ${email} (${found.id})`);
+    return found.id;
+  }
+
+  const { data, error } = await supabase.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+    user_metadata: { name },
+  });
+
+  if (error) {
+    console.error(`  [error] Failed to create auth user ${email}:`, error.message);
+    return null;
+  }
+
+  console.log(`  [created] Auth user ${email} (${data.user.id})`);
+  return data.user.id;
+}
+
 async function main() {
-  console.log("Seeding database...");
+  console.log("Seeding database...\n");
 
-  const adminPassword = await bcrypt.hash("admin123", 10);
-  const assessorPassword = await bcrypt.hash("assessor123", 10);
+  // --- Auth users ---
+  console.log("Setting up Supabase Auth users...");
+  const adminSupaId = await ensureSupabaseUser("admin@vehicle-assess.com", "admin123", "System Admin");
+  const assessorSupaId = await ensureSupabaseUser("assessor@vehicle-assess.com", "assessor123", "John Assessor");
+  const publicSupaId = await ensureSupabaseUser("public@vehicle-assess.com", "public123", "Public User");
 
-  await prisma.user.upsert({
-    where: { email: "admin@vehicle-assess.com" },
-    update: {},
-    create: {
-      name: "System Admin",
-      email: "admin@vehicle-assess.com",
-      password: adminPassword,
-      role: "ADMIN",
-    },
-  });
+  const users = [
+    { email: "admin@vehicle-assess.com", name: "System Admin", role: "ADMIN", supabaseUserId: adminSupaId },
+    { email: "assessor@vehicle-assess.com", name: "John Assessor", role: "ASSESSOR", supabaseUserId: assessorSupaId },
+    { email: "public@vehicle-assess.com", name: "Public User", role: "ASSESSOR", supabaseUserId: publicSupaId },
+  ];
 
-  await prisma.user.upsert({
-    where: { email: "assessor@vehicle-assess.com" },
-    update: {},
-    create: {
-      name: "John Assessor",
-      email: "assessor@vehicle-assess.com",
-      password: assessorPassword,
-      role: "ASSESSOR",
-    },
-  });
+  for (const u of users) {
+    const updateData: Record<string, string> = {};
+    if (u.name) updateData.name = u.name;
+    if (u.role) updateData.role = u.role;
+    if (u.supabaseUserId) updateData.supabaseUserId = u.supabaseUserId;
 
-  await prisma.user.upsert({
-    where: { email: "public@vehicle-assess.com" },
-    update: {},
-    create: {
-      name: "Public User",
-      email: "public@vehicle-assess.com",
-      password: await bcrypt.hash("public123", 10),
-      role: "ASSESSOR",
-    },
-  });
+    await prisma.user.upsert({
+      where: { email: u.email },
+      update: updateData,
+      create: {
+        id: crypto.randomUUID(),
+        name: u.name,
+        email: u.email,
+        role: u.role,
+        supabaseUserId: u.supabaseUserId || null,
+      },
+    });
+  }
 
-  console.log("Users seeded");
+  console.log("Users seeded\n");
 
+  // --- Vehicle makes ---
   const makes = [
     { name: "Toyota" },
     { name: "Nissan" },
@@ -60,401 +96,160 @@ async function main() {
     { name: "Suzuki" },
   ];
 
-  for (const make of makes) {
+  for (const m of makes) {
     await prisma.vehicleMake.upsert({
-      where: { name: make.name },
+      where: { name: m.name },
       update: {},
-      create: make,
+      create: m,
     });
   }
+  console.log(`${makes.length} vehicle makes seeded`);
 
-  console.log("Vehicle makes seeded");
+  // --- Vehicle models ---
+  const toyota = await prisma.vehicleMake.findUnique({ where: { name: "Toyota" } });
+  const nissan = await prisma.vehicleMake.findUnique({ where: { name: "Nissan" } });
+  const mazda = await prisma.vehicleMake.findUnique({ where: { name: "Mazda" } });
+  const ford = await prisma.vehicleMake.findUnique({ where: { name: "Ford" } });
+  const isuzu = await prisma.vehicleMake.findUnique({ where: { name: "Isuzu" } });
+  const mitsubishi = await prisma.vehicleMake.findUnique({ where: { name: "Mitsubishi" } });
+  const honda = await prisma.vehicleMake.findUnique({ where: { name: "Honda" } });
+  const suzuki = await prisma.vehicleMake.findUnique({ where: { name: "Suzuki" } });
 
-  const toyotaMake = await prisma.vehicleMake.findUnique({
-    where: { name: "Toyota" },
-  });
-
-  if (toyotaMake) {
-    const models = ["Hilux", "Prado", "Land Cruiser", "Corolla", "RAV4"];
-    for (const modelName of models) {
-      await prisma.vehicleModel.upsert({
-        where: { name_makeId: { name: modelName, makeId: toyotaMake.id } },
-        update: {},
-        create: { name: modelName, makeId: toyotaMake.id },
-      });
-    }
-
-    const hilux = await prisma.vehicleModel.findFirst({
-      where: { name: "Hilux", makeId: toyotaMake.id },
-    });
-
-    if (hilux) {
-      const variants = ["SR", "SR5", "Invincible", "Revo", "Double Cab", "Single Cab"];
-      for (const variantName of variants) {
-        await prisma.vehicleVariant.upsert({
-          where: {
-            name_modelId: { name: variantName, modelId: hilux.id },
-          },
-          update: {},
-          create: { name: variantName, modelId: hilux.id },
-        });
-      }
-
-      const variant = await prisma.vehicleVariant.findFirst({
-        where: { name: "SR5", modelId: hilux.id },
-      });
-
-      if (variant) {
-        const parts = [
-          {
-            partNumber: "TOY-HIL-BP-001",
-            name: "Front Bumper",
-            category: "BODY",
-            unitPrice: 850,
-            labourCost: 150,
-          },
-          {
-            partNumber: "TOY-HIL-HL-002",
-            name: "Headlight Assembly (Left)",
-            category: "EXTERIOR",
-            unitPrice: 320,
-            labourCost: 80,
-          },
-          {
-            partNumber: "TOY-HIL-HL-003",
-            name: "Headlight Assembly (Right)",
-            category: "EXTERIOR",
-            unitPrice: 320,
-            labourCost: 80,
-          },
-          {
-            partNumber: "TOY-HIL-FG-004",
-            name: "Front Grille",
-            category: "EXTERIOR",
-            unitPrice: 180,
-            labourCost: 50,
-          },
-          {
-            partNumber: "TOY-HIL-FN-005",
-            name: "Front Fender (Left)",
-            category: "BODY",
-            unitPrice: 290,
-            labourCost: 120,
-          },
-          {
-            partNumber: "TOY-HIL-FN-006",
-            name: "Front Fender (Right)",
-            category: "BODY",
-            unitPrice: 290,
-            labourCost: 120,
-          },
-          {
-            partNumber: "TOY-HIL-WS-007",
-            name: "Windshield",
-            category: "GLASS",
-            unitPrice: 420,
-            labourCost: 100,
-          },
-          {
-            partNumber: "TOY-HIL-BM-008",
-            name: "Rear Bumper",
-            category: "BODY",
-            unitPrice: 650,
-            labourCost: 130,
-          },
-          {
-            partNumber: "TOY-HIL-FL-009",
-            name: "Front Bumper Reinforcement",
-            category: "CHASSIS",
-            unitPrice: 480,
-            labourCost: 200,
-          },
-          {
-            partNumber: "TOY-HIL-SH-010",
-            name: "Front Shock Absorber (Left)",
-            category: "SUSPENSION",
-            unitPrice: 180,
-            labourCost: 90,
-          },
-          {
-            partNumber: "COM-BMP-001",
-            name: "Bumper",
-            category: "BODY",
-            unitPrice: 600,
-            labourCost: 120,
-          },
-          {
-            partNumber: "COM-HL-001",
-            name: "Headlight",
-            category: "EXTERIOR",
-            unitPrice: 280,
-            labourCost: 70,
-          },
-          {
-            partNumber: "COM-TL-001",
-            name: "Tail Light",
-            category: "EXTERIOR",
-            unitPrice: 180,
-            labourCost: 40,
-          },
-          {
-            partNumber: "COM-FN-001",
-            name: "Fender",
-            category: "BODY",
-            unitPrice: 250,
-            labourCost: 100,
-          },
-          {
-            partNumber: "COM-DR-001",
-            name: "Front Door",
-            category: "BODY",
-            unitPrice: 900,
-            labourCost: 250,
-          },
-          {
-            partNumber: "COM-DR-002",
-            name: "Rear Door",
-            category: "BODY",
-            unitPrice: 850,
-            labourCost: 220,
-          },
-          {
-            partNumber: "COM-HD-001",
-            name: "Hood",
-            category: "BODY",
-            unitPrice: 550,
-            labourCost: 150,
-          },
-          {
-            partNumber: "COM-RD-001",
-            name: "Radiator",
-            category: "COOLING",
-            unitPrice: 380,
-            labourCost: 120,
-          },
-          {
-            partNumber: "COM-CL-001",
-            name: "AC Condenser",
-            category: "COOLING",
-            unitPrice: 320,
-            labourCost: 100,
-          },
-          {
-            partNumber: "COM-IC-001",
-            name: "Intercooler",
-            category: "COOLING",
-            unitPrice: 450,
-            labourCost: 130,
-          },
-          {
-            partNumber: "COM-MR-001",
-            name: "Side Mirror",
-            category: "EXTERIOR",
-            unitPrice: 150,
-            labourCost: 40,
-          },
-          {
-            partNumber: "COM-RP-001",
-            name: "Roof Panel",
-            category: "BODY",
-            unitPrice: 1200,
-            labourCost: 400,
-          },
-          {
-            partNumber: "COM-WS-001",
-            name: "Windshield",
-            category: "GLASS",
-            unitPrice: 380,
-            labourCost: 90,
-          },
-          {
-            partNumber: "COM-PP-001",
-            name: "Pillar",
-            category: "CHASSIS",
-            unitPrice: 350,
-            labourCost: 200,
-          },
-          {
-            partNumber: "COM-XM-001",
-            name: "Crossmember",
-            category: "CHASSIS",
-            unitPrice: 520,
-            labourCost: 250,
-          },
-          {
-            partNumber: "COM-SF-001",
-            name: "Suspension",
-            category: "SUSPENSION",
-            unitPrice: 400,
-            labourCost: 180,
-          },
-          {
-            partNumber: "COM-EG-001",
-            name: "Engine",
-            category: "POWERTRAIN",
-            unitPrice: 5000,
-            labourCost: 1500,
-          },
-          {
-            partNumber: "COM-CH-001",
-            name: "Chassis",
-            category: "CHASSIS",
-            unitPrice: 3000,
-            labourCost: 2000,
-          },
-          {
-            partNumber: "COM-FD-001",
-            name: "Fog Light",
-            category: "EXTERIOR",
-            unitPrice: 120,
-            labourCost: 30,
-          },
-          {
-            partNumber: "COM-BL-001",
-            name: "Bonnet",
-            category: "BODY",
-            unitPrice: 500,
-            labourCost: 140,
-          },
-          {
-            partNumber: "COM-QP-001",
-            name: "Quarter Panel",
-            category: "BODY",
-            unitPrice: 650,
-            labourCost: 200,
-          },
-          {
-            partNumber: "COM-RG-001",
-            name: "Rocker Panel",
-            category: "BODY",
-            unitPrice: 380,
-            labourCost: 150,
-          },
-          {
-            partNumber: "COM-WG-001",
-            name: "Wheel Guard",
-            category: "BODY",
-            unitPrice: 120,
-            labourCost: 40,
-          },
-          {
-            partNumber: "COM-BR-001",
-            name: "Brake Caliper",
-            category: "BRAKES",
-            unitPrice: 280,
-            labourCost: 100,
-          },
-          {
-            partNumber: "COM-BD-001",
-            name: "Brake Disc",
-            category: "BRAKES",
-            unitPrice: 180,
-            labourCost: 80,
-          },
-          {
-            partNumber: "COM-SL-001",
-            name: "Side Skirt",
-            category: "BODY",
-            unitPrice: 200,
-            labourCost: 60,
-          },
-          {
-            partNumber: "COM-WH-001",
-            name: "Wheel",
-            category: "WHEELS",
-            unitPrice: 350,
-            labourCost: 30,
-          },
-          {
-            partNumber: "COM-TY-001",
-            name: "Tyre",
-            category: "WHEELS",
-            unitPrice: 200,
-            labourCost: 20,
-          },
-          {
-            partNumber: "COM-FS-001",
-            name: "Fuel System",
-            category: "FUEL",
-            unitPrice: 600,
-            labourCost: 200,
-          },
-          {
-            partNumber: "COM-EX-001",
-            name: "Exhaust System",
-            category: "EXHAUST",
-            unitPrice: 500,
-            labourCost: 180,
-          },
-        ];
-
-        for (const part of parts) {
-          await prisma.vehiclePart.create({ data: { ...part, variantId: variant.id } });
-        }
-      }
-    }
-  }
-
-  console.log("Vehicle catalog seeded");
-
-  const nissanMake = await prisma.vehicleMake.findUnique({
-    where: { name: "Nissan" },
-  });
-  if (nissanMake) {
-    const models = ["Navara", "X-Trail", "Patrol", "Qashqai"];
-    for (const modelName of models) {
-      await prisma.vehicleModel.upsert({
-        where: { name_makeId: { name: modelName, makeId: nissanMake.id } },
-        update: {},
-        create: { name: modelName, makeId: nissanMake.id },
-      });
-    }
-  }
-
-  const suppliers = [
-    { name: "Toyota Kenya (CFAO Mobility Kenya)", website: "https://toyota.co.ke", location: "Nairobi" },
-    { name: "Commercial Motor Spares (CMS)", website: "https://cms.co.ke", location: "Nairobi" },
-    { name: "Car Parts Kenya", website: "https://carparts.co.ke", location: "Nairobi" },
-    { name: "KM Auto Spares", website: "https://kmautospares.co.ke", location: "Nairobi" },
-    { name: "Auto Market Kenya", website: null, location: "Nairobi" },
-    { name: "Doukan", website: "https://doukan.co.ke", location: "Nairobi" },
-    { name: "HIQ Auto Parts", website: null, location: "Nairobi" },
-    { name: "Rev Auto Parts", website: "https://revauto.co.ke", location: "Nairobi" },
-    { name: "Spares Kenya", website: null, location: "Nairobi" },
-    { name: "Turtle Auto Emporium", website: null, location: "Nairobi" },
-    { name: "Garizili", website: null, location: "Nairobi" },
-    { name: "AutoXpress Kenya", website: "https://autoxpress.co.ke", location: "Nairobi" },
-    { name: "Car & General", website: "https://carandgeneral.com", location: "Nairobi" },
-    { name: "Kingsway Tyres", website: null, location: "Nairobi" },
-    { name: "Isuzu East Africa", website: "https://isuzu.co.ke", location: "Nairobi" },
-    { name: "DT Dobie Kenya", website: "https://dtdobie.co.ke", location: "Nairobi" },
-    { name: "Simba Corporation", website: "https://simbacorporation.com", location: "Nairobi" },
-    { name: "CMC Motors Group", website: "https://cmcmotors.com", location: "Nairobi" },
-    { name: "Ryce East Africa", website: "https://ryceafrica.com", location: "Nairobi" },
-    { name: "Bavaria Auto", website: "https://bavariaauto.co.ke", location: "Nairobi" },
-    { name: "NG Auto Spares", website: null, location: "Nairobi" },
-    { name: "Galaxy Auto", website: null, location: "Nairobi" },
-    { name: "Avenge Auto", website: null, location: "Nairobi" },
-    { name: "Japan Auto Parts Kenya", website: null, location: "Nairobi" },
-    { name: "MotorHub Kenya", website: null, location: "Nairobi" },
-    { name: "Auto Zone Kenya", website: null, location: "Nairobi" },
-    { name: "Kenya Auto Bazaar", website: null, location: "Nairobi" },
-    { name: "Prime Auto Parts", website: null, location: "Nairobi" },
-    { name: "Genuine Auto Parts Kenya", website: null, location: "Nairobi" },
-    { name: "AutoKenya", website: null, location: "Nairobi" },
+  const models = [
+    { name: "Hilux", makeId: toyota!.id },
+    { name: "Prado", makeId: toyota!.id },
+    { name: "Land Cruiser", makeId: toyota!.id },
+    { name: "Corolla", makeId: toyota!.id },
+    { name: "RAV4", makeId: toyota!.id },
+    { name: "Pathfinder", makeId: nissan!.id },
+    { name: "X-Trail", makeId: nissan!.id },
+    { name: "Navara", makeId: nissan!.id },
+    { name: "CX-5", makeId: mazda!.id },
+    { name: "BT-50", makeId: mazda!.id },
+    { name: "Ranger", makeId: ford!.id },
+    { name: "Everest", makeId: ford!.id },
+    { name: "MU-X", makeId: isuzu!.id },
+    { name: "D-Max", makeId: isuzu!.id },
+    { name: "Outlander", makeId: mitsubishi!.id },
+    { name: "Triton", makeId: mitsubishi!.id },
+    { name: "CR-V", makeId: honda!.id },
+    { name: "Vitara", makeId: suzuki!.id },
   ];
 
-  for (const supplier of suppliers) {
-    await prisma.supplier.upsert({
-      where: { name: supplier.name },
-      update: { website: supplier.website, location: supplier.location },
-      create: supplier,
-    });
+  for (const m of models) {
+    const existing = await prisma.vehicleModel.findFirst({ where: { name: m.name, makeId: m.makeId } });
+    if (!existing) {
+      await prisma.vehicleModel.create({ data: m });
+    }
   }
+  console.log(`${models.length} vehicle models seeded`);
 
-  console.log("Suppliers seeded");
+  // --- Damaged parts ---
+  const parts = [
+    { name: "Front Bumper", category: "Body" },
+    { name: "Rear Bumper", category: "Body" },
+    { name: "Bonnet", category: "Body" },
+    { name: "Front Fender (Left)", category: "Body" },
+    { name: "Front Fender (Right)", category: "Body" },
+    { name: "Rear Fender (Left)", category: "Body" },
+    { name: "Rear Fender (Right)", category: "Body" },
+    { name: "Front Door (Left)", category: "Body" },
+    { name: "Front Door (Right)", category: "Body" },
+    { name: "Rear Door (Left)", category: "Body" },
+    { name: "Rear Door (Right)", category: "Body" },
+    { name: "Tailgate", category: "Body" },
+    { name: "Roof Panel", category: "Body" },
+    { name: "A-Pillar (Left)", category: "Structural" },
+    { name: "A-Pillar (Right)", category: "Structural" },
+    { name: "B-Pillar (Left)", category: "Structural" },
+    { name: "B-Pillar (Right)", category: "Structural" },
+    { name: "C-Pillar (Left)", category: "Structural" },
+    { name: "C-Pillar (Right)", category: "Structural" },
+    { name: "Front Crossmember", category: "Structural" },
+    { name: "Rear Crossmember", category: "Structural" },
+    { name: "Chassis Rail (Left)", category: "Structural" },
+    { name: "Chassis Rail (Right)", category: "Structural" },
+    { name: "Headlight (Left)", category: "Lighting" },
+    { name: "Headlight (Right)", category: "Lighting" },
+    { name: "Tail Light (Left)", category: "Lighting" },
+    { name: "Tail Light (Right)", category: "Lighting" },
+    { name: "Fog Light (Left)", category: "Lighting" },
+    { name: "Fog Light (Right)", category: "Lighting" },
+    { name: "Windshield", category: "Glass" },
+    { name: "Rear Windshield", category: "Glass" },
+    { name: "Side Window (Left)", category: "Glass" },
+    { name: "Side Window (Right)", category: "Glass" },
+    { name: "Radiator Support", category: "Structural" },
+    { name: "Grille", category: "Body" },
+    { name: "Side Mirror (Left)", category: "Accessories" },
+    { name: "Side Mirror (Right)", category: "Accessories" },
+    { name: "Front Wheel", category: "Wheels" },
+    { name: "Rear Wheel", category: "Wheels" },
+    { name: "Spare Wheel", category: "Wheels" },
+  ];
 
-  console.log("Database seeded successfully!");
+  for (const p of parts) {
+    const existing = await prisma.vehiclePart.findFirst({ where: { name: p.name } });
+    if (!existing) {
+      await prisma.vehiclePart.create({
+        data: {
+          name: p.name,
+          category: p.category,
+          partNumber: `VP-${p.name.replace(/\s+/g, "-").toUpperCase().slice(0, 20)}`,
+          unitPrice: 0,
+          labourCost: 0,
+        },
+      });
+    }
+  }
+  console.log(`${parts.length} damaged parts seeded`);
+
+  // --- Suppliers ---
+  const suppliers = [
+    { name: "GreenChey Kenya", location: "Nairobi", website: "https://greenchey.co.ke", isActive: true },
+    { name: "Parts Zone Kenya", location: "Nairobi", website: "https://partszone.co.ke", isActive: true },
+    { name: "CMS Auto Parts", location: "Nairobi", website: "https://cms.co.ke", isActive: true },
+    { name: "Motorcare Kenya", location: "Nairobi", website: "https://motorcare.co.ke", isActive: true },
+    { name: "AutoParts Kenya", location: "Nairobi", website: "https://autoparts.co.ke", isActive: true },
+    { name: "Nairobi Auto Parts", location: "Nairobi", website: "https://nairobautoparts.co.ke", isActive: true },
+    { name: "Kenya Auto Spares", location: "Nairobi", website: "https://kenyaautospares.co.ke", isActive: true },
+    { name: "Mombasa Auto Parts", location: "Mombasa", website: "https://mombasaautoparts.co.ke", isActive: true },
+    { name: "Kisumu Auto Spares", location: "Kisumu", website: "https://kisumuautospares.co.ke", isActive: true },
+    { name: "Eldoret Auto Parts", location: "Eldoret", website: "https://eldoretautoparts.co.ke", isActive: true },
+    { name: "Nakuru Auto Spares", location: "Nakuru", website: "https://nakuruautospares.co.ke", isActive: true },
+    { name: "Thika Auto Parts", location: "Thika", website: "https://thikaautoparts.co.ke", isActive: true },
+    { name: "Nyeri Auto Spares", location: "Nyeri", website: "https://nyeriautospares.co.ke", isActive: true },
+    { name: "Meru Auto Parts", location: "Meru", website: "https://meruautoparts.co.ke", isActive: true },
+    { name: "Machakos Auto Spares", location: "Machakos", website: "https://machakosautospares.co.ke", isActive: true },
+    { name: "Kitale Auto Parts", location: "Kitale", website: "https://kitaleautoparts.co.ke", isActive: true },
+    { name: "Garissa Auto Spares", location: "Garissa", website: "https://garissaautospares.co.ke", isActive: true },
+    { name: "Kakamega Auto Parts", location: "Kakamega", website: "https://kakamegaaautoparts.co.ke", isActive: true },
+    { name: "Kericho Auto Spares", location: "Kericho", website: "https://kerichoautospares.co.ke", isActive: true },
+    { name: "Narok Auto Parts", location: "Narok", website: "https://narokautoparts.co.ke", isActive: true },
+    { name: "Bungoma Auto Spares", location: "Bungoma", website: "https://bungomaautospares.co.ke", isActive: true },
+    { name: "Busia Auto Parts", location: "Busia", website: "https://busiaautoparts.co.ke", isActive: true },
+    { name: "Homa Bay Auto Spares", location: "Homa Bay", website: "https://homabayautospares.co.ke", isActive: true },
+    { name: "Siaya Auto Parts", location: "Siaya", website: "https://siayaautoparts.co.ke", isActive: true },
+    { name: "Murang'a Auto Spares", location: "Murang'a", website: "https://murangaaautospares.co.ke", isActive: true },
+    { name: "Kirinyaga Auto Parts", location: "Kirinyaga", website: "https://kirinyagaautoparts.co.ke", isActive: true },
+    { name: "Laikipia Auto Spares", location: "Laikipia", website: "https://laikipiaautospares.co.ke", isActive: true },
+    { name: "Trans Nzoia Auto Parts", location: "Trans Nzoia", website: "https://transnziaautoparts.co.ke", isActive: true },
+    { name: "Uasin Gishu Auto Spares", location: "Uasin Gishu", website: "https://uasingishuautospares.co.ke", isActive: true },
+    { name: "Bomet Auto Parts", location: "Bomet", website: "https://bometautoparts.co.ke", isActive: true },
+    { name: "Kajiado Auto Spares", location: "Kajiado", website: "https://kajiadoautospares.co.ke", isActive: true },
+    { name: "Kiambu Auto Parts", location: "Kiambu", website: "https://kiambuautoparts.co.ke", isActive: true },
+    { name: "Migori Auto Spares", location: "Migori", website: "https://migoriautospares.co.ke", isActive: true },
+  ];
+
+  for (const s of suppliers) {
+    const existing = await prisma.supplier.findFirst({ where: { name: s.name } });
+    if (!existing) {
+      await prisma.supplier.create({ data: s });
+    }
+  }
+  console.log(`${suppliers.length} suppliers seeded`);
+
+  console.log("\nSeeding complete!");
 }
 
 main()
@@ -464,4 +259,5 @@ main()
   })
   .finally(async () => {
     await prisma.$disconnect();
+    await pool.end();
   });

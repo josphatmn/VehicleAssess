@@ -6,6 +6,7 @@ const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
 const BUCKET = "vehicle-images";
 
 let browserClient: SupabaseClient | null = null;
+let bucketAvailable: boolean | null = null;
 
 export function getSupabaseBrowser(): SupabaseClient {
   if (!browserClient) {
@@ -14,24 +15,46 @@ export function getSupabaseBrowser(): SupabaseClient {
   return browserClient;
 }
 
+async function fileToDataUrl(file: File): Promise<string> {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => resolve(e.target?.result as string);
+    reader.readAsDataURL(file);
+  });
+}
+
+async function checkBucket(): Promise<boolean> {
+  if (bucketAvailable !== null) return bucketAvailable;
+  const supabase = getSupabaseBrowser();
+  const { error } = await supabase.storage.getBucket(BUCKET);
+  bucketAvailable = !error;
+  return bucketAvailable;
+}
+
 export async function uploadImage(
   file: File,
   assessmentId: string,
   index: number
 ): Promise<string> {
-  const supabase = getSupabaseBrowser();
-  const ext = file.name.split(".").pop() || "jpg";
-  const path = `${assessmentId}/${Date.now()}-${index}.${ext}`;
+  const hasBucket = await checkBucket();
 
-  const { error } = await supabase.storage.from(BUCKET).upload(path, file, {
-    contentType: file.type,
-    upsert: false,
-  });
+  if (hasBucket) {
+    const supabase = getSupabaseBrowser();
+    const ext = file.name.split(".").pop() || "jpg";
+    const path = `${assessmentId}/${Date.now()}-${index}.${ext}`;
 
-  if (error) throw new Error(`Upload failed: ${error.message}`);
+    const { error } = await supabase.storage.from(BUCKET).upload(path, file, {
+      contentType: file.type,
+      upsert: false,
+    });
 
-  const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
-  return data.publicUrl;
+    if (!error) {
+      const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
+      return data.publicUrl;
+    }
+  }
+
+  return fileToDataUrl(file);
 }
 
 export async function uploadImages(
@@ -50,6 +73,12 @@ export function getSupabasePublicUrl(path: string): string {
 }
 
 export async function deleteImage(path: string): Promise<void> {
-  const supabase = getSupabaseBrowser();
-  await supabase.storage.from(BUCKET).remove([path]);
+  if (path.includes("supabase")) {
+    const supabase = getSupabaseBrowser();
+    const url = new URL(path);
+    const pathParts = url.pathname.split("/object/public/vehicle-images/");
+    if (pathParts[1]) {
+      await supabase.storage.from(BUCKET).remove([pathParts[1]]);
+    }
+  }
 }
