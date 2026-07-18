@@ -147,6 +147,10 @@ exports.Prisma.AssessmentScalarFieldEnum = {
   aiRawResponse: 'aiRawResponse',
   verifiedVehicleJson: 'verifiedVehicleJson',
   verifiedDamageJson: 'verifiedDamageJson',
+  paid: 'paid',
+  paymentRef: 'paymentRef',
+  paymentAmount: 'paymentAmount',
+  paymentDate: 'paymentDate',
   userId: 'userId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -214,6 +218,13 @@ exports.Prisma.AssessmentReplacementPartScalarFieldEnum = {
   vehiclePartId: 'vehiclePartId',
   assessmentId: 'assessmentId',
   createdAt: 'createdAt'
+};
+
+exports.Prisma.AppSettingScalarFieldEnum = {
+  id: 'id',
+  key: 'key',
+  value: 'value',
+  updatedAt: 'updatedAt'
 };
 
 exports.Prisma.SupplierScalarFieldEnum = {
@@ -300,6 +311,7 @@ exports.Prisma.ModelName = {
   VehiclePart: 'VehiclePart',
   AssessmentDamagedPart: 'AssessmentDamagedPart',
   AssessmentReplacementPart: 'AssessmentReplacementPart',
+  AppSetting: 'AppSetting',
   Supplier: 'Supplier',
   SupplierPartPrice: 'SupplierPartPrice',
   PartPrice: 'PartPrice',

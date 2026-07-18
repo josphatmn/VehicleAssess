@@ -59,6 +59,11 @@ export type AssessmentDamagedPart = $Result.DefaultSelection<Prisma.$AssessmentD
  */
 export type AssessmentReplacementPart = $Result.DefaultSelection<Prisma.$AssessmentReplacementPartPayload>
 /**
+ * Model AppSetting
+ * 
+ */
+export type AppSetting = $Result.DefaultSelection<Prisma.$AppSettingPayload>
+/**
  * Model Supplier
  * 
  */
@@ -289,6 +294,16 @@ export class PrismaClient<
     * ```
     */
   get assessmentReplacementPart(): Prisma.AssessmentReplacementPartDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.appSetting`: Exposes CRUD operations for the **AppSetting** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more AppSettings
+    * const appSettings = await prisma.appSetting.findMany()
+    * ```
+    */
+  get appSetting(): Prisma.AppSettingDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.supplier`: Exposes CRUD operations for the **Supplier** model.
@@ -772,6 +787,7 @@ export namespace Prisma {
     VehiclePart: 'VehiclePart',
     AssessmentDamagedPart: 'AssessmentDamagedPart',
     AssessmentReplacementPart: 'AssessmentReplacementPart',
+    AppSetting: 'AppSetting',
     Supplier: 'Supplier',
     SupplierPartPrice: 'SupplierPartPrice',
     PartPrice: 'PartPrice',
@@ -791,7 +807,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "assessment" | "assessmentImage" | "vehicleMake" | "vehicleModel" | "vehicleVariant" | "vehiclePart" | "assessmentDamagedPart" | "assessmentReplacementPart" | "supplier" | "supplierPartPrice" | "partPrice" | "inspectionItem"
+      modelProps: "user" | "assessment" | "assessmentImage" | "vehicleMake" | "vehicleModel" | "vehicleVariant" | "vehiclePart" | "assessmentDamagedPart" | "assessmentReplacementPart" | "appSetting" | "supplier" | "supplierPartPrice" | "partPrice" | "inspectionItem"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1461,6 +1477,80 @@ export namespace Prisma {
           }
         }
       }
+      AppSetting: {
+        payload: Prisma.$AppSettingPayload<ExtArgs>
+        fields: Prisma.AppSettingFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.AppSettingFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AppSettingPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.AppSettingFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AppSettingPayload>
+          }
+          findFirst: {
+            args: Prisma.AppSettingFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AppSettingPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.AppSettingFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AppSettingPayload>
+          }
+          findMany: {
+            args: Prisma.AppSettingFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AppSettingPayload>[]
+          }
+          create: {
+            args: Prisma.AppSettingCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AppSettingPayload>
+          }
+          createMany: {
+            args: Prisma.AppSettingCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.AppSettingCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AppSettingPayload>[]
+          }
+          delete: {
+            args: Prisma.AppSettingDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AppSettingPayload>
+          }
+          update: {
+            args: Prisma.AppSettingUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AppSettingPayload>
+          }
+          deleteMany: {
+            args: Prisma.AppSettingDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.AppSettingUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.AppSettingUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AppSettingPayload>[]
+          }
+          upsert: {
+            args: Prisma.AppSettingUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AppSettingPayload>
+          }
+          aggregate: {
+            args: Prisma.AppSettingAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateAppSetting>
+          }
+          groupBy: {
+            args: Prisma.AppSettingGroupByArgs<ExtArgs>
+            result: $Utils.Optional<AppSettingGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.AppSettingCountArgs<ExtArgs>
+            result: $Utils.Optional<AppSettingCountAggregateOutputType> | number
+          }
+        }
+      }
       Supplier: {
         payload: Prisma.$SupplierPayload<ExtArgs>
         fields: Prisma.SupplierFieldRefs
@@ -1874,6 +1964,7 @@ export namespace Prisma {
     vehiclePart?: VehiclePartOmit
     assessmentDamagedPart?: AssessmentDamagedPartOmit
     assessmentReplacementPart?: AssessmentReplacementPartOmit
+    appSetting?: AppSettingOmit
     supplier?: SupplierOmit
     supplierPartPrice?: SupplierPartPriceOmit
     partPrice?: PartPriceOmit
@@ -3277,8 +3368,18 @@ export namespace Prisma {
 
   export type AggregateAssessment = {
     _count: AssessmentCountAggregateOutputType | null
+    _avg: AssessmentAvgAggregateOutputType | null
+    _sum: AssessmentSumAggregateOutputType | null
     _min: AssessmentMinAggregateOutputType | null
     _max: AssessmentMaxAggregateOutputType | null
+  }
+
+  export type AssessmentAvgAggregateOutputType = {
+    paymentAmount: number | null
+  }
+
+  export type AssessmentSumAggregateOutputType = {
+    paymentAmount: number | null
   }
 
   export type AssessmentMinAggregateOutputType = {
@@ -3298,6 +3399,10 @@ export namespace Prisma {
     aiRawResponse: string | null
     verifiedVehicleJson: string | null
     verifiedDamageJson: string | null
+    paid: boolean | null
+    paymentRef: string | null
+    paymentAmount: number | null
+    paymentDate: Date | null
     userId: string | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -3320,6 +3425,10 @@ export namespace Prisma {
     aiRawResponse: string | null
     verifiedVehicleJson: string | null
     verifiedDamageJson: string | null
+    paid: boolean | null
+    paymentRef: string | null
+    paymentAmount: number | null
+    paymentDate: Date | null
     userId: string | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -3342,12 +3451,24 @@ export namespace Prisma {
     aiRawResponse: number
     verifiedVehicleJson: number
     verifiedDamageJson: number
+    paid: number
+    paymentRef: number
+    paymentAmount: number
+    paymentDate: number
     userId: number
     createdAt: number
     updatedAt: number
     _all: number
   }
 
+
+  export type AssessmentAvgAggregateInputType = {
+    paymentAmount?: true
+  }
+
+  export type AssessmentSumAggregateInputType = {
+    paymentAmount?: true
+  }
 
   export type AssessmentMinAggregateInputType = {
     id?: true
@@ -3366,6 +3487,10 @@ export namespace Prisma {
     aiRawResponse?: true
     verifiedVehicleJson?: true
     verifiedDamageJson?: true
+    paid?: true
+    paymentRef?: true
+    paymentAmount?: true
+    paymentDate?: true
     userId?: true
     createdAt?: true
     updatedAt?: true
@@ -3388,6 +3513,10 @@ export namespace Prisma {
     aiRawResponse?: true
     verifiedVehicleJson?: true
     verifiedDamageJson?: true
+    paid?: true
+    paymentRef?: true
+    paymentAmount?: true
+    paymentDate?: true
     userId?: true
     createdAt?: true
     updatedAt?: true
@@ -3410,6 +3539,10 @@ export namespace Prisma {
     aiRawResponse?: true
     verifiedVehicleJson?: true
     verifiedDamageJson?: true
+    paid?: true
+    paymentRef?: true
+    paymentAmount?: true
+    paymentDate?: true
     userId?: true
     createdAt?: true
     updatedAt?: true
@@ -3454,6 +3587,18 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
+     * Select which fields to average
+    **/
+    _avg?: AssessmentAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: AssessmentSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
      * Select which fields to find the minimum value
     **/
     _min?: AssessmentMinAggregateInputType
@@ -3484,6 +3629,8 @@ export namespace Prisma {
     take?: number
     skip?: number
     _count?: AssessmentCountAggregateInputType | true
+    _avg?: AssessmentAvgAggregateInputType
+    _sum?: AssessmentSumAggregateInputType
     _min?: AssessmentMinAggregateInputType
     _max?: AssessmentMaxAggregateInputType
   }
@@ -3505,10 +3652,16 @@ export namespace Prisma {
     aiRawResponse: string | null
     verifiedVehicleJson: string | null
     verifiedDamageJson: string | null
+    paid: boolean
+    paymentRef: string | null
+    paymentAmount: number | null
+    paymentDate: Date | null
     userId: string | null
     createdAt: Date
     updatedAt: Date
     _count: AssessmentCountAggregateOutputType | null
+    _avg: AssessmentAvgAggregateOutputType | null
+    _sum: AssessmentSumAggregateOutputType | null
     _min: AssessmentMinAggregateOutputType | null
     _max: AssessmentMaxAggregateOutputType | null
   }
@@ -3544,6 +3697,10 @@ export namespace Prisma {
     aiRawResponse?: boolean
     verifiedVehicleJson?: boolean
     verifiedDamageJson?: boolean
+    paid?: boolean
+    paymentRef?: boolean
+    paymentAmount?: boolean
+    paymentDate?: boolean
     userId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -3572,6 +3729,10 @@ export namespace Prisma {
     aiRawResponse?: boolean
     verifiedVehicleJson?: boolean
     verifiedDamageJson?: boolean
+    paid?: boolean
+    paymentRef?: boolean
+    paymentAmount?: boolean
+    paymentDate?: boolean
     userId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -3595,6 +3756,10 @@ export namespace Prisma {
     aiRawResponse?: boolean
     verifiedVehicleJson?: boolean
     verifiedDamageJson?: boolean
+    paid?: boolean
+    paymentRef?: boolean
+    paymentAmount?: boolean
+    paymentDate?: boolean
     userId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -3618,12 +3783,16 @@ export namespace Prisma {
     aiRawResponse?: boolean
     verifiedVehicleJson?: boolean
     verifiedDamageJson?: boolean
+    paid?: boolean
+    paymentRef?: boolean
+    paymentAmount?: boolean
+    paymentDate?: boolean
     userId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type AssessmentOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "assessmentNumber" | "status" | "customerName" | "customerPhone" | "customerEmail" | "customerAddress" | "insuranceCompany" | "claimNumber" | "registrationNumber" | "vin" | "odometer" | "vehicleNotes" | "aiRawResponse" | "verifiedVehicleJson" | "verifiedDamageJson" | "userId" | "createdAt" | "updatedAt", ExtArgs["result"]["assessment"]>
+  export type AssessmentOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "assessmentNumber" | "status" | "customerName" | "customerPhone" | "customerEmail" | "customerAddress" | "insuranceCompany" | "claimNumber" | "registrationNumber" | "vin" | "odometer" | "vehicleNotes" | "aiRawResponse" | "verifiedVehicleJson" | "verifiedDamageJson" | "paid" | "paymentRef" | "paymentAmount" | "paymentDate" | "userId" | "createdAt" | "updatedAt", ExtArgs["result"]["assessment"]>
   export type AssessmentInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     user?: boolean | Assessment$userArgs<ExtArgs>
     images?: boolean | Assessment$imagesArgs<ExtArgs>
@@ -3665,6 +3834,10 @@ export namespace Prisma {
       aiRawResponse: string | null
       verifiedVehicleJson: string | null
       verifiedDamageJson: string | null
+      paid: boolean
+      paymentRef: string | null
+      paymentAmount: number | null
+      paymentDate: Date | null
       userId: string | null
       createdAt: Date
       updatedAt: Date
@@ -4112,6 +4285,10 @@ export namespace Prisma {
     readonly aiRawResponse: FieldRef<"Assessment", 'String'>
     readonly verifiedVehicleJson: FieldRef<"Assessment", 'String'>
     readonly verifiedDamageJson: FieldRef<"Assessment", 'String'>
+    readonly paid: FieldRef<"Assessment", 'Boolean'>
+    readonly paymentRef: FieldRef<"Assessment", 'String'>
+    readonly paymentAmount: FieldRef<"Assessment", 'Int'>
+    readonly paymentDate: FieldRef<"Assessment", 'DateTime'>
     readonly userId: FieldRef<"Assessment", 'String'>
     readonly createdAt: FieldRef<"Assessment", 'DateTime'>
     readonly updatedAt: FieldRef<"Assessment", 'DateTime'>
@@ -12404,6 +12581,993 @@ export namespace Prisma {
 
 
   /**
+   * Model AppSetting
+   */
+
+  export type AggregateAppSetting = {
+    _count: AppSettingCountAggregateOutputType | null
+    _min: AppSettingMinAggregateOutputType | null
+    _max: AppSettingMaxAggregateOutputType | null
+  }
+
+  export type AppSettingMinAggregateOutputType = {
+    id: string | null
+    key: string | null
+    value: string | null
+    updatedAt: Date | null
+  }
+
+  export type AppSettingMaxAggregateOutputType = {
+    id: string | null
+    key: string | null
+    value: string | null
+    updatedAt: Date | null
+  }
+
+  export type AppSettingCountAggregateOutputType = {
+    id: number
+    key: number
+    value: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type AppSettingMinAggregateInputType = {
+    id?: true
+    key?: true
+    value?: true
+    updatedAt?: true
+  }
+
+  export type AppSettingMaxAggregateInputType = {
+    id?: true
+    key?: true
+    value?: true
+    updatedAt?: true
+  }
+
+  export type AppSettingCountAggregateInputType = {
+    id?: true
+    key?: true
+    value?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type AppSettingAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which AppSetting to aggregate.
+     */
+    where?: AppSettingWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AppSettings to fetch.
+     */
+    orderBy?: AppSettingOrderByWithRelationInput | AppSettingOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: AppSettingWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AppSettings from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AppSettings.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned AppSettings
+    **/
+    _count?: true | AppSettingCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: AppSettingMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: AppSettingMaxAggregateInputType
+  }
+
+  export type GetAppSettingAggregateType<T extends AppSettingAggregateArgs> = {
+        [P in keyof T & keyof AggregateAppSetting]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateAppSetting[P]>
+      : GetScalarType<T[P], AggregateAppSetting[P]>
+  }
+
+
+
+
+  export type AppSettingGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: AppSettingWhereInput
+    orderBy?: AppSettingOrderByWithAggregationInput | AppSettingOrderByWithAggregationInput[]
+    by: AppSettingScalarFieldEnum[] | AppSettingScalarFieldEnum
+    having?: AppSettingScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: AppSettingCountAggregateInputType | true
+    _min?: AppSettingMinAggregateInputType
+    _max?: AppSettingMaxAggregateInputType
+  }
+
+  export type AppSettingGroupByOutputType = {
+    id: string
+    key: string
+    value: string
+    updatedAt: Date
+    _count: AppSettingCountAggregateOutputType | null
+    _min: AppSettingMinAggregateOutputType | null
+    _max: AppSettingMaxAggregateOutputType | null
+  }
+
+  type GetAppSettingGroupByPayload<T extends AppSettingGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<AppSettingGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof AppSettingGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], AppSettingGroupByOutputType[P]>
+            : GetScalarType<T[P], AppSettingGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type AppSettingSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    key?: boolean
+    value?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["appSetting"]>
+
+  export type AppSettingSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    key?: boolean
+    value?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["appSetting"]>
+
+  export type AppSettingSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    key?: boolean
+    value?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["appSetting"]>
+
+  export type AppSettingSelectScalar = {
+    id?: boolean
+    key?: boolean
+    value?: boolean
+    updatedAt?: boolean
+  }
+
+  export type AppSettingOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "key" | "value" | "updatedAt", ExtArgs["result"]["appSetting"]>
+
+  export type $AppSettingPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "AppSetting"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      key: string
+      value: string
+      updatedAt: Date
+    }, ExtArgs["result"]["appSetting"]>
+    composites: {}
+  }
+
+  type AppSettingGetPayload<S extends boolean | null | undefined | AppSettingDefaultArgs> = $Result.GetResult<Prisma.$AppSettingPayload, S>
+
+  type AppSettingCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<AppSettingFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: AppSettingCountAggregateInputType | true
+    }
+
+  export interface AppSettingDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['AppSetting'], meta: { name: 'AppSetting' } }
+    /**
+     * Find zero or one AppSetting that matches the filter.
+     * @param {AppSettingFindUniqueArgs} args - Arguments to find a AppSetting
+     * @example
+     * // Get one AppSetting
+     * const appSetting = await prisma.appSetting.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends AppSettingFindUniqueArgs>(args: SelectSubset<T, AppSettingFindUniqueArgs<ExtArgs>>): Prisma__AppSettingClient<$Result.GetResult<Prisma.$AppSettingPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one AppSetting that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {AppSettingFindUniqueOrThrowArgs} args - Arguments to find a AppSetting
+     * @example
+     * // Get one AppSetting
+     * const appSetting = await prisma.appSetting.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends AppSettingFindUniqueOrThrowArgs>(args: SelectSubset<T, AppSettingFindUniqueOrThrowArgs<ExtArgs>>): Prisma__AppSettingClient<$Result.GetResult<Prisma.$AppSettingPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first AppSetting that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AppSettingFindFirstArgs} args - Arguments to find a AppSetting
+     * @example
+     * // Get one AppSetting
+     * const appSetting = await prisma.appSetting.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends AppSettingFindFirstArgs>(args?: SelectSubset<T, AppSettingFindFirstArgs<ExtArgs>>): Prisma__AppSettingClient<$Result.GetResult<Prisma.$AppSettingPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first AppSetting that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AppSettingFindFirstOrThrowArgs} args - Arguments to find a AppSetting
+     * @example
+     * // Get one AppSetting
+     * const appSetting = await prisma.appSetting.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends AppSettingFindFirstOrThrowArgs>(args?: SelectSubset<T, AppSettingFindFirstOrThrowArgs<ExtArgs>>): Prisma__AppSettingClient<$Result.GetResult<Prisma.$AppSettingPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more AppSettings that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AppSettingFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all AppSettings
+     * const appSettings = await prisma.appSetting.findMany()
+     * 
+     * // Get first 10 AppSettings
+     * const appSettings = await prisma.appSetting.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const appSettingWithIdOnly = await prisma.appSetting.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends AppSettingFindManyArgs>(args?: SelectSubset<T, AppSettingFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AppSettingPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a AppSetting.
+     * @param {AppSettingCreateArgs} args - Arguments to create a AppSetting.
+     * @example
+     * // Create one AppSetting
+     * const AppSetting = await prisma.appSetting.create({
+     *   data: {
+     *     // ... data to create a AppSetting
+     *   }
+     * })
+     * 
+     */
+    create<T extends AppSettingCreateArgs>(args: SelectSubset<T, AppSettingCreateArgs<ExtArgs>>): Prisma__AppSettingClient<$Result.GetResult<Prisma.$AppSettingPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many AppSettings.
+     * @param {AppSettingCreateManyArgs} args - Arguments to create many AppSettings.
+     * @example
+     * // Create many AppSettings
+     * const appSetting = await prisma.appSetting.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends AppSettingCreateManyArgs>(args?: SelectSubset<T, AppSettingCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many AppSettings and returns the data saved in the database.
+     * @param {AppSettingCreateManyAndReturnArgs} args - Arguments to create many AppSettings.
+     * @example
+     * // Create many AppSettings
+     * const appSetting = await prisma.appSetting.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many AppSettings and only return the `id`
+     * const appSettingWithIdOnly = await prisma.appSetting.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends AppSettingCreateManyAndReturnArgs>(args?: SelectSubset<T, AppSettingCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AppSettingPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a AppSetting.
+     * @param {AppSettingDeleteArgs} args - Arguments to delete one AppSetting.
+     * @example
+     * // Delete one AppSetting
+     * const AppSetting = await prisma.appSetting.delete({
+     *   where: {
+     *     // ... filter to delete one AppSetting
+     *   }
+     * })
+     * 
+     */
+    delete<T extends AppSettingDeleteArgs>(args: SelectSubset<T, AppSettingDeleteArgs<ExtArgs>>): Prisma__AppSettingClient<$Result.GetResult<Prisma.$AppSettingPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one AppSetting.
+     * @param {AppSettingUpdateArgs} args - Arguments to update one AppSetting.
+     * @example
+     * // Update one AppSetting
+     * const appSetting = await prisma.appSetting.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends AppSettingUpdateArgs>(args: SelectSubset<T, AppSettingUpdateArgs<ExtArgs>>): Prisma__AppSettingClient<$Result.GetResult<Prisma.$AppSettingPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more AppSettings.
+     * @param {AppSettingDeleteManyArgs} args - Arguments to filter AppSettings to delete.
+     * @example
+     * // Delete a few AppSettings
+     * const { count } = await prisma.appSetting.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends AppSettingDeleteManyArgs>(args?: SelectSubset<T, AppSettingDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more AppSettings.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AppSettingUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many AppSettings
+     * const appSetting = await prisma.appSetting.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends AppSettingUpdateManyArgs>(args: SelectSubset<T, AppSettingUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more AppSettings and returns the data updated in the database.
+     * @param {AppSettingUpdateManyAndReturnArgs} args - Arguments to update many AppSettings.
+     * @example
+     * // Update many AppSettings
+     * const appSetting = await prisma.appSetting.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more AppSettings and only return the `id`
+     * const appSettingWithIdOnly = await prisma.appSetting.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends AppSettingUpdateManyAndReturnArgs>(args: SelectSubset<T, AppSettingUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AppSettingPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one AppSetting.
+     * @param {AppSettingUpsertArgs} args - Arguments to update or create a AppSetting.
+     * @example
+     * // Update or create a AppSetting
+     * const appSetting = await prisma.appSetting.upsert({
+     *   create: {
+     *     // ... data to create a AppSetting
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the AppSetting we want to update
+     *   }
+     * })
+     */
+    upsert<T extends AppSettingUpsertArgs>(args: SelectSubset<T, AppSettingUpsertArgs<ExtArgs>>): Prisma__AppSettingClient<$Result.GetResult<Prisma.$AppSettingPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of AppSettings.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AppSettingCountArgs} args - Arguments to filter AppSettings to count.
+     * @example
+     * // Count the number of AppSettings
+     * const count = await prisma.appSetting.count({
+     *   where: {
+     *     // ... the filter for the AppSettings we want to count
+     *   }
+     * })
+    **/
+    count<T extends AppSettingCountArgs>(
+      args?: Subset<T, AppSettingCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], AppSettingCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a AppSetting.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AppSettingAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends AppSettingAggregateArgs>(args: Subset<T, AppSettingAggregateArgs>): Prisma.PrismaPromise<GetAppSettingAggregateType<T>>
+
+    /**
+     * Group by AppSetting.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AppSettingGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends AppSettingGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: AppSettingGroupByArgs['orderBy'] }
+        : { orderBy?: AppSettingGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, AppSettingGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetAppSettingGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the AppSetting model
+   */
+  readonly fields: AppSettingFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for AppSetting.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__AppSettingClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the AppSetting model
+   */
+  interface AppSettingFieldRefs {
+    readonly id: FieldRef<"AppSetting", 'String'>
+    readonly key: FieldRef<"AppSetting", 'String'>
+    readonly value: FieldRef<"AppSetting", 'String'>
+    readonly updatedAt: FieldRef<"AppSetting", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * AppSetting findUnique
+   */
+  export type AppSettingFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AppSetting
+     */
+    select?: AppSettingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AppSetting
+     */
+    omit?: AppSettingOmit<ExtArgs> | null
+    /**
+     * Filter, which AppSetting to fetch.
+     */
+    where: AppSettingWhereUniqueInput
+  }
+
+  /**
+   * AppSetting findUniqueOrThrow
+   */
+  export type AppSettingFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AppSetting
+     */
+    select?: AppSettingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AppSetting
+     */
+    omit?: AppSettingOmit<ExtArgs> | null
+    /**
+     * Filter, which AppSetting to fetch.
+     */
+    where: AppSettingWhereUniqueInput
+  }
+
+  /**
+   * AppSetting findFirst
+   */
+  export type AppSettingFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AppSetting
+     */
+    select?: AppSettingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AppSetting
+     */
+    omit?: AppSettingOmit<ExtArgs> | null
+    /**
+     * Filter, which AppSetting to fetch.
+     */
+    where?: AppSettingWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AppSettings to fetch.
+     */
+    orderBy?: AppSettingOrderByWithRelationInput | AppSettingOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for AppSettings.
+     */
+    cursor?: AppSettingWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AppSettings from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AppSettings.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AppSettings.
+     */
+    distinct?: AppSettingScalarFieldEnum | AppSettingScalarFieldEnum[]
+  }
+
+  /**
+   * AppSetting findFirstOrThrow
+   */
+  export type AppSettingFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AppSetting
+     */
+    select?: AppSettingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AppSetting
+     */
+    omit?: AppSettingOmit<ExtArgs> | null
+    /**
+     * Filter, which AppSetting to fetch.
+     */
+    where?: AppSettingWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AppSettings to fetch.
+     */
+    orderBy?: AppSettingOrderByWithRelationInput | AppSettingOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for AppSettings.
+     */
+    cursor?: AppSettingWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AppSettings from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AppSettings.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AppSettings.
+     */
+    distinct?: AppSettingScalarFieldEnum | AppSettingScalarFieldEnum[]
+  }
+
+  /**
+   * AppSetting findMany
+   */
+  export type AppSettingFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AppSetting
+     */
+    select?: AppSettingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AppSetting
+     */
+    omit?: AppSettingOmit<ExtArgs> | null
+    /**
+     * Filter, which AppSettings to fetch.
+     */
+    where?: AppSettingWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AppSettings to fetch.
+     */
+    orderBy?: AppSettingOrderByWithRelationInput | AppSettingOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing AppSettings.
+     */
+    cursor?: AppSettingWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AppSettings from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AppSettings.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AppSettings.
+     */
+    distinct?: AppSettingScalarFieldEnum | AppSettingScalarFieldEnum[]
+  }
+
+  /**
+   * AppSetting create
+   */
+  export type AppSettingCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AppSetting
+     */
+    select?: AppSettingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AppSetting
+     */
+    omit?: AppSettingOmit<ExtArgs> | null
+    /**
+     * The data needed to create a AppSetting.
+     */
+    data: XOR<AppSettingCreateInput, AppSettingUncheckedCreateInput>
+  }
+
+  /**
+   * AppSetting createMany
+   */
+  export type AppSettingCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many AppSettings.
+     */
+    data: AppSettingCreateManyInput | AppSettingCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * AppSetting createManyAndReturn
+   */
+  export type AppSettingCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AppSetting
+     */
+    select?: AppSettingSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the AppSetting
+     */
+    omit?: AppSettingOmit<ExtArgs> | null
+    /**
+     * The data used to create many AppSettings.
+     */
+    data: AppSettingCreateManyInput | AppSettingCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * AppSetting update
+   */
+  export type AppSettingUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AppSetting
+     */
+    select?: AppSettingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AppSetting
+     */
+    omit?: AppSettingOmit<ExtArgs> | null
+    /**
+     * The data needed to update a AppSetting.
+     */
+    data: XOR<AppSettingUpdateInput, AppSettingUncheckedUpdateInput>
+    /**
+     * Choose, which AppSetting to update.
+     */
+    where: AppSettingWhereUniqueInput
+  }
+
+  /**
+   * AppSetting updateMany
+   */
+  export type AppSettingUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update AppSettings.
+     */
+    data: XOR<AppSettingUpdateManyMutationInput, AppSettingUncheckedUpdateManyInput>
+    /**
+     * Filter which AppSettings to update
+     */
+    where?: AppSettingWhereInput
+    /**
+     * Limit how many AppSettings to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * AppSetting updateManyAndReturn
+   */
+  export type AppSettingUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AppSetting
+     */
+    select?: AppSettingSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the AppSetting
+     */
+    omit?: AppSettingOmit<ExtArgs> | null
+    /**
+     * The data used to update AppSettings.
+     */
+    data: XOR<AppSettingUpdateManyMutationInput, AppSettingUncheckedUpdateManyInput>
+    /**
+     * Filter which AppSettings to update
+     */
+    where?: AppSettingWhereInput
+    /**
+     * Limit how many AppSettings to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * AppSetting upsert
+   */
+  export type AppSettingUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AppSetting
+     */
+    select?: AppSettingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AppSetting
+     */
+    omit?: AppSettingOmit<ExtArgs> | null
+    /**
+     * The filter to search for the AppSetting to update in case it exists.
+     */
+    where: AppSettingWhereUniqueInput
+    /**
+     * In case the AppSetting found by the `where` argument doesn't exist, create a new AppSetting with this data.
+     */
+    create: XOR<AppSettingCreateInput, AppSettingUncheckedCreateInput>
+    /**
+     * In case the AppSetting was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<AppSettingUpdateInput, AppSettingUncheckedUpdateInput>
+  }
+
+  /**
+   * AppSetting delete
+   */
+  export type AppSettingDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AppSetting
+     */
+    select?: AppSettingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AppSetting
+     */
+    omit?: AppSettingOmit<ExtArgs> | null
+    /**
+     * Filter which AppSetting to delete.
+     */
+    where: AppSettingWhereUniqueInput
+  }
+
+  /**
+   * AppSetting deleteMany
+   */
+  export type AppSettingDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which AppSettings to delete
+     */
+    where?: AppSettingWhereInput
+    /**
+     * Limit how many AppSettings to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * AppSetting without action
+   */
+  export type AppSettingDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AppSetting
+     */
+    select?: AppSettingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AppSetting
+     */
+    omit?: AppSettingOmit<ExtArgs> | null
+  }
+
+
+  /**
    * Model Supplier
    */
 
@@ -17062,6 +18226,10 @@ export namespace Prisma {
     aiRawResponse: 'aiRawResponse',
     verifiedVehicleJson: 'verifiedVehicleJson',
     verifiedDamageJson: 'verifiedDamageJson',
+    paid: 'paid',
+    paymentRef: 'paymentRef',
+    paymentAmount: 'paymentAmount',
+    paymentDate: 'paymentDate',
     userId: 'userId',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
@@ -17153,6 +18321,16 @@ export namespace Prisma {
   };
 
   export type AssessmentReplacementPartScalarFieldEnum = (typeof AssessmentReplacementPartScalarFieldEnum)[keyof typeof AssessmentReplacementPartScalarFieldEnum]
+
+
+  export const AppSettingScalarFieldEnum: {
+    id: 'id',
+    key: 'key',
+    value: 'value',
+    updatedAt: 'updatedAt'
+  };
+
+  export type AppSettingScalarFieldEnum = (typeof AppSettingScalarFieldEnum)[keyof typeof AppSettingScalarFieldEnum]
 
 
   export const SupplierScalarFieldEnum: {
@@ -17283,6 +18461,13 @@ export namespace Prisma {
 
 
   /**
+   * Reference to a field of type 'Boolean'
+   */
+  export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
+    
+
+
+  /**
    * Reference to a field of type 'Int'
    */
   export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
@@ -17307,13 +18492,6 @@ export namespace Prisma {
    * Reference to a field of type 'Float[]'
    */
   export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
-    
-
-
-  /**
-   * Reference to a field of type 'Boolean'
-   */
-  export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
     
   /**
    * Deep Input Types
@@ -17405,6 +18583,10 @@ export namespace Prisma {
     aiRawResponse?: StringNullableFilter<"Assessment"> | string | null
     verifiedVehicleJson?: StringNullableFilter<"Assessment"> | string | null
     verifiedDamageJson?: StringNullableFilter<"Assessment"> | string | null
+    paid?: BoolFilter<"Assessment"> | boolean
+    paymentRef?: StringNullableFilter<"Assessment"> | string | null
+    paymentAmount?: IntNullableFilter<"Assessment"> | number | null
+    paymentDate?: DateTimeNullableFilter<"Assessment"> | Date | string | null
     userId?: StringNullableFilter<"Assessment"> | string | null
     createdAt?: DateTimeFilter<"Assessment"> | Date | string
     updatedAt?: DateTimeFilter<"Assessment"> | Date | string
@@ -17432,6 +18614,10 @@ export namespace Prisma {
     aiRawResponse?: SortOrderInput | SortOrder
     verifiedVehicleJson?: SortOrderInput | SortOrder
     verifiedDamageJson?: SortOrderInput | SortOrder
+    paid?: SortOrder
+    paymentRef?: SortOrderInput | SortOrder
+    paymentAmount?: SortOrderInput | SortOrder
+    paymentDate?: SortOrderInput | SortOrder
     userId?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -17462,6 +18648,10 @@ export namespace Prisma {
     aiRawResponse?: StringNullableFilter<"Assessment"> | string | null
     verifiedVehicleJson?: StringNullableFilter<"Assessment"> | string | null
     verifiedDamageJson?: StringNullableFilter<"Assessment"> | string | null
+    paid?: BoolFilter<"Assessment"> | boolean
+    paymentRef?: StringNullableFilter<"Assessment"> | string | null
+    paymentAmount?: IntNullableFilter<"Assessment"> | number | null
+    paymentDate?: DateTimeNullableFilter<"Assessment"> | Date | string | null
     userId?: StringNullableFilter<"Assessment"> | string | null
     createdAt?: DateTimeFilter<"Assessment"> | Date | string
     updatedAt?: DateTimeFilter<"Assessment"> | Date | string
@@ -17489,12 +18679,18 @@ export namespace Prisma {
     aiRawResponse?: SortOrderInput | SortOrder
     verifiedVehicleJson?: SortOrderInput | SortOrder
     verifiedDamageJson?: SortOrderInput | SortOrder
+    paid?: SortOrder
+    paymentRef?: SortOrderInput | SortOrder
+    paymentAmount?: SortOrderInput | SortOrder
+    paymentDate?: SortOrderInput | SortOrder
     userId?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: AssessmentCountOrderByAggregateInput
+    _avg?: AssessmentAvgOrderByAggregateInput
     _max?: AssessmentMaxOrderByAggregateInput
     _min?: AssessmentMinOrderByAggregateInput
+    _sum?: AssessmentSumOrderByAggregateInput
   }
 
   export type AssessmentScalarWhereWithAggregatesInput = {
@@ -17517,6 +18713,10 @@ export namespace Prisma {
     aiRawResponse?: StringNullableWithAggregatesFilter<"Assessment"> | string | null
     verifiedVehicleJson?: StringNullableWithAggregatesFilter<"Assessment"> | string | null
     verifiedDamageJson?: StringNullableWithAggregatesFilter<"Assessment"> | string | null
+    paid?: BoolWithAggregatesFilter<"Assessment"> | boolean
+    paymentRef?: StringNullableWithAggregatesFilter<"Assessment"> | string | null
+    paymentAmount?: IntNullableWithAggregatesFilter<"Assessment"> | number | null
+    paymentDate?: DateTimeNullableWithAggregatesFilter<"Assessment"> | Date | string | null
     userId?: StringNullableWithAggregatesFilter<"Assessment"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"Assessment"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Assessment"> | Date | string
@@ -17959,6 +19159,53 @@ export namespace Prisma {
     vehiclePartId?: StringNullableWithAggregatesFilter<"AssessmentReplacementPart"> | string | null
     assessmentId?: StringWithAggregatesFilter<"AssessmentReplacementPart"> | string
     createdAt?: DateTimeWithAggregatesFilter<"AssessmentReplacementPart"> | Date | string
+  }
+
+  export type AppSettingWhereInput = {
+    AND?: AppSettingWhereInput | AppSettingWhereInput[]
+    OR?: AppSettingWhereInput[]
+    NOT?: AppSettingWhereInput | AppSettingWhereInput[]
+    id?: StringFilter<"AppSetting"> | string
+    key?: StringFilter<"AppSetting"> | string
+    value?: StringFilter<"AppSetting"> | string
+    updatedAt?: DateTimeFilter<"AppSetting"> | Date | string
+  }
+
+  export type AppSettingOrderByWithRelationInput = {
+    id?: SortOrder
+    key?: SortOrder
+    value?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type AppSettingWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    key?: string
+    AND?: AppSettingWhereInput | AppSettingWhereInput[]
+    OR?: AppSettingWhereInput[]
+    NOT?: AppSettingWhereInput | AppSettingWhereInput[]
+    value?: StringFilter<"AppSetting"> | string
+    updatedAt?: DateTimeFilter<"AppSetting"> | Date | string
+  }, "id" | "key">
+
+  export type AppSettingOrderByWithAggregationInput = {
+    id?: SortOrder
+    key?: SortOrder
+    value?: SortOrder
+    updatedAt?: SortOrder
+    _count?: AppSettingCountOrderByAggregateInput
+    _max?: AppSettingMaxOrderByAggregateInput
+    _min?: AppSettingMinOrderByAggregateInput
+  }
+
+  export type AppSettingScalarWhereWithAggregatesInput = {
+    AND?: AppSettingScalarWhereWithAggregatesInput | AppSettingScalarWhereWithAggregatesInput[]
+    OR?: AppSettingScalarWhereWithAggregatesInput[]
+    NOT?: AppSettingScalarWhereWithAggregatesInput | AppSettingScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"AppSetting"> | string
+    key?: StringWithAggregatesFilter<"AppSetting"> | string
+    value?: StringWithAggregatesFilter<"AppSetting"> | string
+    updatedAt?: DateTimeWithAggregatesFilter<"AppSetting"> | Date | string
   }
 
   export type SupplierWhereInput = {
@@ -18404,6 +19651,10 @@ export namespace Prisma {
     aiRawResponse?: string | null
     verifiedVehicleJson?: string | null
     verifiedDamageJson?: string | null
+    paid?: boolean
+    paymentRef?: string | null
+    paymentAmount?: number | null
+    paymentDate?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     user?: UserCreateNestedOneWithoutAssessmentsInput
@@ -18430,6 +19681,10 @@ export namespace Prisma {
     aiRawResponse?: string | null
     verifiedVehicleJson?: string | null
     verifiedDamageJson?: string | null
+    paid?: boolean
+    paymentRef?: string | null
+    paymentAmount?: number | null
+    paymentDate?: Date | string | null
     userId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -18456,6 +19711,10 @@ export namespace Prisma {
     aiRawResponse?: NullableStringFieldUpdateOperationsInput | string | null
     verifiedVehicleJson?: NullableStringFieldUpdateOperationsInput | string | null
     verifiedDamageJson?: NullableStringFieldUpdateOperationsInput | string | null
+    paid?: BoolFieldUpdateOperationsInput | boolean
+    paymentRef?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentAmount?: NullableIntFieldUpdateOperationsInput | number | null
+    paymentDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneWithoutAssessmentsNestedInput
@@ -18482,6 +19741,10 @@ export namespace Prisma {
     aiRawResponse?: NullableStringFieldUpdateOperationsInput | string | null
     verifiedVehicleJson?: NullableStringFieldUpdateOperationsInput | string | null
     verifiedDamageJson?: NullableStringFieldUpdateOperationsInput | string | null
+    paid?: BoolFieldUpdateOperationsInput | boolean
+    paymentRef?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentAmount?: NullableIntFieldUpdateOperationsInput | number | null
+    paymentDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     userId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -18508,6 +19771,10 @@ export namespace Prisma {
     aiRawResponse?: string | null
     verifiedVehicleJson?: string | null
     verifiedDamageJson?: string | null
+    paid?: boolean
+    paymentRef?: string | null
+    paymentAmount?: number | null
+    paymentDate?: Date | string | null
     userId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -18530,6 +19797,10 @@ export namespace Prisma {
     aiRawResponse?: NullableStringFieldUpdateOperationsInput | string | null
     verifiedVehicleJson?: NullableStringFieldUpdateOperationsInput | string | null
     verifiedDamageJson?: NullableStringFieldUpdateOperationsInput | string | null
+    paid?: BoolFieldUpdateOperationsInput | boolean
+    paymentRef?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentAmount?: NullableIntFieldUpdateOperationsInput | number | null
+    paymentDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -18551,6 +19822,10 @@ export namespace Prisma {
     aiRawResponse?: NullableStringFieldUpdateOperationsInput | string | null
     verifiedVehicleJson?: NullableStringFieldUpdateOperationsInput | string | null
     verifiedDamageJson?: NullableStringFieldUpdateOperationsInput | string | null
+    paid?: BoolFieldUpdateOperationsInput | boolean
+    paymentRef?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentAmount?: NullableIntFieldUpdateOperationsInput | number | null
+    paymentDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     userId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -19008,6 +20283,55 @@ export namespace Prisma {
     vehiclePartId?: NullableStringFieldUpdateOperationsInput | string | null
     assessmentId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AppSettingCreateInput = {
+    id?: string
+    key: string
+    value: string
+    updatedAt?: Date | string
+  }
+
+  export type AppSettingUncheckedCreateInput = {
+    id?: string
+    key: string
+    value: string
+    updatedAt?: Date | string
+  }
+
+  export type AppSettingUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    key?: StringFieldUpdateOperationsInput | string
+    value?: StringFieldUpdateOperationsInput | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AppSettingUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    key?: StringFieldUpdateOperationsInput | string
+    value?: StringFieldUpdateOperationsInput | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AppSettingCreateManyInput = {
+    id?: string
+    key: string
+    value: string
+    updatedAt?: Date | string
+  }
+
+  export type AppSettingUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    key?: StringFieldUpdateOperationsInput | string
+    value?: StringFieldUpdateOperationsInput | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AppSettingUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    key?: StringFieldUpdateOperationsInput | string
+    value?: StringFieldUpdateOperationsInput | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type SupplierCreateInput = {
@@ -19554,6 +20878,33 @@ export namespace Prisma {
     _max?: NestedDateTimeFilter<$PrismaModel>
   }
 
+  export type BoolFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolFilter<$PrismaModel> | boolean
+  }
+
+  export type IntNullableFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableFilter<$PrismaModel> | number | null
+  }
+
+  export type DateTimeNullableFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
+  }
+
   export type UserNullableScalarRelationFilter = {
     is?: UserWhereInput | null
     isNot?: UserWhereInput | null
@@ -19616,9 +20967,17 @@ export namespace Prisma {
     aiRawResponse?: SortOrder
     verifiedVehicleJson?: SortOrder
     verifiedDamageJson?: SortOrder
+    paid?: SortOrder
+    paymentRef?: SortOrder
+    paymentAmount?: SortOrder
+    paymentDate?: SortOrder
     userId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+  }
+
+  export type AssessmentAvgOrderByAggregateInput = {
+    paymentAmount?: SortOrder
   }
 
   export type AssessmentMaxOrderByAggregateInput = {
@@ -19638,6 +20997,10 @@ export namespace Prisma {
     aiRawResponse?: SortOrder
     verifiedVehicleJson?: SortOrder
     verifiedDamageJson?: SortOrder
+    paid?: SortOrder
+    paymentRef?: SortOrder
+    paymentAmount?: SortOrder
+    paymentDate?: SortOrder
     userId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -19660,9 +21023,55 @@ export namespace Prisma {
     aiRawResponse?: SortOrder
     verifiedVehicleJson?: SortOrder
     verifiedDamageJson?: SortOrder
+    paid?: SortOrder
+    paymentRef?: SortOrder
+    paymentAmount?: SortOrder
+    paymentDate?: SortOrder
     userId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+  }
+
+  export type AssessmentSumOrderByAggregateInput = {
+    paymentAmount?: SortOrder
+  }
+
+  export type BoolWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedBoolFilter<$PrismaModel>
+    _max?: NestedBoolFilter<$PrismaModel>
+  }
+
+  export type IntNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedFloatNullableFilter<$PrismaModel>
+    _sum?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedIntNullableFilter<$PrismaModel>
+    _max?: NestedIntNullableFilter<$PrismaModel>
+  }
+
+  export type DateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeNullableWithAggregatesFilter<$PrismaModel> | Date | string | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedDateTimeNullableFilter<$PrismaModel>
+    _max?: NestedDateTimeNullableFilter<$PrismaModel>
   }
 
   export type IntFilter<$PrismaModel = never> = {
@@ -19855,11 +21264,6 @@ export namespace Prisma {
     not?: NestedFloatFilter<$PrismaModel> | number
   }
 
-  export type BoolFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
-    not?: NestedBoolFilter<$PrismaModel> | boolean
-  }
-
   export type VehicleVariantNullableScalarRelationFilter = {
     is?: VehicleVariantWhereInput | null
     isNot?: VehicleVariantWhereInput | null
@@ -19928,14 +21332,6 @@ export namespace Prisma {
     _sum?: NestedFloatFilter<$PrismaModel>
     _min?: NestedFloatFilter<$PrismaModel>
     _max?: NestedFloatFilter<$PrismaModel>
-  }
-
-  export type BoolWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
-    not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedBoolFilter<$PrismaModel>
-    _max?: NestedBoolFilter<$PrismaModel>
   }
 
   export type AssessmentDamagedPartCountOrderByAggregateInput = {
@@ -20016,6 +21412,27 @@ export namespace Prisma {
     subtotal?: SortOrder
   }
 
+  export type AppSettingCountOrderByAggregateInput = {
+    id?: SortOrder
+    key?: SortOrder
+    value?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type AppSettingMaxOrderByAggregateInput = {
+    id?: SortOrder
+    key?: SortOrder
+    value?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type AppSettingMinOrderByAggregateInput = {
+    id?: SortOrder
+    key?: SortOrder
+    value?: SortOrder
+    updatedAt?: SortOrder
+  }
+
   export type SupplierPartPriceListRelationFilter = {
     every?: SupplierPartPriceWhereInput
     some?: SupplierPartPriceWhereInput
@@ -20066,17 +21483,6 @@ export namespace Prisma {
     isActive?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
-  }
-
-  export type IntNullableFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntNullableFilter<$PrismaModel> | number | null
   }
 
   export type SupplierScalarRelationFilter = {
@@ -20156,22 +21562,6 @@ export namespace Prisma {
   export type SupplierPartPriceSumOrderByAggregateInput = {
     vehicleYear?: SortOrder
     price?: SortOrder
-  }
-
-  export type IntNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _avg?: NestedFloatNullableFilter<$PrismaModel>
-    _sum?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedIntNullableFilter<$PrismaModel>
-    _max?: NestedIntNullableFilter<$PrismaModel>
   }
 
   export type PartPriceCountOrderByAggregateInput = {
@@ -20373,6 +21763,22 @@ export namespace Prisma {
     connectOrCreate?: InspectionItemCreateOrConnectWithoutAssessmentInput | InspectionItemCreateOrConnectWithoutAssessmentInput[]
     createMany?: InspectionItemCreateManyAssessmentInputEnvelope
     connect?: InspectionItemWhereUniqueInput | InspectionItemWhereUniqueInput[]
+  }
+
+  export type BoolFieldUpdateOperationsInput = {
+    set?: boolean
+  }
+
+  export type NullableIntFieldUpdateOperationsInput = {
+    set?: number | null
+    increment?: number
+    decrement?: number
+    multiply?: number
+    divide?: number
+  }
+
+  export type NullableDateTimeFieldUpdateOperationsInput = {
+    set?: Date | string | null
   }
 
   export type UserUpdateOneWithoutAssessmentsNestedInput = {
@@ -20687,10 +22093,6 @@ export namespace Prisma {
     divide?: number
   }
 
-  export type BoolFieldUpdateOperationsInput = {
-    set?: boolean
-  }
-
   export type VehicleVariantUpdateOneWithoutPartsNestedInput = {
     create?: XOR<VehicleVariantCreateWithoutPartsInput, VehicleVariantUncheckedCreateWithoutPartsInput>
     connectOrCreate?: VehicleVariantCreateOrConnectWithoutPartsInput
@@ -20775,14 +22177,6 @@ export namespace Prisma {
     create?: XOR<SupplierCreateWithoutPricesInput, SupplierUncheckedCreateWithoutPricesInput>
     connectOrCreate?: SupplierCreateOrConnectWithoutPricesInput
     connect?: SupplierWhereUniqueInput
-  }
-
-  export type NullableIntFieldUpdateOperationsInput = {
-    set?: number | null
-    increment?: number
-    decrement?: number
-    multiply?: number
-    divide?: number
   }
 
   export type SupplierUpdateOneRequiredWithoutPricesNestedInput = {
@@ -20916,52 +22310,20 @@ export namespace Prisma {
     _max?: NestedDateTimeFilter<$PrismaModel>
   }
 
-  export type NestedIntWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel>
-    in?: number[] | ListIntFieldRefInput<$PrismaModel>
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntWithAggregatesFilter<$PrismaModel> | number
-    _count?: NestedIntFilter<$PrismaModel>
-    _avg?: NestedFloatFilter<$PrismaModel>
-    _sum?: NestedIntFilter<$PrismaModel>
-    _min?: NestedIntFilter<$PrismaModel>
-    _max?: NestedIntFilter<$PrismaModel>
-  }
-
-  export type NestedFloatFilter<$PrismaModel = never> = {
-    equals?: number | FloatFieldRefInput<$PrismaModel>
-    in?: number[] | ListFloatFieldRefInput<$PrismaModel>
-    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel>
-    lt?: number | FloatFieldRefInput<$PrismaModel>
-    lte?: number | FloatFieldRefInput<$PrismaModel>
-    gt?: number | FloatFieldRefInput<$PrismaModel>
-    gte?: number | FloatFieldRefInput<$PrismaModel>
-    not?: NestedFloatFilter<$PrismaModel> | number
-  }
-
   export type NestedBoolFilter<$PrismaModel = never> = {
     equals?: boolean | BooleanFieldRefInput<$PrismaModel>
     not?: NestedBoolFilter<$PrismaModel> | boolean
   }
 
-  export type NestedFloatWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: number | FloatFieldRefInput<$PrismaModel>
-    in?: number[] | ListFloatFieldRefInput<$PrismaModel>
-    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel>
-    lt?: number | FloatFieldRefInput<$PrismaModel>
-    lte?: number | FloatFieldRefInput<$PrismaModel>
-    gt?: number | FloatFieldRefInput<$PrismaModel>
-    gte?: number | FloatFieldRefInput<$PrismaModel>
-    not?: NestedFloatWithAggregatesFilter<$PrismaModel> | number
-    _count?: NestedIntFilter<$PrismaModel>
-    _avg?: NestedFloatFilter<$PrismaModel>
-    _sum?: NestedFloatFilter<$PrismaModel>
-    _min?: NestedFloatFilter<$PrismaModel>
-    _max?: NestedFloatFilter<$PrismaModel>
+  export type NestedDateTimeNullableFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
   }
 
   export type NestedBoolWithAggregatesFilter<$PrismaModel = never> = {
@@ -20999,6 +22361,63 @@ export namespace Prisma {
     not?: NestedFloatNullableFilter<$PrismaModel> | number | null
   }
 
+  export type NestedDateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeNullableWithAggregatesFilter<$PrismaModel> | Date | string | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedDateTimeNullableFilter<$PrismaModel>
+    _max?: NestedDateTimeNullableFilter<$PrismaModel>
+  }
+
+  export type NestedIntWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[] | ListIntFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntWithAggregatesFilter<$PrismaModel> | number
+    _count?: NestedIntFilter<$PrismaModel>
+    _avg?: NestedFloatFilter<$PrismaModel>
+    _sum?: NestedIntFilter<$PrismaModel>
+    _min?: NestedIntFilter<$PrismaModel>
+    _max?: NestedIntFilter<$PrismaModel>
+  }
+
+  export type NestedFloatFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel>
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatFilter<$PrismaModel> | number
+  }
+
+  export type NestedFloatWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel>
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatWithAggregatesFilter<$PrismaModel> | number
+    _count?: NestedIntFilter<$PrismaModel>
+    _avg?: NestedFloatFilter<$PrismaModel>
+    _sum?: NestedFloatFilter<$PrismaModel>
+    _min?: NestedFloatFilter<$PrismaModel>
+    _max?: NestedFloatFilter<$PrismaModel>
+  }
+
   export type AssessmentCreateWithoutUserInput = {
     id?: string
     assessmentNumber: string
@@ -21016,6 +22435,10 @@ export namespace Prisma {
     aiRawResponse?: string | null
     verifiedVehicleJson?: string | null
     verifiedDamageJson?: string | null
+    paid?: boolean
+    paymentRef?: string | null
+    paymentAmount?: number | null
+    paymentDate?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     images?: AssessmentImageCreateNestedManyWithoutAssessmentInput
@@ -21041,6 +22464,10 @@ export namespace Prisma {
     aiRawResponse?: string | null
     verifiedVehicleJson?: string | null
     verifiedDamageJson?: string | null
+    paid?: boolean
+    paymentRef?: string | null
+    paymentAmount?: number | null
+    paymentDate?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     images?: AssessmentImageUncheckedCreateNestedManyWithoutAssessmentInput
@@ -21095,6 +22522,10 @@ export namespace Prisma {
     aiRawResponse?: StringNullableFilter<"Assessment"> | string | null
     verifiedVehicleJson?: StringNullableFilter<"Assessment"> | string | null
     verifiedDamageJson?: StringNullableFilter<"Assessment"> | string | null
+    paid?: BoolFilter<"Assessment"> | boolean
+    paymentRef?: StringNullableFilter<"Assessment"> | string | null
+    paymentAmount?: IntNullableFilter<"Assessment"> | number | null
+    paymentDate?: DateTimeNullableFilter<"Assessment"> | Date | string | null
     userId?: StringNullableFilter<"Assessment"> | string | null
     createdAt?: DateTimeFilter<"Assessment"> | Date | string
     updatedAt?: DateTimeFilter<"Assessment"> | Date | string
@@ -21410,6 +22841,10 @@ export namespace Prisma {
     aiRawResponse?: string | null
     verifiedVehicleJson?: string | null
     verifiedDamageJson?: string | null
+    paid?: boolean
+    paymentRef?: string | null
+    paymentAmount?: number | null
+    paymentDate?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     user?: UserCreateNestedOneWithoutAssessmentsInput
@@ -21435,6 +22870,10 @@ export namespace Prisma {
     aiRawResponse?: string | null
     verifiedVehicleJson?: string | null
     verifiedDamageJson?: string | null
+    paid?: boolean
+    paymentRef?: string | null
+    paymentAmount?: number | null
+    paymentDate?: Date | string | null
     userId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -21476,6 +22915,10 @@ export namespace Prisma {
     aiRawResponse?: NullableStringFieldUpdateOperationsInput | string | null
     verifiedVehicleJson?: NullableStringFieldUpdateOperationsInput | string | null
     verifiedDamageJson?: NullableStringFieldUpdateOperationsInput | string | null
+    paid?: BoolFieldUpdateOperationsInput | boolean
+    paymentRef?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentAmount?: NullableIntFieldUpdateOperationsInput | number | null
+    paymentDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneWithoutAssessmentsNestedInput
@@ -21501,6 +22944,10 @@ export namespace Prisma {
     aiRawResponse?: NullableStringFieldUpdateOperationsInput | string | null
     verifiedVehicleJson?: NullableStringFieldUpdateOperationsInput | string | null
     verifiedDamageJson?: NullableStringFieldUpdateOperationsInput | string | null
+    paid?: BoolFieldUpdateOperationsInput | boolean
+    paymentRef?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentAmount?: NullableIntFieldUpdateOperationsInput | number | null
+    paymentDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     userId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -21802,6 +23249,10 @@ export namespace Prisma {
     aiRawResponse?: string | null
     verifiedVehicleJson?: string | null
     verifiedDamageJson?: string | null
+    paid?: boolean
+    paymentRef?: string | null
+    paymentAmount?: number | null
+    paymentDate?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     user?: UserCreateNestedOneWithoutAssessmentsInput
@@ -21827,6 +23278,10 @@ export namespace Prisma {
     aiRawResponse?: string | null
     verifiedVehicleJson?: string | null
     verifiedDamageJson?: string | null
+    paid?: boolean
+    paymentRef?: string | null
+    paymentAmount?: number | null
+    paymentDate?: Date | string | null
     userId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -21868,6 +23323,10 @@ export namespace Prisma {
     aiRawResponse?: NullableStringFieldUpdateOperationsInput | string | null
     verifiedVehicleJson?: NullableStringFieldUpdateOperationsInput | string | null
     verifiedDamageJson?: NullableStringFieldUpdateOperationsInput | string | null
+    paid?: BoolFieldUpdateOperationsInput | boolean
+    paymentRef?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentAmount?: NullableIntFieldUpdateOperationsInput | number | null
+    paymentDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneWithoutAssessmentsNestedInput
@@ -21893,6 +23352,10 @@ export namespace Prisma {
     aiRawResponse?: NullableStringFieldUpdateOperationsInput | string | null
     verifiedVehicleJson?: NullableStringFieldUpdateOperationsInput | string | null
     verifiedDamageJson?: NullableStringFieldUpdateOperationsInput | string | null
+    paid?: BoolFieldUpdateOperationsInput | boolean
+    paymentRef?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentAmount?: NullableIntFieldUpdateOperationsInput | number | null
+    paymentDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     userId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -21918,6 +23381,10 @@ export namespace Prisma {
     aiRawResponse?: string | null
     verifiedVehicleJson?: string | null
     verifiedDamageJson?: string | null
+    paid?: boolean
+    paymentRef?: string | null
+    paymentAmount?: number | null
+    paymentDate?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     user?: UserCreateNestedOneWithoutAssessmentsInput
@@ -21943,6 +23410,10 @@ export namespace Prisma {
     aiRawResponse?: string | null
     verifiedVehicleJson?: string | null
     verifiedDamageJson?: string | null
+    paid?: boolean
+    paymentRef?: string | null
+    paymentAmount?: number | null
+    paymentDate?: Date | string | null
     userId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -21984,6 +23455,10 @@ export namespace Prisma {
     aiRawResponse?: NullableStringFieldUpdateOperationsInput | string | null
     verifiedVehicleJson?: NullableStringFieldUpdateOperationsInput | string | null
     verifiedDamageJson?: NullableStringFieldUpdateOperationsInput | string | null
+    paid?: BoolFieldUpdateOperationsInput | boolean
+    paymentRef?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentAmount?: NullableIntFieldUpdateOperationsInput | number | null
+    paymentDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneWithoutAssessmentsNestedInput
@@ -22009,6 +23484,10 @@ export namespace Prisma {
     aiRawResponse?: NullableStringFieldUpdateOperationsInput | string | null
     verifiedVehicleJson?: NullableStringFieldUpdateOperationsInput | string | null
     verifiedDamageJson?: NullableStringFieldUpdateOperationsInput | string | null
+    paid?: BoolFieldUpdateOperationsInput | boolean
+    paymentRef?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentAmount?: NullableIntFieldUpdateOperationsInput | number | null
+    paymentDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     userId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -22190,6 +23669,10 @@ export namespace Prisma {
     aiRawResponse?: string | null
     verifiedVehicleJson?: string | null
     verifiedDamageJson?: string | null
+    paid?: boolean
+    paymentRef?: string | null
+    paymentAmount?: number | null
+    paymentDate?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     user?: UserCreateNestedOneWithoutAssessmentsInput
@@ -22215,6 +23698,10 @@ export namespace Prisma {
     aiRawResponse?: string | null
     verifiedVehicleJson?: string | null
     verifiedDamageJson?: string | null
+    paid?: boolean
+    paymentRef?: string | null
+    paymentAmount?: number | null
+    paymentDate?: Date | string | null
     userId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -22256,6 +23743,10 @@ export namespace Prisma {
     aiRawResponse?: NullableStringFieldUpdateOperationsInput | string | null
     verifiedVehicleJson?: NullableStringFieldUpdateOperationsInput | string | null
     verifiedDamageJson?: NullableStringFieldUpdateOperationsInput | string | null
+    paid?: BoolFieldUpdateOperationsInput | boolean
+    paymentRef?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentAmount?: NullableIntFieldUpdateOperationsInput | number | null
+    paymentDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneWithoutAssessmentsNestedInput
@@ -22281,6 +23772,10 @@ export namespace Prisma {
     aiRawResponse?: NullableStringFieldUpdateOperationsInput | string | null
     verifiedVehicleJson?: NullableStringFieldUpdateOperationsInput | string | null
     verifiedDamageJson?: NullableStringFieldUpdateOperationsInput | string | null
+    paid?: BoolFieldUpdateOperationsInput | boolean
+    paymentRef?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentAmount?: NullableIntFieldUpdateOperationsInput | number | null
+    paymentDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     userId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -22306,6 +23801,10 @@ export namespace Prisma {
     aiRawResponse?: string | null
     verifiedVehicleJson?: string | null
     verifiedDamageJson?: string | null
+    paid?: boolean
+    paymentRef?: string | null
+    paymentAmount?: number | null
+    paymentDate?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -22327,6 +23826,10 @@ export namespace Prisma {
     aiRawResponse?: NullableStringFieldUpdateOperationsInput | string | null
     verifiedVehicleJson?: NullableStringFieldUpdateOperationsInput | string | null
     verifiedDamageJson?: NullableStringFieldUpdateOperationsInput | string | null
+    paid?: BoolFieldUpdateOperationsInput | boolean
+    paymentRef?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentAmount?: NullableIntFieldUpdateOperationsInput | number | null
+    paymentDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     images?: AssessmentImageUpdateManyWithoutAssessmentNestedInput
@@ -22352,6 +23855,10 @@ export namespace Prisma {
     aiRawResponse?: NullableStringFieldUpdateOperationsInput | string | null
     verifiedVehicleJson?: NullableStringFieldUpdateOperationsInput | string | null
     verifiedDamageJson?: NullableStringFieldUpdateOperationsInput | string | null
+    paid?: BoolFieldUpdateOperationsInput | boolean
+    paymentRef?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentAmount?: NullableIntFieldUpdateOperationsInput | number | null
+    paymentDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     images?: AssessmentImageUncheckedUpdateManyWithoutAssessmentNestedInput
@@ -22377,6 +23884,10 @@ export namespace Prisma {
     aiRawResponse?: NullableStringFieldUpdateOperationsInput | string | null
     verifiedVehicleJson?: NullableStringFieldUpdateOperationsInput | string | null
     verifiedDamageJson?: NullableStringFieldUpdateOperationsInput | string | null
+    paid?: BoolFieldUpdateOperationsInput | boolean
+    paymentRef?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentAmount?: NullableIntFieldUpdateOperationsInput | number | null
+    paymentDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }

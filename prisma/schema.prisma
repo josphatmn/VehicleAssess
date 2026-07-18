@@ -39,6 +39,11 @@ model Assessment {
   verifiedVehicleJson String?
   verifiedDamageJson  String?
 
+  paid                Boolean   @default(false)
+  paymentRef          String?
+  paymentAmount       Int?
+  paymentDate         DateTime?
+
   userId              String?
   user                User?     @relation(fields: [userId], references: [id])
 
@@ -135,7 +140,14 @@ model AssessmentReplacementPart {
   assessmentId    String
   assessment      Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
 
-  createdAt       DateTime  @default(now())
+  createdAt     DateTime  @default(now())
+}
+
+model AppSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
 }
 
 model Supplier {

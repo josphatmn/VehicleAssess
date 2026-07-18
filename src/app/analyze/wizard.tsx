@@ -21,6 +21,7 @@ import {
   Package,
   Plus,
   Trash2,
+  CreditCard,
 } from "lucide-react";
 import { useSession } from "@/hooks/use-session";
 import { Navbar } from "@/components/navbar";
@@ -81,13 +82,14 @@ interface CataloguePart {
   catalogueVariant: string | null;
 }
 
-type Step = "details" | "upload" | "analyze" | "confirm" | "results";
+type Step = "details" | "upload" | "analyze" | "confirm" | "payment" | "results";
 
 const STEP_PARAM: Record<Step, string> = {
   details: "details",
   upload: "upload",
   analyze: "analyzing",
   confirm: "confirm",
+  payment: "payment",
   results: "results",
 };
 
@@ -96,6 +98,7 @@ const PARAM_TO_STEP: Record<string, Step> = {
   upload: "upload",
   analyzing: "analyze",
   confirm: "confirm",
+  payment: "payment",
   results: "results",
 };
 
@@ -116,6 +119,11 @@ export default function AnalyzeWizard() {
   const [assessmentId, setAssessmentId] = useState<string | null>(searchParams.get("id") || null);
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
   const [loadingAssessment, setLoadingAssessment] = useState(false);
+
+  const [paymentAmount, setPaymentAmount] = useState<number>(500);
+  const [paying, setPaying] = useState(false);
+  const [paid, setPaid] = useState(false);
+  const [loadingPrice, setLoadingPrice] = useState(true);
 
   const [customerModalOpen, setCustomerModalOpen] = useState(false);
   const [vehicleModalOpen, setVehicleModalOpen] = useState(false);
@@ -175,8 +183,9 @@ export default function AnalyzeWizard() {
     if (didMountRef.current) return;
     didMountRef.current = true;
     const id = searchParams.get("id");
+    const urlStep = searchParams.get("step") || "";
     if (id) {
-      loadAssessment(id);
+      loadAssessment(id, urlStep);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -189,11 +198,19 @@ export default function AnalyzeWizard() {
     const urlId = searchParams.get("id");
     if (urlId && urlId !== assessmentId) {
       setAssessmentId(urlId);
-      loadAssessment(urlId);
+      loadAssessment(urlId, searchParams.get("step") || "");
     }
   }, [searchParams]);
 
-  const loadAssessment = async (id: string) => {
+  useEffect(() => {
+    fetch("/api/settings")
+      .then((r) => r.json())
+      .then((s) => { if (s.report_price) setPaymentAmount(parseInt(s.report_price, 10)); })
+      .catch(() => {})
+      .finally(() => setLoadingPrice(false));
+  }, []);
+
+  const loadAssessment = async (id: string, requestedStep?: string) => {
     setLoadingAssessment(true);
     try {
       const res = await fetch(`/api/assessments/${id}`);
@@ -303,6 +320,11 @@ export default function AnalyzeWizard() {
             })));
           }
         }
+      }
+      if (a.paid) setPaid(true);
+      if (requestedStep === "results" && !a.paid) {
+        setStepInternal("payment");
+        router.replace(`/analyze?step=payment&id=${id}`, { scroll: false });
       }
     } catch {
       // Silent fail
@@ -624,6 +646,67 @@ export default function AnalyzeWizard() {
     }
   };
 
+  const handlePayment = async () => {
+    if (!assessmentId || !user?.email) return;
+    setPaying(true);
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 20000);
+
+      let res: Response;
+      try {
+        res = await fetch("/api/paystack/initialize", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ assessmentId, email: user.email }),
+          signal: controller.signal,
+        });
+      } catch {
+        throw new Error("Could not reach payment server. Please try again.");
+      } finally {
+        clearTimeout(timeout);
+      }
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Payment init failed");
+
+      const script = document.createElement("script");
+      script.src = "https://js.paystack.co/v1/inline.js";
+      script.onload = () => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const handler = (window as any).PaystackPop.setup({
+          key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || "pk_test_08605a5144f1f466bc203fd77282352535cc0699",
+          email: user.email,
+          amount: data.amount * 100,
+          currency: "KES",
+          ref: data.reference,
+          onClose: () => { setPaying(false); },
+          callback: async (response: { reference: string }) => {
+            try {
+              const verifyRes = await fetch(`/api/paystack/verify?reference=${response.reference}`);
+              const verifyData = await verifyRes.json();
+              if (verifyData.verified) {
+                setPaid(true);
+                toast.success("Payment successful!");
+                goToResults();
+              } else {
+                toast.error("Payment verification failed");
+              }
+            } catch {
+              toast.error("Could not verify payment");
+            }
+            setPaying(false);
+          },
+        });
+        handler.openIframe();
+      };
+      document.body.appendChild(script);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Payment failed");
+      setPaying(false);
+    }
+  };
+
   const handleDownloadPdf = async () => {
     if (!result) return;
     setDownloadingPdf(true);
@@ -899,9 +982,9 @@ export default function AnalyzeWizard() {
     }
   };
 
-  const stepOrder: Step[] = ["details", "upload", "analyze", "confirm", "results"];
+  const stepOrder: Step[] = ["details", "upload", "analyze", "confirm", "payment", "results"];
   const stepLabels: Record<Step, string> = {
-    details: "Your Details", upload: "Upload Photos", analyze: "Analyzing", confirm: "Confirm Vehicle", results: "Results",
+    details: "Your Details", upload: "Upload Photos", analyze: "Analyzing", confirm: "Confirm Vehicle", payment: "Payment", results: "Results",
   };
   const currentIdx = stepOrder.indexOf(step);
 
@@ -1102,15 +1185,51 @@ export default function AnalyzeWizard() {
             <div className="mt-4 flex items-center gap-2 text-xs text-gray-400"><Pencil className="w-3.5 h-3.5" /> Edit any field to correct the AI detection</div>
             <div className="mt-8 flex justify-between">
               <button onClick={() => setStep("upload")} className="px-5 py-2.5 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition">Back</button>
-              <button onClick={goToResults}
+              <button onClick={() => setStep("payment")}
                 className="inline-flex items-center gap-2 px-6 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition shadow-lg shadow-blue-500/25">
-                Confirm & View Results <ChevronRight className="w-4 h-4" />
+                Confirm & Pay <ChevronRight className="w-4 h-4" />
               </button>
             </div>
           </div>
         )}
 
-        {/* STEP 5: Results */}
+        {/* STEP 5: Payment */}
+        {step === "payment" && (
+          <div className="max-w-lg mx-auto text-center py-10">
+            <button onClick={() => setStep("confirm")} className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-900 mb-6 transition"><ChevronLeft className="w-4 h-4" /> Back</button>
+            <div className="w-14 h-14 rounded-2xl bg-emerald-50 flex items-center justify-center mx-auto mb-4">
+              <CreditCard className="w-7 h-7 text-emerald-600" />
+            </div>
+            <h1 className="text-2xl font-bold tracking-tight">Pay for Report</h1>
+            <p className="mt-2 text-sm text-gray-500">A one-time fee to generate your detailed PDF report.</p>
+            <div className="mt-8 bg-white rounded-2xl border border-gray-100 p-8">
+              <div className="text-4xl font-bold text-gray-900">KES {paymentAmount.toLocaleString()}</div>
+              <p className="mt-2 text-xs text-gray-400">One-time payment via Paystack</p>
+              <ul className="mt-6 space-y-2 text-sm text-gray-600 text-left max-w-xs mx-auto">
+                <li className="flex items-start gap-2"><CheckCircle className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" /> Detailed PDF report</li>
+                <li className="flex items-start gap-2"><CheckCircle className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" /> Per-part cost breakdown</li>
+                <li className="flex items-start gap-2"><CheckCircle className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" /> Supplier recommendations</li>
+                <li className="flex items-start gap-2"><CheckCircle className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" /> Structural concerns &amp; advice</li>
+              </ul>
+              <button
+                onClick={handlePayment}
+                disabled={paying || loadingPrice}
+                className="mt-8 w-full inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-semibold text-white bg-gradient-to-r from-emerald-600 to-green-600 rounded-xl hover:from-emerald-700 hover:to-green-700 transition shadow-lg shadow-emerald-500/25 disabled:opacity-50"
+              >
+                {paying ? <><Loader2 className="w-4 h-4 animate-spin" /> Processing...</> : <>Pay KES {paymentAmount.toLocaleString()}</>}
+              </button>
+              <p className="mt-4 text-[11px] text-gray-400">Secure payment powered by Paystack</p>
+            </div>
+            <button
+              onClick={goToResults}
+              className="mt-6 text-sm text-gray-400 hover:text-gray-600 underline underline-offset-2 transition"
+            >
+              Skip for now (no PDF)
+            </button>
+          </div>
+        )}
+
+        {/* STEP 6: Results */}
         {step === "results" && result && (
           <div>
             <button onClick={reset} className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-900 mb-6 transition"><ArrowLeft className="w-4 h-4" /> New Analysis</button>
