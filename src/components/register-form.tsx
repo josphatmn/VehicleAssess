@@ -2,13 +2,13 @@
 
 import { useActionState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { login } from "@/actions/auth";
+import { register } from "@/actions/auth";
 import { AuthLayout } from "@/components/auth-layout";
 import { Loader2, ArrowRight } from "lucide-react";
 import Link from "next/link";
 
-export function LoginForm() {
-  const [state, action, pending] = useActionState(login, undefined);
+export function RegisterForm() {
+  const [state, action, pending] = useActionState(register, undefined);
   const router = useRouter();
 
   useEffect(() => {
@@ -16,13 +16,24 @@ export function LoginForm() {
   }, [state, router]);
 
   return (
-    <AuthLayout title="Welcome back" subtitle="Sign in to your account to continue">
+    <AuthLayout title="Create your account" subtitle="Get started with Vehicle Accident Analyzer">
       <form action={action} className="space-y-4">
         {state?.error && (
           <div className="rounded-xl bg-red-50 border border-red-100 p-3.5 text-sm text-red-600 font-medium">
             {state.error}
           </div>
         )}
+
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium text-gray-700">Full Name</label>
+          <input
+            name="name"
+            type="text"
+            placeholder="John Doe"
+            required
+            className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 transition"
+          />
+        </div>
 
         <div className="space-y-1.5">
           <label className="text-sm font-medium text-gray-700">Email</label>
@@ -36,22 +47,16 @@ export function LoginForm() {
         </div>
 
         <div className="space-y-1.5">
-          <div className="flex items-center justify-between">
-            <label className="text-sm font-medium text-gray-700">Password</label>
-            <Link
-              href="/forgot-password"
-              className="text-xs font-medium text-gray-500 hover:text-gray-900 transition-colors"
-            >
-              Forgot password?
-            </Link>
-          </div>
+          <label className="text-sm font-medium text-gray-700">Password</label>
           <input
             name="password"
             type="password"
-            placeholder="Enter your password"
+            placeholder="At least 6 characters"
+            minLength={6}
             required
             className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 transition"
           />
+          <p className="text-xs text-gray-400">Must be at least 6 characters</p>
         </div>
 
         <button
@@ -63,7 +68,7 @@ export function LoginForm() {
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
             <>
-              Sign In
+              Create Account
               <ArrowRight className="h-4 w-4" />
             </>
           )}
@@ -79,17 +84,11 @@ export function LoginForm() {
         </div>
 
         <p className="text-sm text-center text-gray-500">
-          Don&apos;t have an account?{" "}
-          <Link href="/register" className="font-semibold text-gray-900 hover:underline">
-            Create one
+          Already have an account?{" "}
+          <Link href="/login" className="font-semibold text-gray-900 hover:underline">
+            Sign in
           </Link>
         </p>
-
-        <div className="rounded-xl bg-gray-100/80 border border-gray-200/60 p-3 text-center">
-          <p className="text-xs text-gray-400">
-            Demo: <span className="font-mono text-gray-500">admin@vehicle-assess.com</span> / <span className="font-mono text-gray-500">admin123</span>
-          </p>
-        </div>
       </form>
     </AuthLayout>
   );

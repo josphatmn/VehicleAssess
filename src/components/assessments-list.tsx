@@ -7,14 +7,17 @@ import {
   ASSESSMENT_STATUS_LABELS,
   ASSESSMENT_STATUS_COLORS,
 } from "@/types";
-import { Eye, Search, Plus, ChevronRight, ClipboardList, Loader2 } from "lucide-react";
+import { Search, Plus, ChevronRight, ClipboardList, Loader2 } from "lucide-react";
 
 interface Assessment {
   id: string;
   assessmentNumber: string;
-  customerName: string;
   status: string;
-  vehicleDisplay: string;
+  currentStep: string;
+  insuredName: string;
+  registrationNumber: string;
+  vehicleMake: string;
+  vehicleModel: string;
   insuranceCompany: string;
   createdAt: string;
 }
@@ -96,7 +99,7 @@ export function AssessmentsList({ initialData }: { initialData: PaginatedResult 
         <div className="relative flex-1 max-w-sm w-full">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
-            placeholder="Search by #, customer, registration..."
+            placeholder="Search by #, insured, registration..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9 h-10 rounded-xl border-gray-200 bg-white text-sm"
@@ -145,46 +148,49 @@ export function AssessmentsList({ initialData }: { initialData: PaginatedResult 
           </div>
         ) : (
           <div className="divide-y divide-gray-50">
-            {data.assessments.map((a, i) => (
-              <Link
-                key={a.id}
-                href={`/analyze?step=results&id=${a.id}`}
-                className={`group flex items-center gap-4 px-6 py-4 hover:bg-gray-50/80 transition-colors animate-fade-in-up animate-delay-${Math.min((i + 1) * 50, 500)}`}
-              >
-                <div className={`h-2 w-2 rounded-full ${statusDot[a.status] || "bg-gray-300"} shrink-0`} />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2.5">
-                    <span className="text-sm font-semibold text-gray-900 font-mono">
-                      {a.assessmentNumber}
-                    </span>
-                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${ASSESSMENT_STATUS_COLORS[a.status as keyof typeof ASSESSMENT_STATUS_COLORS] || ""}`}>
-                      {ASSESSMENT_STATUS_LABELS[a.status as keyof typeof ASSESSMENT_STATUS_LABELS] || a.status}
-                    </span>
+            {data.assessments.map((a, i) => {
+              const vehicleDisplay = [a.vehicleMake, a.vehicleModel].filter(Boolean).join(" ") || "N/A";
+              return (
+                <Link
+                  key={a.id}
+                  href={`/analyze?step=${a.currentStep}&id=${a.id}`}
+                  className={`group flex items-center gap-4 px-6 py-4 hover:bg-gray-50/80 transition-colors animate-fade-in-up animate-delay-${Math.min((i + 1) * 50, 500)}`}
+                >
+                  <div className={`h-2 w-2 rounded-full ${statusDot[a.status] || "bg-gray-300"} shrink-0`} />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2.5">
+                      <span className="text-sm font-semibold text-gray-900 font-mono">
+                        {a.assessmentNumber}
+                      </span>
+                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${ASSESSMENT_STATUS_COLORS[a.status as keyof typeof ASSESSMENT_STATUS_COLORS] || ""}`}>
+                        {ASSESSMENT_STATUS_LABELS[a.status as keyof typeof ASSESSMENT_STATUS_LABELS] || a.status}
+                      </span>
+                    </div>
+                    <div className="mt-1 flex items-center gap-2 text-xs text-gray-500">
+                      <span className="font-medium text-gray-700">{a.insuredName}</span>
+                      {vehicleDisplay !== "N/A" && (
+                        <>
+                          <span className="text-gray-300">&middot;</span>
+                          <span className="truncate">{vehicleDisplay}</span>
+                        </>
+                      )}
+                      {a.insuranceCompany && a.insuranceCompany !== "N/A" && (
+                        <>
+                          <span className="text-gray-300">&middot;</span>
+                          <span className="text-gray-400">{a.insuranceCompany}</span>
+                        </>
+                      )}
+                    </div>
                   </div>
-                  <div className="mt-1 flex items-center gap-2 text-xs text-gray-500">
-                    <span className="font-medium text-gray-700">{a.customerName}</span>
-                    {a.vehicleDisplay !== "N/A" && (
-                      <>
-                        <span className="text-gray-300">&middot;</span>
-                        <span className="truncate">{a.vehicleDisplay}</span>
-                      </>
-                    )}
-                    {a.insuranceCompany && (
-                      <>
-                        <span className="text-gray-300">&middot;</span>
-                        <span className="text-gray-400">{a.insuranceCompany}</span>
-                      </>
-                    )}
+                  <div className="text-right shrink-0">
+                    <p className="text-xs text-gray-400">
+                      {new Date(a.createdAt).toLocaleDateString("en-KE", { month: "short", day: "numeric", year: "numeric" })}
+                    </p>
                   </div>
-                </div>
-                <div className="text-right shrink-0">
-                  <p className="text-xs text-gray-400">
-                    {new Date(a.createdAt).toLocaleDateString("en-KE", { month: "short", day: "numeric", year: "numeric" })}
-                  </p>
-                </div>
-                <ChevronRight className="h-4 w-4 text-gray-300 group-hover:text-gray-500 transition-colors shrink-0" />
-              </Link>
-            ))}
+                  <ChevronRight className="h-4 w-4 text-gray-300 group-hover:text-gray-500 transition-colors shrink-0" />
+                </Link>
+              );
+            })}
           </div>
         )}
 

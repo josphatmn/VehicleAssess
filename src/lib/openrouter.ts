@@ -136,6 +136,20 @@ async function enrichWithSupplierPrices(result: AIAnalysisResult): Promise<void>
   }
 }
 
+async function resolveImageToBase64(input: string): Promise<string> {
+  if (input.startsWith("http://") || input.startsWith("https://")) {
+    const res = await fetch(input);
+    if (!res.ok) throw new Error(`Failed to fetch image: ${res.status}`);
+    const buf = await res.arrayBuffer();
+    return Buffer.from(buf).toString("base64");
+  }
+  if (input.startsWith("data:")) {
+    const match = input.match(/^data:[^;]+;base64,(.+)$/);
+    if (match) return match[1];
+  }
+  return input;
+}
+
 export async function analyzeImages(
   imageBase64Strings: string[]
 ): Promise<AIAnalysisResult> {
@@ -154,7 +168,8 @@ export async function analyzeImages(
     },
   ];
 
-  for (const base64 of imageBase64Strings) {
+  const resolved = await Promise.all(imageBase64Strings.map(resolveImageToBase64));
+  for (const base64 of resolved) {
     content.push({
       type: "image_url",
       image_url: { url: `data:image/jpeg;base64,${base64}` },

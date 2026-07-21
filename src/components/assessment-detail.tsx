@@ -32,43 +32,110 @@ interface AssessmentDetailProps {
     id: string;
     assessmentNumber: string;
     status: string;
-    customerName: string;
-    customerPhone: string;
-    customerEmail: string;
-    insuranceCompany: string;
-    claimNumber: string;
-    registrationNumber: string | null;
-    vin: string | null;
-    odometer: string | null;
-    vehicleNotes: string | null;
-    verifiedVehicleJson: unknown;
-    verifiedDamageJson: unknown;
-    aiRawResponse: unknown;
-    images: {
-      id: string;
-      path: string;
-      originalName: string;
-    }[];
-    damagedParts: {
-      id: string;
-      name: string;
-      severity: string | null;
-      confirmed: boolean;
-    }[];
-    replacementParts: {
-      id: string;
+    paid: boolean;
+    user: { name: string; email: string } | null;
+    insuranceCompany: { name: string; phone: string | null; email: string | null } | null;
+    repairer: { name: string; contactPerson: string | null; phone: string | null; email: string | null; address: string | null } | null;
+    feeNote: {
+      referenceNumber: string | null;
+      assessmentDate: Date | null;
+      professionalFee: number;
+      vat: number;
+      reimbursement: number;
+      totalProfessionalFee: number;
+    } | null;
+    claim: {
+      claimNumber: string | null;
+      insuredName: string | null;
+      insuredPhone: string | null;
+      insuredEmail: string | null;
+      insuredAddress: string | null;
+      policyNumber: string | null;
+      sumInsured: number | null;
+      excessPercentage: number | null;
+      excessAmount: number | null;
+      dateOfInstruction: Date | null;
+      dateOfAssessment: Date | null;
+    } | null;
+    vehicle: {
+      registrationNumber: string | null;
+      colour: string | null;
+      yearOfManufacture: number | null;
+      engineType: string | null;
+      engineNumber: string | null;
+      chassisNumber: string | null;
+      vin: string | null;
+      mileage: string | null;
+      make: { name: string } | null;
+      vehicleModel: { name: string } | null;
+      variant: { name: string } | null;
+    } | null;
+    vehicleCondition: {
+      overallCondition: string | null;
+      mechanicalCondition: string | null;
+      interiorCondition: string | null;
+      exteriorCondition: string | null;
+      tyreBrand: string | null;
+      tyres: { position: string; percentage: number }[];
+    } | null;
+    accidentDetail: {
+      accidentDate: Date | null;
+      accidentLocation: string | null;
+      accidentDescription: string | null;
+      damageDescription: string | null;
+      damageConsistentWithAccident: boolean | null;
+      damageConsistencyNote: string | null;
+    } | null;
+    damageItems: Array<{
+      damageArea: string | null;
+      partName: string | null;
+      side: string | null;
+      damageDescription: string | null;
+      actionRequired: string | null;
+      accidentRelated: boolean;
+      preAccidentDamage: boolean;
+      remarks: string | null;
+      sortOrder: number;
+    }>;
+    parts: Array<{
       partName: string;
       partNumber: string | null;
       quantity: number;
       unitPrice: number;
-      subtotal: number;
-    }[];
-    inspectionItems: {
+      totalPrice: number;
+    }>;
+    services: Array<{
+      description: string;
+      quantity: number;
+      totalCost: number;
+      serviceType: string | null;
+    }>;
+    remark: {
+      generalRemarks: string | null;
+      partsToBeReplaced: string | null;
+      preAccidentDamage: string | null;
+    } | null;
+    authorization: {
+      authorizationStatus: string | null;
+      assessmentStatus: string | null;
+      authorized: boolean | null;
+      salvageValue: number | null;
+      preAccidentValue: number | null;
+    } | null;
+    photos: {
       id: string;
-      item: string;
-      notes: string | null;
-      completed: boolean;
+      path: string;
+      originalName: string;
+      caption: string | null;
     }[];
+    signatures: {
+      role: string;
+      name: string | null;
+      organization: string | null;
+      phone: string | null;
+      signatureDate: Date | null;
+    }[];
+    aiRawResponse: string | null;
     createdAt: Date;
   };
 }
@@ -76,31 +143,9 @@ interface AssessmentDetailProps {
 export function AssessmentDetail({ assessment }: AssessmentDetailProps) {
   const [updatingStatus, setUpdatingStatus] = useState(false);
 
-  const vehicle = typeof assessment.verifiedVehicleJson === "string"
-    ? JSON.parse(assessment.verifiedVehicleJson)
-    : assessment.verifiedVehicleJson as {
-    make?: string;
-    model?: string;
-    variant?: string;
-    year?: string;
-    bodyType?: string;
-    color?: string;
-  } | null;
-
-  const damage = typeof assessment.verifiedDamageJson === "string"
-    ? JSON.parse(assessment.verifiedDamageJson)
-    : assessment.verifiedDamageJson as {
-    severity?: string;
-    summary?: string;
-    structuralDamage?: boolean;
-    possibleTotalLoss?: boolean;
-    repairRecommendation?: string;
-  } | null;
-
-  const totalCost = assessment.replacementParts.reduce(
-    (sum, p) => sum + p.subtotal,
-    0
-  );
+  const partsTotal = assessment.parts.reduce((sum, p) => sum + (p.totalPrice || 0), 0);
+  const servicesTotal = assessment.services.reduce((sum, s) => sum + (s.totalCost || 0), 0);
+  const grandTotal = partsTotal + servicesTotal;
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -125,47 +170,15 @@ export function AssessmentDetail({ assessment }: AssessmentDetailProps) {
           <Badge
             className={
               ASSESSMENT_STATUS_COLORS[
-                assessment.status as keyof typeof ASSESSMENT_STATUS_COLORS
+                (assessment.authorization?.assessmentStatus || assessment.status) as keyof typeof ASSESSMENT_STATUS_COLORS
               ]
             }
             variant="secondary"
           >
             {ASSESSMENT_STATUS_LABELS[
-              assessment.status as keyof typeof ASSESSMENT_STATUS_LABELS
+              (assessment.authorization?.assessmentStatus || assessment.status) as keyof typeof ASSESSMENT_STATUS_LABELS
             ]}
           </Badge>
-          {assessment.status !== "COMPLETED" && (
-            <Button
-              variant="default"
-              size="sm"
-              disabled={updatingStatus}
-              onClick={async () => {
-                const nextStatus: Record<string, string> = {
-                  DRAFT: "AI_ANALYZED",
-                  AI_ANALYZED: "AWAITING_VERIFICATION",
-                  AWAITING_VERIFICATION: "VERIFIED",
-                  VERIFIED: "COMPLETED",
-                };
-                const next = nextStatus[assessment.status];
-                if (!next) return;
-                setUpdatingStatus(true);
-                try {
-                  await updateAssessment(assessment.id, { status: next });
-                  window.location.reload();
-                } catch {
-                  toast.error("Failed to update status");
-                } finally {
-                  setUpdatingStatus(false);
-                }
-              }}
-            >
-              <CheckCircle className="h-4 w-4 mr-1" />
-              {assessment.status === "DRAFT" && "Mark AI Analyzed"}
-              {assessment.status === "AI_ANALYZED" && "Send for Verification"}
-              {assessment.status === "AWAITING_VERIFICATION" && "Mark Verified"}
-              {assessment.status === "VERIFIED" && "Complete"}
-            </Button>
-          )}
           <Button variant="outline" size="sm" onClick={() => window.print()}>
             <Printer className="h-4 w-4 mr-1" />
             Print
@@ -173,102 +186,115 @@ export function AssessmentDetail({ assessment }: AssessmentDetailProps) {
         </div>
       </div>
 
+      {/* Claim / Customer Info */}
       <Card>
         <CardHeader>
-          <CardTitle>Customer Information</CardTitle>
+          <CardTitle>Claim & Insurance Details</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <p className="text-sm text-muted-foreground">Name</p>
-              <p className="font-medium">{assessment.customerName}</p>
+              <p className="text-sm text-muted-foreground">Insured Name</p>
+              <p className="font-medium">{assessment.claim?.insuredName || "—"}</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Claim Number</p>
+              <p className="font-medium">{assessment.claim?.claimNumber || "—"}</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Phone</p>
-              <p className="font-medium">{assessment.customerPhone}</p>
+              <p className="font-medium">{assessment.claim?.insuredPhone || "—"}</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Email</p>
-              <p className="font-medium">{assessment.customerEmail}</p>
+              <p className="font-medium">{assessment.claim?.insuredEmail || "—"}</p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Insurance</p>
-              <p className="font-medium">{assessment.insuranceCompany}</p>
+              <p className="text-sm text-muted-foreground">Insurance Company</p>
+              <p className="font-medium">{assessment.insuranceCompany?.name || "—"}</p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Claim #</p>
-              <p className="font-medium">{assessment.claimNumber}</p>
+              <p className="text-sm text-muted-foreground">Policy Number</p>
+              <p className="font-medium">{assessment.claim?.policyNumber || "—"}</p>
             </div>
           </div>
         </CardContent>
       </Card>
 
+      {/* Vehicle Info */}
       <Card>
         <CardHeader>
           <CardTitle>Vehicle Information</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-3">
-            {vehicle?.make && (
+            {assessment.vehicle?.make && (
               <div>
                 <p className="text-sm text-muted-foreground">Make</p>
-                <p className="font-medium">{vehicle.make}</p>
+                <p className="font-medium">{assessment.vehicle.make.name}</p>
               </div>
             )}
-            {vehicle?.model && (
+            {assessment.vehicle?.vehicleModel && (
               <div>
                 <p className="text-sm text-muted-foreground">Model</p>
-                <p className="font-medium">{vehicle.model}</p>
+                <p className="font-medium">{assessment.vehicle.vehicleModel.name}</p>
               </div>
             )}
-            {vehicle?.variant && (
+            {assessment.vehicle?.variant && (
               <div>
                 <p className="text-sm text-muted-foreground">Variant</p>
-                <p className="font-medium">{vehicle.variant}</p>
+                <p className="font-medium">{assessment.vehicle.variant.name}</p>
               </div>
             )}
-            {vehicle?.year && (
+            {assessment.vehicle?.yearOfManufacture && (
               <div>
                 <p className="text-sm text-muted-foreground">Year</p>
-                <p className="font-medium">{vehicle.year}</p>
+                <p className="font-medium">{assessment.vehicle.yearOfManufacture}</p>
               </div>
             )}
-            {vehicle?.bodyType && (
+            {assessment.vehicle?.colour && (
               <div>
-                <p className="text-sm text-muted-foreground">Body Type</p>
-                <p className="font-medium">{vehicle.bodyType}</p>
+                <p className="text-sm text-muted-foreground">Colour</p>
+                <p className="font-medium">{assessment.vehicle.colour}</p>
               </div>
             )}
-            {vehicle?.color && (
-              <div>
-                <p className="text-sm text-muted-foreground">Color</p>
-                <p className="font-medium">{vehicle.color}</p>
-              </div>
-            )}
-            {assessment.registrationNumber && (
+            {assessment.vehicle?.registrationNumber && (
               <div>
                 <p className="text-sm text-muted-foreground">Registration</p>
-                <p className="font-medium">{assessment.registrationNumber}</p>
+                <p className="font-medium">{assessment.vehicle.registrationNumber}</p>
               </div>
             )}
-            {assessment.vin && (
+            {assessment.vehicle?.vin && (
               <div>
                 <p className="text-sm text-muted-foreground">VIN</p>
-                <p className="font-medium">{assessment.vin}</p>
+                <p className="font-medium">{assessment.vehicle.vin}</p>
+              </div>
+            )}
+            {assessment.vehicle?.engineType && (
+              <div>
+                <p className="text-sm text-muted-foreground">Engine Type</p>
+                <p className="font-medium">{assessment.vehicle.engineType}</p>
+              </div>
+            )}
+            {assessment.vehicle?.mileage && (
+              <div>
+                <p className="text-sm text-muted-foreground">Mileage</p>
+                <p className="font-medium">{assessment.vehicle.mileage}</p>
               </div>
             )}
           </div>
         </CardContent>
       </Card>
 
-      {assessment.images.length > 0 && (
+      {/* Photos */}
+      {assessment.photos.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Images ({assessment.images.length})</CardTitle>
+            <CardTitle>Photos ({assessment.photos.length})</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-              {assessment.images.map((img) => (
+              {assessment.photos.map((img) => (
                 <div
                   key={img.id}
                   className="aspect-square rounded-md border overflow-hidden bg-muted"
@@ -285,92 +311,67 @@ export function AssessmentDetail({ assessment }: AssessmentDetailProps) {
         </Card>
       )}
 
-      {damage && (
+      {/* Damage Items */}
+      {assessment.damageItems.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Damage Summary</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="grid gap-4 md:grid-cols-3">
-              <div>
-                <p className="text-sm text-muted-foreground">Severity</p>
-                <Badge variant="secondary">{damage.severity}</Badge>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Structural Damage</p>
-                <p className="font-medium">
-                  {damage.structuralDamage ? "Yes" : "No"}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Total Loss</p>
-                <p className="font-medium">
-                  {damage.possibleTotalLoss ? "Yes" : "No"}
-                </p>
-              </div>
-            </div>
-            {damage.summary && (
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">
-                  Description
-                </p>
-                <p>{damage.summary}</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {assessment.damagedParts.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Damaged Parts</CardTitle>
+            <CardTitle>Damage Assessment ({assessment.damageItems.length} items)</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-wrap gap-2">
-              {assessment.damagedParts.map((part) => (
-                <Badge
-                  key={part.id}
-                  variant={part.confirmed ? "default" : "outline"}
-                >
-                  {part.name}
-                  {part.severity && ` (${part.severity})`}
-                </Badge>
-              ))}
-            </div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Area</TableHead>
+                  <TableHead>Part</TableHead>
+                  <TableHead>Action</TableHead>
+                  <TableHead>Accident</TableHead>
+                  <TableHead>Pre-Accident</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {assessment.damageItems.map((item, i) => (
+                  <TableRow key={i}>
+                    <TableCell>{item.damageArea || "—"}</TableCell>
+                    <TableCell className="font-medium">{item.partName || "—"}</TableCell>
+                    <TableCell>{item.actionRequired || "—"}</TableCell>
+                    <TableCell>{item.accidentRelated ? "✓" : "—"}</TableCell>
+                    <TableCell>{item.preAccidentDamage ? "✓" : "—"}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </CardContent>
         </Card>
       )}
 
-      {assessment.replacementParts.length > 0 && (
+      {/* Parts */}
+      {assessment.parts.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>
-              Replacement Parts - Total: {formatCurrency(totalCost)}
-            </CardTitle>
+            <CardTitle>Replacement Parts — {formatCurrency(partsTotal)}</CardTitle>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Part Name</TableHead>
-                  <TableHead>Part Number</TableHead>
+                  <TableHead>Part No.</TableHead>
                   <TableHead>Qty</TableHead>
                   <TableHead>Unit Price</TableHead>
-                  <TableHead>Subtotal</TableHead>
+                  <TableHead>Total</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {assessment.replacementParts.map((part) => (
-                  <TableRow key={part.id}>
-                    <TableCell>{part.partName}</TableCell>
+                {assessment.parts.map((part, i) => (
+                  <TableRow key={i}>
+                    <TableCell className="font-medium">{part.partName}</TableCell>
                     <TableCell className="font-mono text-sm">
-                      {part.partNumber || "-"}
+                      {part.partNumber || "—"}
                     </TableCell>
                     <TableCell>{part.quantity}</TableCell>
                     <TableCell>{formatCurrency(part.unitPrice)}</TableCell>
                     <TableCell className="font-medium">
-                      {formatCurrency(part.subtotal)}
+                      {formatCurrency(part.totalPrice)}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -380,38 +381,78 @@ export function AssessmentDetail({ assessment }: AssessmentDetailProps) {
         </Card>
       )}
 
-      {assessment.inspectionItems.length > 0 && (
+      {/* Services */}
+      {assessment.services.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Inspection Items</CardTitle>
+            <CardTitle>Labour & Services — {formatCurrency(servicesTotal)}</CardTitle>
           </CardHeader>
           <CardContent>
-            <ul className="space-y-2">
-              {assessment.inspectionItems.map((item) => (
-                <li key={item.id} className="flex items-start gap-2">
-                  <span className="text-muted-foreground">-</span>
-                  <div>
-                    <span>{item.item}</span>
-                    {item.notes && (
-                      <span className="text-muted-foreground ml-2">
-                        ({item.notes})
-                      </span>
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ul>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Description</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Qty</TableHead>
+                  <TableHead>Total</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {assessment.services.map((svc, i) => (
+                  <TableRow key={i}>
+                    <TableCell className="font-medium">{svc.description}</TableCell>
+                    <TableCell>{svc.serviceType || "—"}</TableCell>
+                    <TableCell>{svc.quantity}</TableCell>
+                    <TableCell className="font-medium">
+                      {formatCurrency(svc.totalCost)}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </CardContent>
         </Card>
       )}
 
-      {damage?.repairRecommendation && (
+      {/* Grand Total */}
+      <Card className="border-emerald-200 bg-emerald-50">
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between">
+            <span className="text-lg font-bold">Grand Total</span>
+            <span className="text-2xl font-bold text-emerald-700">{formatCurrency(grandTotal)}</span>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Remarks */}
+      {assessment.remark?.generalRemarks && (
         <Card>
           <CardHeader>
-            <CardTitle>Repair Recommendation</CardTitle>
+            <CardTitle>General Remarks</CardTitle>
           </CardHeader>
           <CardContent>
-            <p>{damage.repairRecommendation}</p>
+            <p className="text-sm whitespace-pre-wrap">{assessment.remark.generalRemarks}</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Signatures */}
+      {assessment.signatures.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Signatures</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 md:grid-cols-2">
+              {assessment.signatures.map((sig, i) => (
+                <div key={i} className="rounded-lg border p-4">
+                  <p className="text-xs text-muted-foreground uppercase">{sig.role}</p>
+                  <p className="font-medium mt-1">{sig.name || "—"}</p>
+                  {sig.organization && <p className="text-sm text-muted-foreground">{sig.organization}</p>}
+                  {sig.phone && <p className="text-sm text-muted-foreground">{sig.phone}</p>}
+                </div>
+              ))}
+            </div>
           </CardContent>
         </Card>
       )}

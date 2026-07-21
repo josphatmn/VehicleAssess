@@ -38,6 +38,7 @@ export async function login(
 export type RegisterState = {
   error?: string;
   success?: boolean;
+  email?: string;
 } | undefined;
 
 export async function register(
@@ -83,6 +84,69 @@ export async function register(
         },
       });
     }
+  }
+
+  return { success: true, email };
+}
+
+export type ForgotPasswordState = {
+  error?: string;
+  success?: boolean;
+} | undefined;
+
+export async function forgotPassword(
+  _prevState: ForgotPasswordState,
+  formData: FormData
+): Promise<ForgotPasswordState> {
+  const email = formData.get("email") as string;
+
+  if (!email) {
+    return { error: "Email is required" };
+  }
+
+  const supabase = await createClient();
+
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/update-password`,
+  });
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  return { success: true };
+}
+
+export type UpdatePasswordState = {
+  error?: string;
+  success?: boolean;
+} | undefined;
+
+export async function updatePassword(
+  _prevState: UpdatePasswordState,
+  formData: FormData
+): Promise<UpdatePasswordState> {
+  const password = formData.get("password") as string;
+  const confirmPassword = formData.get("confirmPassword") as string;
+
+  if (!password || !confirmPassword) {
+    return { error: "All fields are required" };
+  }
+
+  if (password !== confirmPassword) {
+    return { error: "Passwords do not match" };
+  }
+
+  if (password.length < 6) {
+    return { error: "Password must be at least 6 characters" };
+  }
+
+  const supabase = await createClient();
+
+  const { error } = await supabase.auth.updateUser({ password });
+
+  if (error) {
+    return { error: error.message };
   }
 
   return { success: true };

@@ -14,19 +14,42 @@ interface AuthSession {
 
 export async function auth(): Promise<AuthSession> {
   const supabase = await createClient();
-  const { data: { user }, error } = await supabase.auth.getUser();
 
-  if (error || !user) {
+  const { data: { session } } = await supabase.auth.getSession();
+
+  if (!session?.user) {
     return { user: null };
   }
 
-  const dbUser = await prisma.user.findUnique({
-    where: { supabaseUserId: user.id },
+  let dbUser = await prisma.user.findUnique({
+    where: { supabaseUserId: session.user.id },
     select: { id: true, name: true, email: true, role: true },
   });
 
+  if (!dbUser && session.user.email) {
+    dbUser = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      select: { id: true, name: true, email: true, role: true },
+    });
+    if (dbUser) {
+      dbUser = await prisma.user.update({
+        where: { id: dbUser.id },
+        data: { supabaseUserId: session.user.id },
+        select: { id: true, name: true, email: true, role: true },
+      });
+    }
+  }
+
   if (!dbUser) {
-    return { user: null };
+    dbUser = await prisma.user.create({
+      data: {
+        supabaseUserId: session.user.id,
+        name: session.user.user_metadata?.name || session.user.email?.split("@")[0] || "User",
+        email: session.user.email || "",
+        role: "ASSESSOR",
+      },
+      select: { id: true, name: true, email: true, role: true },
+    });
   }
 
   return { user: dbUser };

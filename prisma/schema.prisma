@@ -7,141 +7,450 @@ datasource db {
   provider = "postgresql"
 }
 
+// ─── Users ───────────────────────────────────────────────────────────────────
+
 model User {
-  id              String    @id @default(cuid())
-  supabaseUserId  String?   @unique
-  name            String
-  email           String    @unique
-  role            String    @default("ASSESSOR")
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  assessments     Assessment[]
+  id             String    @id @default(cuid())
+  supabaseUserId String?   @unique
+  name           String
+  email          String    @unique
+  role           String    @default("ASSESSOR")
+  phone          String?
+  organization   String?
+  licenseNumber  String?
+  address        String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  assessments    Assessment[]
 }
 
-model Assessment {
-  id                  String    @id @default(cuid())
-  assessmentNumber    String    @unique
-  status              String    @default("DRAFT")
-
-  customerName        String
-  customerPhone       String
-  customerEmail       String
-  customerAddress     String?
-  insuranceCompany    String
-  claimNumber         String
-
-  registrationNumber  String?
-  vin                 String?
-  odometer            String?
-  vehicleNotes        String?
-
-  aiRawResponse       String?
-  verifiedVehicleJson String?
-  verifiedDamageJson  String?
-
-  paid                Boolean   @default(false)
-  paymentRef          String?
-  paymentAmount       Int?
-  paymentDate         DateTime?
-
-  userId              String?
-  user                User?     @relation(fields: [userId], references: [id])
-
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
-
-  images              AssessmentImage[]
-  damagedParts        AssessmentDamagedPart[]
-  replacementParts    AssessmentReplacementPart[]
-  inspectionItems     InspectionItem[]
-}
-
-model AssessmentImage {
-  id            String    @id @default(cuid())
-  filename      String
-  originalName  String
-  path          String
-  mimeType      String
-  size          Int
-  sortOrder     Int       @default(0)
-
-  assessmentId  String
-  assessment    Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
-
-  createdAt     DateTime  @default(now())
-}
+// ─── Vehicle Catalog ─────────────────────────────────────────────────────────
 
 model VehicleMake {
-  id        String   @id @default(cuid())
-  name      String   @unique
-  models    VehicleModel[]
+  id               String        @id @default(cuid())
+  name             String        @unique
+  models           VehicleModel[]
+  assessmentVehicles AssessmentVehicle[]
 }
 
 model VehicleModel {
-  id        String   @id @default(cuid())
-  name      String
-  makeId    String
-  make      VehicleMake @relation(fields: [makeId], references: [id], onDelete: Cascade)
-
-  variants  VehicleVariant[]
-
+  id               String             @id @default(cuid())
+  name             String
+  makeId           String
+  make             VehicleMake        @relation(fields: [makeId], references: [id], onDelete: Cascade)
+  variants         VehicleVariant[]
+  assessmentVehicles AssessmentVehicle[]
   @@unique([name, makeId])
 }
 
 model VehicleVariant {
-  id        String   @id @default(cuid())
-  name      String
-  modelId   String
-  model     VehicleModel @relation(fields: [modelId], references: [id], onDelete: Cascade)
-
-  parts     VehiclePart[]
-
+  id               String             @id @default(cuid())
+  name             String
+  modelId          String
+  model            VehicleModel       @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  parts            VehiclePart[]
+  assessmentVehicles AssessmentVehicle[]
   @@unique([name, modelId])
 }
 
 model VehiclePart {
-  id            String    @id @default(cuid())
-  partNumber    String
-  name          String
-  category      String
-  unitPrice     Float
-  labourCost    Float
-  active        Boolean   @default(true)
-
-  variantId     String?
-  variant       VehicleVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
-
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id         String          @id @default(cuid())
+  partNumber String
+  name       String
+  category   String
+  unitPrice  Float           @default(0)
+  labourCost Float           @default(0)
+  active     Boolean         @default(true)
+  variantId  String?
+  variant    VehicleVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
 }
 
-model AssessmentDamagedPart {
-  id            String    @id @default(cuid())
-  name          String
-  severity      String?
-  confirmed     Boolean   @default(false)
+// ─── Insurance Catalog ───────────────────────────────────────────────────────
 
-  assessmentId  String
-  assessment    Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
-
-  createdAt     DateTime  @default(now())
+model InsuranceCompany {
+  id         String       @id @default(cuid())
+  name       String       @unique
+  phone      String?
+  email      String?
+  website    String?
+  isActive   Boolean      @default(true)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  assessments Assessment[]
 }
 
-model AssessmentReplacementPart {
-  id              String    @id @default(cuid())
+// ─── Repairer Catalog ────────────────────────────────────────────────────────
+
+model Repairer {
+  id            String       @id @default(cuid())
+  name          String
+  contactPerson String?
+  phone         String?
+  email         String?
+  address       String?
+  location      String?
+  isActive      Boolean      @default(true)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  assessments   Assessment[]
+}
+
+// ─── Assessment Core ─────────────────────────────────────────────────────────
+
+model Assessment {
+  id               String   @id @default(cuid())
+  assessmentNumber String   @unique
+  status           String   @default("DRAFT")
+  currentStep      String   @default("upload")
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id])
+
+  insuranceCompanyId String?
+  insuranceCompany   InsuranceCompany? @relation(fields: [insuranceCompanyId], references: [id])
+
+  repairerId String?
+  repairer   Repairer? @relation(fields: [repairerId], references: [id])
+
+  // Payment
+  paid          Boolean   @default(false)
+  paymentRef    String?
+  paymentAmount Int?
+  paymentDate   DateTime?
+
+  // AI analysis raw response
+  aiRawResponse String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // ── Section 1: Fee Note
+  feeNote AssessmentFeeNote?
+
+  // ── Section 3: Claim Details
+  claim AssessmentClaim?
+
+  // ── Section 4: Vehicle Details
+  vehicle AssessmentVehicle?
+
+  // ── Section 5: Vehicle Condition
+  vehicleCondition VehicleCondition?
+
+  // ── Section 6: Accident Details
+  accidentDetail AccidentDetail?
+
+  // ── Section 7: Damage Assessment (dynamic table)
+  damageItems DamageItem[]
+
+  // ── Section 8: Parts Required (dynamic table)
+  parts AssessmentPart[]
+
+  // ── Section 9: Labour & Services (dynamic table)
+  services AssessmentService[]
+
+  // ── Section 11: General Remarks
+  remark AssessmentRemark?
+
+  // ── Section 12: Additional Damage Observations
+  additionalObservations AdditionalDamageObservation[]
+
+  // ── Section 13: Assessment Status / Authorization
+  authorization AssessmentAuthorization?
+
+  // ── Section 15: Special Repair Instructions
+  specialInstructions AssessmentInstruction[]
+
+  // ── Section 16: Assessor Signature
+  signatures AssessmentSignature[]
+
+  // ── Photos (linked to assessment, optionally to damage items)
+  photos AssessmentPhoto[]
+
+  // ── Supplements
+  supplements AssessmentSupplement[]
+}
+
+// ─── Section 1: Assessment / Fee Note ────────────────────────────────────────
+
+model AssessmentFeeNote {
+  id                   String   @id @default(cuid())
+  referenceNumber      String?
+  assessmentDate       DateTime @default(now())
+  professionalFee      Float    @default(0)
+  vat                  Float    @default(0)
+  reimbursement        Float    @default(0)
+  totalProfessionalFee Float    @default(0) // calculated: professionalFee + vat + reimbursement
+
+  assessmentId String   @unique
+  assessment   Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+}
+
+// ─── Section 3: Claim Details ────────────────────────────────────────────────
+
+model AssessmentClaim {
+  id                String   @id @default(cuid())
+  claimNumber       String?
+  insuredName       String?
+  insuredPhone      String?
+  insuredEmail      String?
+  insuredAddress    String?
+  policyNumber      String?
+  sumInsured        Float?
+  excessPercentage  Float?
+  excessAmount      Float?   // calculated from repair estimate
+  dateOfInstruction DateTime?
+  dateOfAssessment  DateTime?
+
+  assessmentId String   @unique
+  assessment   Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+}
+
+// ─── Section 4: Vehicle Details ──────────────────────────────────────────────
+
+model AssessmentVehicle {
+  id                  String   @id @default(cuid())
+  registrationNumber  String?
+  makeId              String?
+  make                VehicleMake? @relation(fields: [makeId], references: [id], onDelete: SetNull)
+  modelId             String?
+  vehicleModel        VehicleModel? @relation(fields: [modelId], references: [id], onDelete: SetNull)
+  variantId           String?
+  variant             VehicleVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+  colour              String?
+  yearOfManufacture   Int?
+  modeOfTransport     String?
+  engineType          String?
+  engineNumber        String?
+  chassisNumber       String?
+  vin                 String?
+  mileage             String?
+  vehiclePopularity    String?
+  repairerName        String? // garage/repairer name (text, for display)
+
+  assessmentId String   @unique
+  assessment   Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+}
+
+// ─── Section 5: Vehicle Condition ────────────────────────────────────────────
+
+model VehicleCondition {
+  id                  String  @id @default(cuid())
+  overallCondition    String?
+  tyreBrand           String?
+  tyreSize            String?
+  spareTyreCondition  String?
+  mechanicalCondition String?
+  interiorCondition   String?
+  exteriorCondition   String?
+
+  assessmentId String   @unique
+  assessment   Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+
+  tyres TyreCondition[]
+}
+
+model TyreCondition {
+  id         String  @id @default(cuid())
+  position   String  // RHF, RHR, LHF, LHR
+  percentage Int     @default(0) // 0-100
+
+  vehicleConditionId String
+  vehicleCondition   VehicleCondition @relation(fields: [vehicleConditionId], references: [id], onDelete: Cascade)
+}
+
+// ─── Section 6: Accident Details ─────────────────────────────────────────────
+
+model AccidentDetail {
+  id                              String   @id @default(cuid())
+  accidentDate                    DateTime?
+  accidentLocation                String?
+  accidentDescription             String?
+  accidentCircumstances           String?
+  damageDescription               String?
+  insuredExplanation              String?
+  assessorObservation             String?
+  damageConsistentWithAccident    Boolean? @default(true)
+  damageConsistencyNote           String?
+
+  assessmentId String   @unique
+  assessment   Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+}
+
+// ─── Section 7: Damage Assessment ────────────────────────────────────────────
+
+model DamageItem {
+  id                   String  @id @default(cuid())
+  damageArea           String? // e.g. LHR Wing, Rear Bumper
+  partName             String?
+  side                 String? // e.g. LHR, RHF, Front, Rear
+  damageDescription    String?
+  actionRequired       String? // Replace, Repair, Paint, Polish, Inspect, No Action
+  accidentRelated      Boolean @default(true)
+  preAccidentDamage    Boolean @default(false)
+  remarks              String?
+  sortOrder            Int     @default(0)
+
+  assessmentId String
+  assessment   Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+
+  photos AssessmentPhoto[]
+}
+
+// ─── Section 8: Parts Required ───────────────────────────────────────────────
+
+model AssessmentPart {
+  id              String  @id @default(cuid())
   partName        String
   partNumber      String?
-  quantity        Int       @default(1)
-  unitPrice       Float
-  subtotal        Float
-  confirmed       Boolean   @default(false)
-  vehiclePartId   String?
+  vehicleMake     String?
+  vehicleModel    String?
+  quantity        Int     @default(1)
+  unitPrice       Float   @default(0)
+  discountPercent Float   @default(0)
+  discountAmount  Float   @default(0) // calculated
+  netPrice        Float   @default(0) // calculated
+  vatPercent      Float   @default(16) // default 16% VAT
+  vatAmount       Float   @default(0) // calculated
+  totalPrice      Float   @default(0) // calculated
+  partStatus      String? // Replace, Repair, Paint, Pending Confirmation
+  remarks         String?
+  sortOrder       Int     @default(0)
 
-  assessmentId    String
-  assessment      Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
-
-  createdAt     DateTime  @default(now())
+  assessmentId String
+  assessment   Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
 }
+
+// ─── Section 9: Labour & Services ────────────────────────────────────────────
+
+model AssessmentService {
+  id                  String  @id @default(cuid())
+  description         String
+  quantity            Int     @default(1)
+  unitCost            Float   @default(0)
+  discount            Float   @default(0)
+  vat                 Float   @default(0) // calculated
+  totalCost           Float   @default(0) // calculated
+  serviceType         String? // Labour, Paint, Miscellaneous
+  remarks             String?
+  sortOrder           Int     @default(0)
+
+  assessmentId String
+  assessment   Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+}
+
+// ─── Section 11: General Remarks ─────────────────────────────────────────────
+
+model AssessmentRemark {
+  id                    String  @id @default(cuid())
+  generalRemarks        String?
+  partsToBeReplaced     String?
+  partsToBePainted      String?
+  partsRequiringRepair  String?
+  preAccidentDamage     String?
+  additionalObservations String?
+
+  assessmentId String   @unique
+  assessment   Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+}
+
+// ─── Section 12: Additional Damage Observations ──────────────────────────────
+
+model AdditionalDamageObservation {
+  id                    String  @id @default(cuid())
+  damageDescription     String?
+  insuredExplanation    String?
+  assessorOpinion       String?
+  accidentRelated       Boolean @default(true)
+  estimatedRepairCost   Float   @default(0)
+  estimatedPaintingCost Float   @default(0)
+  estimatedTotalCost    Float   @default(0) // calculated
+  sortOrder             Int     @default(0)
+
+  assessmentId String
+  assessment   Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+}
+
+// ─── Section 13: Assessment Status / Authorization ───────────────────────────
+
+model AssessmentAuthorization {
+  id                   String  @id @default(cuid())
+  authorized           Boolean @default(false)
+  authorizationStatus  String? // Authorized, Not Authorized, Pending Authorization
+  copyToRepairer       Boolean @default(false)
+  salvageValue         Float?
+  preAccidentValue     Float?
+  assessmentStatus     String? // Draft, Submitted, Under Review, Approved, Rejected, Supplement Required, Completed
+
+  assessmentId String   @unique
+  assessment   Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+}
+
+// ─── Section 15: Special Repair Instructions ─────────────────────────────────
+
+model AssessmentInstruction {
+  id        String  @id @default(cuid())
+  instruction String
+  sortOrder  Int     @default(0)
+
+  assessmentId String
+  assessment   Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+}
+
+// ─── Section 16: Signatures ──────────────────────────────────────────────────
+
+model AssessmentSignature {
+  id            String   @id @default(cuid())
+  role          String   // "ASSESSOR" or "REPAIRER"
+  name          String?
+  licenseNumber String?
+  organization  String?
+  phone         String?
+  email         String?
+  address       String?
+  signatureData String?  // base64 signature image
+  signatureDate DateTime?
+
+  assessmentId String
+  assessment   Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+}
+
+// ─── Photos ──────────────────────────────────────────────────────────────────
+
+model AssessmentPhoto {
+  id           String  @id @default(cuid())
+  filename     String
+  originalName String
+  path         String  // Supabase Storage URL or base64 data URL
+  mimeType     String
+  size         Int
+  sortOrder    Int     @default(0)
+  caption      String?
+
+  assessmentId  String
+  assessment    Assessment  @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+
+  damageItemId String?
+  damageItem   DamageItem? @relation(fields: [damageItemId], references: [id], onDelete: SetNull)
+}
+
+// ─── Supplements ─────────────────────────────────────────────────────────────
+
+model AssessmentSupplement {
+  id            String   @id @default(cuid())
+  supplementNumber String
+  status        String   @default("DRAFT")
+  reason        String?
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  assessmentId String
+  assessment   Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+}
+
+// ─── Settings ────────────────────────────────────────────────────────────────
 
 model AppSetting {
   id        String   @id @default(cuid())
@@ -149,6 +458,8 @@ model AppSetting {
   value     String
   updatedAt DateTime @updatedAt
 }
+
+// ─── Supplier Catalog ────────────────────────────────────────────────────────
 
 model Supplier {
   id            String             @id @default(cuid())
@@ -205,16 +516,4 @@ model PartPrice {
   updatedAt  DateTime @updatedAt
 
   @@index([make, model, partName])
-}
-
-model InspectionItem {
-  id            String    @id @default(cuid())
-  item          String
-  notes         String?
-  completed     Boolean   @default(false)
-
-  assessmentId  String
-  assessment    Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
-
-  createdAt     DateTime  @default(now())
 }

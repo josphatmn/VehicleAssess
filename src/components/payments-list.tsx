@@ -3,13 +3,15 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
-import { Eye, Search, CreditCard, ChevronRight, CheckCircle, Loader2 } from "lucide-react";
+import { CreditCard, ChevronRight, CheckCircle, Loader2 } from "lucide-react";
+import { formatCurrency } from "@/lib/currency";
 
 interface Payment {
   id: string;
   assessmentNumber: string;
-  customerName: string;
+  insuredName: string;
   status: string;
+  currentStep: string;
   paid: boolean;
   paymentRef: string | null;
   paymentAmount: number | null;
@@ -66,7 +68,7 @@ export function PaymentsList({ initialData }: { initialData: PaginatedResult }) 
         <div className="flex items-center gap-3">
           <div className="rounded-xl border border-gray-200 bg-white px-4 py-2.5 shadow-sm">
             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Total Revenue</p>
-            <p className="text-lg font-bold text-gray-900">KES {totalPaid.toLocaleString()}</p>
+            <p className="text-lg font-bold text-gray-900">{formatCurrency(totalPaid)}</p>
           </div>
         </div>
       </div>
@@ -74,12 +76,11 @@ export function PaymentsList({ initialData }: { initialData: PaginatedResult }) 
       {/* Search */}
       <div className="animate-fade-in-up animate-delay-100">
         <div className="relative max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
-            placeholder="Search by assessment #, customer, or ref..."
+            placeholder="Search by assessment #, insured name..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-9 h-10 rounded-xl border-gray-200 bg-white text-sm"
+            className="pl-3 h-10 rounded-xl border-gray-200 bg-white text-sm"
           />
         </div>
       </div>
@@ -113,7 +114,7 @@ export function PaymentsList({ initialData }: { initialData: PaginatedResult }) 
             {data.payments.map((p, i) => (
               <Link
                 key={p.id}
-                href={`/analyze?step=results&id=${p.id}`}
+                href={`/analyze?step=${p.currentStep}&id=${p.id}`}
                 className={`group flex items-center gap-4 px-6 py-4 hover:bg-gray-50/80 transition-colors animate-fade-in-up animate-delay-${Math.min((i + 1) * 50, 500)}`}
               >
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 shrink-0">
@@ -129,7 +130,7 @@ export function PaymentsList({ initialData }: { initialData: PaginatedResult }) 
                     </span>
                   </div>
                   <div className="mt-1 flex items-center gap-2 text-xs text-gray-500">
-                    <span className="font-medium text-gray-700">{p.customerName}</span>
+                    <span className="font-medium text-gray-700">{p.insuredName}</span>
                     {p.paymentRef && (
                       <>
                         <span className="text-gray-300">&middot;</span>
@@ -140,7 +141,7 @@ export function PaymentsList({ initialData }: { initialData: PaginatedResult }) 
                 </div>
                 <div className="text-right shrink-0">
                   <p className="text-sm font-bold text-gray-900">
-                    KES {(p.paymentAmount || 0).toLocaleString()}
+                    {formatCurrency(p.paymentAmount || 0)}
                   </p>
                   <p className="text-[11px] text-gray-400">
                     {p.paymentDate

@@ -16,11 +16,30 @@ export async function GET(
   const assessment = await prisma.assessment.findUnique({
     where: { id },
     include: {
-      images: { orderBy: { sortOrder: "asc" } },
-      damagedParts: true,
-      replacementParts: true,
-      inspectionItems: true,
-      user: { select: { name: true } },
+      user: { select: { name: true, email: true } },
+      insuranceCompany: true,
+      repairer: true,
+      feeNote: true,
+      claim: true,
+      vehicle: {
+        include: {
+          make: true,
+          vehicleModel: true,
+          variant: true,
+        },
+      },
+      vehicleCondition: { include: { tyres: true } },
+      accidentDetail: true,
+      damageItems: { orderBy: { sortOrder: "asc" } },
+      parts: { orderBy: { sortOrder: "asc" } },
+      services: { orderBy: { sortOrder: "asc" } },
+      remark: true,
+      additionalObservations: { orderBy: { sortOrder: "asc" } },
+      authorization: true,
+      specialInstructions: { orderBy: { sortOrder: "asc" } },
+      signatures: true,
+      photos: { orderBy: { sortOrder: "asc" } },
+      supplements: { orderBy: { createdAt: "desc" } },
     },
   });
 
@@ -43,9 +62,18 @@ export async function PUT(
   const { id } = await params;
   const body = await request.json();
 
+  // Only allow updating safe fields
+  const allowedFields: Record<string, unknown> = {};
+  if (body.status !== undefined) allowedFields.status = body.status;
+  if (body.paid !== undefined) allowedFields.paid = body.paid;
+  if (body.paymentRef !== undefined) allowedFields.paymentRef = body.paymentRef;
+  if (body.paymentAmount !== undefined) allowedFields.paymentAmount = body.paymentAmount;
+  if (body.paymentDate !== undefined) allowedFields.paymentDate = body.paymentDate;
+  if (body.aiRawResponse !== undefined) allowedFields.aiRawResponse = JSON.stringify(body.aiRawResponse);
+
   const assessment = await prisma.assessment.update({
     where: { id },
-    data: body,
+    data: allowedFields,
   });
 
   return NextResponse.json(assessment);

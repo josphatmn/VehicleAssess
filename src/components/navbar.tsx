@@ -86,7 +86,7 @@ export function Navbar({ onNewAnalysis, showNewAnalysis }: NavbarProps) {
         )}
       </header>
 
-      <AuthModal open={authModal.open} onClose={() => setAuthModal({ ...authModal, open: false })} defaultTab={authModal.tab} />
+      <AuthModal open={authModal.open} onClose={() => setAuthModal(prev => ({ ...prev, open: false }))} defaultTab={authModal.tab} />
     </>
   );
 }

@@ -23,8 +23,8 @@ export async function GET(request: NextRequest) {
   if (search) {
     where.OR = [
       { assessmentNumber: { contains: search } },
-      { customerName: { contains: search } },
       { paymentRef: { contains: search } },
+      { claim: { insuredName: { contains: search } } },
     ];
   }
 
@@ -34,16 +34,8 @@ export async function GET(request: NextRequest) {
       orderBy: { paymentDate: "desc" },
       skip,
       take: limit,
-      select: {
-        id: true,
-        assessmentNumber: true,
-        customerName: true,
-        status: true,
-        paid: true,
-        paymentRef: true,
-        paymentAmount: true,
-        paymentDate: true,
-        createdAt: true,
+      include: {
+        claim: { select: { insuredName: true } },
       },
     }),
     prisma.assessment.count({ where }),
@@ -51,7 +43,13 @@ export async function GET(request: NextRequest) {
 
   return NextResponse.json({
     payments: payments.map((p) => ({
-      ...p,
+      id: p.id,
+      assessmentNumber: p.assessmentNumber,
+      insuredName: p.claim?.insuredName || "N/A",
+      status: p.status,
+      paid: p.paid,
+      paymentRef: p.paymentRef,
+      paymentAmount: p.paymentAmount,
       paymentDate: p.paymentDate?.toISOString() || null,
       createdAt: p.createdAt.toISOString(),
     })),

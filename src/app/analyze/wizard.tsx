@@ -4,1870 +4,1628 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
-  X,
-  Camera,
-  BarChart3,
-  FileText,
-  CheckCircle,
-  AlertCircle,
-  Loader2,
-  ChevronLeft,
-  ChevronRight,
-  ArrowLeft,
-  User,
-  Car,
-  Pencil,
-  Download,
-  Package,
-  Plus,
-  Trash2,
-  CreditCard,
+  X, Camera, FileText, CheckCircle, AlertCircle, Loader2,
+  ChevronLeft, ChevronRight, ArrowLeft, Plus, Trash2,
+  CreditCard, Download, PenTool, User, Car, Shield,
+  Wrench, ClipboardList, MessageSquare, Stamp, AlertTriangle,
 } from "lucide-react";
+import { useWizardStore, STEP_PARAM, PARAM_TO_STEP, type Step } from "@/hooks/use-wizard-store";
 import { useSession } from "@/hooks/use-session";
 import { Navbar } from "@/components/navbar";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { toast } from "sonner";
 import { CURRENCY, formatCurrency } from "@/lib/currency";
 import { uploadImages as supabaseUpload, deleteImage as supabaseDelete } from "@/lib/supabase";
+import { toast } from "sonner";
+import { DAMAGE_ACTIONS, PART_STATUSES, SERVICE_TYPES, TYRE_POSITIONS } from "@/types";
 
-interface DetectedPart {
-  partName: string;
-  damageType: string;
-  damageSeverity: string;
-  estimatedQuantity: number;
-  estimatedLaborHours: number;
-  pricing_options: { supplier: string; price: number }[];
+const STEPS: { key: Step; label: string; icon: React.ReactNode }[] = [
+  { key: "upload", label: "Photos", icon: <Camera className="w-4 h-4" /> },
+  { key: "analyze", label: "AI Analysis", icon: <PenTool className="w-4 h-4" /> },
+  { key: "payment", label: "Payment", icon: <CreditCard className="w-4 h-4" /> },
+  { key: "intake", label: "Fee Note & Claim", icon: <FileText className="w-4 h-4" /> },
+  { key: "vehicle", label: "Vehicle Details", icon: <Car className="w-4 h-4" /> },
+  { key: "condition", label: "Vehicle Condition", icon: <ClipboardList className="w-4 h-4" /> },
+  { key: "damage", label: "Damage Assessment", icon: <AlertTriangle className="w-4 h-4" /> },
+  { key: "estimate", label: "Parts & Cost", icon: <Wrench className="w-4 h-4" /> },
+  { key: "remarks", label: "Remarks", icon: <MessageSquare className="w-4 h-4" /> },
+  { key: "authorization", label: "Auth & Signatures", icon: <Stamp className="w-4 h-4" /> },
+  { key: "results", label: "Results", icon: <CheckCircle className="w-4 h-4" /> },
+];
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-3">
+      <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider">{title}</h3>
+      {children}
+    </div>
+  );
 }
 
-interface VehicleInfo {
-  make: string;
-  model: string;
-  variant: string;
-  year: string;
-  body_type: string;
-  color: string;
-  registration: string;
-  confidence: number;
+function Field({ label, children, className }: { label: string; children: React.ReactNode; className?: string }) {
+  return (
+    <div className={`space-y-1 ${className || ""}`}>
+      <label className="text-xs font-medium text-gray-500">{label}</label>
+      {children}
+    </div>
+  );
 }
 
-interface DamageInfo {
-  severity: string;
-  summary: string;
-  structural_damage: boolean;
-  rollover: boolean;
-  possible_total_loss: boolean;
-  estimated_total_cost: number;
-  estimated_total_labor_hours: number;
+function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
+  return (
+    <input
+      {...props}
+      className={`w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 transition ${props.className || ""}`}
+    />
+  );
 }
 
-interface AnalysisResult {
-  vehicle: VehicleInfo;
-  damage: DamageInfo;
-  replacement_parts: DetectedPart[];
-  structural_concerns: string[];
-  recommendations: string[];
+function Select(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
+  return (
+    <select
+      {...props}
+      className={`w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 transition ${props.className || ""}`}
+    />
+  );
 }
 
-interface CataloguePart {
-  partName: string;
-  found: boolean;
-  vehiclePartId: string;
-  partNumber: string;
-  unitPrice: number;
-  labourCost: number;
-  subtotal: number;
-  category: string;
-  catalogueMake: string | null;
-  catalogueModel: string | null;
-  catalogueVariant: string | null;
+function Textarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
+  return (
+    <textarea
+      {...props}
+      rows={3}
+      className={`w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 transition resize-none ${props.className || ""}`}
+    />
+  );
 }
-
-type Step = "details" | "upload" | "analyze" | "confirm" | "payment" | "results";
-
-const STEP_PARAM: Record<Step, string> = {
-  details: "details",
-  upload: "upload",
-  analyze: "analyzing",
-  confirm: "confirm",
-  payment: "payment",
-  results: "results",
-};
-
-const PARAM_TO_STEP: Record<string, Step> = {
-  details: "details",
-  upload: "upload",
-  analyzing: "analyze",
-  confirm: "confirm",
-  payment: "payment",
-  results: "results",
-};
 
 export default function AnalyzeWizard() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user } = useSession();
+  const store = useWizardStore();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { user: sessionUser, loading: sessionLoading } = useSession();
+  const savingRef = useRef(false);
 
-  const initialStep = PARAM_TO_STEP[searchParams.get("step") || ""] || "details";
-  const [step, setStepInternal] = useState<Step>(initialStep);
-  const [files, setFiles] = useState<File[]>([]);
-  const [previews, setPreviews] = useState<string[]>([]);
-  const [analyzing, setAnalyzing] = useState(false);
-  const [result, setResult] = useState<AnalysisResult | null>(null);
-  const [catalogueParts, setCatalogueParts] = useState<CataloguePart[]>([]);
-  const [catalogueLoading, setCatalogueLoading] = useState(false);
-  const [downloadingPdf, setDownloadingPdf] = useState(false);
-  const [assessmentId, setAssessmentId] = useState<string | null>(searchParams.get("id") || null);
-  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
-  const [loadingAssessment, setLoadingAssessment] = useState(false);
+  // Auth guard
+  useEffect(() => {
+    if (!sessionLoading && !sessionUser) {
+      router.replace("/login?callbackUrl=/analyze");
+    }
+  }, [sessionLoading, sessionUser, router]);
 
+  const [vehicleCatalog, setVehicleCatalog] = useState<{
+    makes: Array<{ id: string; name: string; models: Array<{ id: string; name: string; variants: Array<{ id: string; name: string }> }> }>;
+  }>({ makes: [] });
+  const [insuranceCompanies, setInsuranceCompanies] = useState<Array<{ id: string; name: string }>>([]);
+  const [repairers, setRepairers] = useState<Array<{ id: string; name: string; contactPerson?: string; phone?: string; email?: string; address?: string }>>([]);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState({ done: 0, total: 0 });
-  const [deletingIdx, setDeletingIdx] = useState<number | null>(null);
-
-  const [paymentAmount, setPaymentAmount] = useState<number>(500);
-  const [paying, setPaying] = useState(false);
-  const [paid, setPaid] = useState(false);
+  const [loadingAssessment, setLoadingAssessment] = useState(false);
+  const [newInstruction, setNewInstruction] = useState("");
+  const [paymentAmount, setPaymentAmount] = useState(500);
   const [loadingPrice, setLoadingPrice] = useState(true);
 
-  const [customerModalOpen, setCustomerModalOpen] = useState(false);
-  const [vehicleModalOpen, setVehicleModalOpen] = useState(false);
-  const [summaryModalOpen, setSummaryModalOpen] = useState(false);
-  const [structuralModalOpen, setStructuralModalOpen] = useState(false);
-  const [recommendationsModalOpen, setRecommendationsModalOpen] = useState(false);
-
-  const [customerForm, setCustomerForm] = useState({ fullName: "", phone: "", email: "", address: "" });
-  const [vehicleForm, setVehicleForm] = useState<VehicleInfo>({ make: "", model: "", variant: "", year: "", body_type: "", color: "", registration: "", confidence: 0 });
-  const [summaryForm, setSummaryForm] = useState({ summary: "", severity: "", structural_damage: false, rollover: false, possible_total_loss: false, estimated_total_cost: 0, estimated_total_labor_hours: 0 });
-  const [structuralForm, setStructuralForm] = useState<string[]>([]);
-  const [recommendationsForm, setRecommendationsForm] = useState<string[]>([]);
-  const [savingModal, setSavingModal] = useState(false);
-  const [savingParts, setSavingParts] = useState(false);
-
-  const [editableParts, setEditableParts] = useState<Array<{
-    partName: string;
-    damageType: string;
-    damageSeverity: string;
-    quantity: number;
-    unitPrice: number;
-    labourCost: number;
-    selectedSupplier: string;
-  }>>([]);
-
-  const [supplierPrices, setSupplierPrices] = useState<Record<string, { supplier: string; price: number; supplierPriceId: string }[]>>({});
-
-  const [customerInfo, setCustomerInfo] = useState({
-    fullName: "",
-    phone: "",
-    email: "",
-    address: "",
-  });
-
-  const [confirmedVehicle, setConfirmedVehicle] = useState<VehicleInfo>({
-    make: "", model: "", variant: "", year: "", body_type: "", color: "", registration: "", confidence: 0,
-  });
-
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const vehiclePhotoInputRef = useRef<HTMLInputElement>(null);
-  const savePartsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
   const setStep = useCallback(
-    (s: Step, id?: string | null) => {
-      setStepInternal(s);
+    (s: Step) => {
+      store.setStep(s);
       const params = new URLSearchParams({ step: STEP_PARAM[s] });
-      const idParam = id ?? assessmentId;
-      if (idParam) params.set("id", idParam);
+      if (store.assessmentId) params.set("id", store.assessmentId);
       router.replace(`/analyze?${params.toString()}`, { scroll: false });
     },
-    [router, assessmentId]
+    [router, store]
   );
 
-  // Load assessment on direct URL access (e.g. /analyze?step=confirm&id=xxx)
+  // Load catalogs
+  useEffect(() => {
+    fetch("/api/catalogs").then(r => r.json()).then(d => {
+      if (d.makes) setVehicleCatalog({ makes: d.makes });
+      if (d.insuranceCompanies) setInsuranceCompanies(d.insuranceCompanies);
+      if (d.repairers) setRepairers(d.repairers);
+    }).catch(() => {});
+    fetch("/api/settings").then(r => r.json()).then(s => {
+      if (s.report_price) setPaymentAmount(parseInt(s.report_price, 10));
+    }).catch(() => {}).finally(() => setLoadingPrice(false));
+  }, []);
+
+  // Load assessment on mount
   const didMountRef = useRef(false);
   useEffect(() => {
     if (didMountRef.current) return;
     didMountRef.current = true;
-
     const init = async () => {
       const id = searchParams.get("id");
       const urlStep = searchParams.get("step") || "";
       const reference = searchParams.get("reference");
 
-      // Auto-verify Paystack callback BEFORE loading assessment
       if (reference && id) {
-        setPaying(true);
+        store.setPaying(true);
         try {
           const res = await fetch(`/api/paystack/verify?reference=${reference}`);
           const data = await res.json();
-          if (data.verified) {
-            setPaid(true);
-            toast.success("Payment confirmed!");
-          }
-        } catch {
-          // ignore
-        }
-        setPaying(false);
+          if (data.verified) { store.setPaid(true); toast.success("Payment confirmed!"); }
+        } catch {}
+        store.setPaying(false);
         window.history.replaceState({}, "", `/analyze?step=results&id=${id}`);
       }
 
       if (id) {
-        loadAssessment(id, urlStep || (reference ? "results" : undefined));
+        setLoadingAssessment(true);
+        try {
+          const res = await fetch(`/api/assessments/${id}`);
+          if (res.ok) {
+            const a = await res.json();
+            store.setAssessmentId(id);
+            store.loadAssessment(a);
+            store.setPaid(a.paid || false);
+          }
+        } catch {}
+        setLoadingAssessment(false);
       }
     };
     init();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Auto-set step from URL
   useEffect(() => {
     const urlStep = PARAM_TO_STEP[searchParams.get("step") || ""];
-    if (urlStep && urlStep !== step) {
-      setStepInternal(urlStep);
-    }
+    if (urlStep && urlStep !== store.step) store.setStep(urlStep);
     const urlId = searchParams.get("id");
-    if (urlId && urlId !== assessmentId) {
-      setAssessmentId(urlId);
-      loadAssessment(urlId, searchParams.get("step") || "");
-    }
+    if (urlId && urlId !== store.assessmentId) store.setAssessmentId(urlId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
+  // Auto-compute fee note total
   useEffect(() => {
-    fetch("/api/settings")
-      .then((r) => r.json())
-      .then((s) => { if (s.report_price) setPaymentAmount(parseInt(s.report_price, 10)); })
-      .catch(() => {})
-      .finally(() => setLoadingPrice(false));
-  }, []);
-
-  const loadAssessment = async (id: string, requestedStep?: string) => {
-    setLoadingAssessment(true);
-    try {
-      const res = await fetch(`/api/assessments/${id}`);
-      if (!res.ok) return;
-      const a = await res.json();
-
-      setCustomerInfo({
-        fullName: a.customerName || "",
-        phone: a.customerPhone || "",
-        email: a.customerEmail || "",
-        address: a.customerAddress || "",
-      });
-
-      if (a.images?.length) {
-        setPreviews(a.images.sort((a: { sortOrder: number }, b: { sortOrder: number }) => a.sortOrder - b.sortOrder).map((img: { path: string }) => img.path));
-      }
-
-      if (a.registrationNumber || a.vehicleNotes) {
-        const vJson = a.verifiedVehicleJson ? JSON.parse(a.verifiedVehicleJson) : {};
-        setConfirmedVehicle({
-          make: vJson.make || a.vehicleNotes?.split(" ")[0] || "",
-          model: vJson.model || a.vehicleNotes?.split(" ")[1] || "",
-          variant: vJson.variant || "",
-          year: vJson.year || "",
-          body_type: vJson.body_type || "",
-          color: vJson.color || "",
-          registration: vJson.registration || a.registrationNumber || "",
-          confidence: vJson.confidence || 0,
-        });
-      }
-
-      if (a.aiRawResponse) {
-        const raw = typeof a.aiRawResponse === "string" ? JSON.parse(a.aiRawResponse) : a.aiRawResponse;
-        const aiResult: AnalysisResult = {
-          vehicle: raw.vehicle || {},
-          damage: raw.damage || { severity: "Unknown", summary: "", structural_damage: false, rollover: false, possible_total_loss: false, estimated_total_cost: 0, estimated_total_labor_hours: 0 },
-          replacement_parts: raw.replacement_parts || [],
-          structural_concerns: raw.structural_concerns || [],
-          recommendations: raw.recommendations || [],
-        };
-        setResult(aiResult);
-
-        const vJson = a.verifiedVehicleJson ? JSON.parse(a.verifiedVehicleJson) : {};
-        const vehicleMake = vJson.make || confirmedVehicle.make;
-        const vehicleModel = vJson.model || confirmedVehicle.model;
-
-        const rawParts = raw.replacement_parts || [];
-        const savedParts = a.replacementParts || [];
-        const partsForLookup = rawParts.length > 0
-          ? rawParts
-          : savedParts.map((p: { partName: string; quantity?: number }) => ({
-              partName: p.partName,
-              estimatedQuantity: p.quantity || 1,
-              pricing_options: [],
-            }));
-
-        const parts = savedParts.length > 0
-          ? savedParts
-          : rawParts.map((p: DetectedPart) => ({
-              partName: p.partName,
-              quantity: p.estimatedQuantity || 1,
-              unitPrice: 0,
-              labourCost: 0,
-            }));
-
-        if (partsForLookup.length) {
-          try {
-            const pricesRes = await fetch("/api/parts/prices", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                parts: partsForLookup.map((p: { partName: string; estimatedQuantity?: number; pricing_options?: Array<{ supplier: string; price: number }> }) => ({
-                  partName: p.partName,
-                  vehicleMake: vehicleMake || undefined,
-                  vehicleModel: vehicleModel || undefined,
-                  pricing_options: p.pricing_options || [],
-                })),
-              }),
-            });
-            if (pricesRes.ok) {
-              const supplierData = await pricesRes.json();
-              setSupplierPrices(supplierData);
-
-              setEditableParts(parts.map((p: { partName: string; quantity?: number; unitPrice?: number; labourCost?: number }) => {
-                const sp = supplierData[p.partName] || [];
-                const cheapest = sp.length ? sp.reduce((min: { price: number }, cur: { price: number }) => cur.price < min.price ? cur : min) : null;
-                return {
-                  partName: p.partName,
-                  damageType: "Dent",
-                  damageSeverity: "Moderate",
-                  quantity: p.quantity || 1,
-                  unitPrice: cheapest?.price || p.unitPrice || 0,
-                  labourCost: p.labourCost || 0,
-                  selectedSupplier: cheapest?.supplier || "",
-                };
-              }));
-            }
-          } catch {
-            setEditableParts(parts.map((p: { partName: string; quantity?: number; unitPrice?: number; labourCost?: number }) => ({
-              partName: p.partName,
-              damageType: "Dent",
-              damageSeverity: "Moderate",
-              quantity: p.quantity || 1,
-              unitPrice: p.unitPrice || 0,
-              labourCost: p.labourCost || 0,
-              selectedSupplier: "",
-            })));
-          }
-        }
-      }
-      if (a.paid) setPaid(true);
-      if (requestedStep === "results" && !a.paid) {
-        setStepInternal("payment");
-        router.replace(`/analyze?step=payment&id=${id}`, { scroll: false });
-      }
-    } catch {
-      // Silent fail
-    } finally {
-      setLoadingAssessment(false);
+    const total = store.feeNote.professionalFee + store.feeNote.vat + store.feeNote.reimbursement;
+    if (total !== store.feeNote.totalProfessionalFee) {
+      store.updateFeeNote({ totalProfessionalFee: total });
     }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [store.feeNote.professionalFee, store.feeNote.vat, store.feeNote.reimbursement]);
 
-  const handleFiles = useCallback((newFiles: FileList | File[]) => {
-    const arr = Array.from(newFiles).filter((f) => f.type.startsWith("image/"));
-    setFiles((prev) => [...prev, ...arr]);
-    setPreviews((prev) => [...prev, ...arr.map((f) => URL.createObjectURL(f))]);
-  }, []);
-
-  const removeFile = (idx: number) => {
-    setFiles((prev) => prev.filter((_, i) => i !== idx));
-    setPreviews((prev) => {
-      URL.revokeObjectURL(prev[idx]);
-      return prev.filter((_, i) => i !== idx);
-    });
-  };
-
-  // Part editing functions
-  const updateEditablePart = (idx: number, field: string, value: string | number) => {
-    setEditableParts((prev) => {
-      const updated = [...prev];
-      updated[idx] = { ...updated[idx], [field]: value };
-      if (field === "quantity" || field === "unitPrice" || field === "labourCost") {
-        autoSaveParts(updated);
+  // Auto-compute excess amount
+  useEffect(() => {
+    if (store.claim.excessPercentage && store.claim.excessPercentage > 0) {
+      const summary = store.getCostSummary();
+      const excess = summary.grandTotal * (store.claim.excessPercentage / 100);
+      if (excess !== store.claim.excessAmount) {
+        store.updateClaim({ excessAmount: Math.round(excess * 100) / 100 });
       }
-      return updated;
-    });
-  };
-
-  const selectSupplier = (idx: number, supplierName: string) => {
-    setEditableParts((prev) => {
-      const updated = [...prev];
-      const part = updated[idx];
-      const prices = supplierPrices[part.partName] || [];
-      const match = prices.find((p) => p.supplier === supplierName);
-      updated[idx] = {
-        ...part,
-        selectedSupplier: supplierName,
-        unitPrice: match?.price || 0,
-      };
-      autoSaveParts(updated);
-      return updated;
-    });
-  };
-
-  const removeEditablePart = (idx: number) => {
-    setEditableParts((prev) => {
-      const updated = prev.filter((_, i) => i !== idx);
-      autoSaveParts(updated);
-      return updated;
-    });
-  };
-
-  const addEditablePart = () => {
-    setEditableParts((prev) => [
-      ...prev,
-      { partName: "", damageType: "Dent", damageSeverity: "Moderate", quantity: 1, unitPrice: 0, labourCost: 0, selectedSupplier: "" },
-    ]);
-  };
-
-  const handleAnalyze = async () => {
-    if (files.length === 0) {
-      toast.error("Please upload at least one image");
-      return;
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [store.claim.excessPercentage, store.parts, store.services]);
 
+  const saveAssessment = async (status?: string, silent = false) => {
+    if (savingRef.current) return store.assessmentId;
+    savingRef.current = true;
+    store.setSaving(true);
     try {
-      const sessionRes = await fetch("/api/auth/me");
-      const session = await sessionRes.json();
-      if (!session?.user) {
-        toast.error("Please log in to analyze images");
-        router.push(`/login?callbackUrl=${encodeURIComponent("/analyze?step=upload")}`);
-        return;
-      }
-    } catch {
-      toast.error("Please log in to analyze images");
-      router.push(`/login?callbackUrl=${encodeURIComponent("/analyze?step=upload")}`);
-      return;
-    }
-
-    setStep("analyze");
-    setAnalyzing(true);
-
-    try {
-      const imageData = await Promise.all(
-        files.map(async (file) => {
-          const b64 = await new Promise<string>((resolve) => {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-              const result = e.target?.result as string;
-              const raw = result.includes(",") ? result.split(",")[1] : result;
-              resolve(raw);
-            };
-            reader.readAsDataURL(file);
-          });
-          return b64;
-        })
-      );
-
-      const res = await fetch("/api/analyze", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ images: imageData }),
-      });
-
-      if (!res.ok) {
-        const errData = await res.json().catch(() => null);
-        throw new Error(errData?.error || "Analysis failed");
-      }
-
-      const data: AnalysisResult = await res.json();
-      setResult(data);
-      setConfirmedVehicle(data.vehicle);
-
-      let savedId: string | null = null;
-      try {
-        const saveRes = await fetch("/api/assessments/save", {
+      let id = store.assessmentId;
+      if (!id) {
+        const res = await fetch("/api/assessments/save", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            customer: customerInfo,
-            vehicle: data.vehicle,
-            damage: data.damage,
-            parts: (data.replacement_parts || []).map((p) => ({
-              partName: p.partName,
-              quantity: typeof p.estimatedQuantity === "number" ? p.estimatedQuantity : 1,
-              unitPrice: 0,
-              labourCost: 0,
-              subtotal: 0,
-              found: false,
-            })),
-            structural_concerns: data.structural_concerns,
-            recommendations: data.recommendations,
-          }),
+          body: JSON.stringify({}),
         });
-        if (saveRes.ok) {
-          const saved = await saveRes.json();
-          savedId = saved.id;
-          setAssessmentId(saved.id);
-
-          const imageUrls = await supabaseUpload(files, saved.id);
-          setPreviews(imageUrls);
-
-          await fetch("/api/assessments/save", {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              id: saved.id,
-              images: imageUrls.map((url, i) => ({
-                filename: `photo-${i + 1}`,
-                originalName: files[i].name,
-                path: url,
-                mimeType: files[i].type,
-                size: files[i].size,
-                sortOrder: i,
-              })),
-            }),
-          });
-        }
-      } catch {
-        // Non-blocking — user can still proceed
+        const data = await res.json();
+        id = data.id;
+        if (!id) throw new Error("No ID returned");
+        store.setAssessmentId(id);
       }
 
-      setStep("confirm", savedId);
-      toast.success("Vehicle detected! Please confirm the details.");
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Analysis failed";
-      toast.error(msg);
-      setStep("upload");
-    } finally {
-      setAnalyzing(false);
-    }
-  };
+      // Sync authorization.assessmentStatus → core Assessment.status
+      const resolvedStatus = status || store.authorization.assessmentStatus || undefined;
 
-  const goToResults = async () => {
-    if (result?.replacement_parts?.length) {
-      setCatalogueLoading(true);
-      try {
-        // Save supplier prices to DB
-        const pricingParts = result.replacement_parts
-          .filter((p) => p.pricing_options?.length)
-          .map((p) => ({
-            partName: p.partName,
-            vehicleMake: result.vehicle.make || undefined,
-            vehicleModel: result.vehicle.model || undefined,
-            pricing_options: p.pricing_options,
-          }));
-
-        let supplierData: Record<string, { supplier: string; price: number; supplierPriceId: string }[]> = {};
-        if (pricingParts.length) {
-          try {
-            const pricesRes = await fetch("/api/parts/prices", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ parts: pricingParts }),
-            });
-            if (pricesRes.ok) {
-              supplierData = await pricesRes.json();
-            }
-          } catch {
-            // Non-blocking — use AI pricing directly
-            for (const p of pricingParts) {
-              supplierData[p.partName] = p.pricing_options.map((opt, i) => ({
-                supplier: opt.supplier,
-                price: opt.price,
-                supplierPriceId: `ai-${i}`,
-              }));
-            }
-          }
-        } else {
-          // Use AI pricing directly if no DB save needed
-          for (const p of result.replacement_parts) {
-            if (p.pricing_options?.length) {
-              supplierData[p.partName] = p.pricing_options.map((opt, i) => ({
-                supplier: opt.supplier,
-                price: opt.price,
-                supplierPriceId: `ai-${i}`,
-              }));
-            }
-          }
-        }
-        setSupplierPrices(supplierData);
-
-        // Fetch catalogue parts
-        const res = await fetch("/api/parts", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            parts: result.replacement_parts.map((p) => ({
-              partName: p.partName,
-              quantity: typeof p.estimatedQuantity === "number" ? p.estimatedQuantity : 1,
-            })),
-          }),
-        });
-        if (res.ok) {
-          const data = await res.json();
-          setCatalogueParts(data.parts);
-          setEditableParts(
-            result.replacement_parts.map((p) => {
-              const cp = data.parts.find((c: CataloguePart) => c.partName === p.partName);
-              const prices = supplierData[p.partName] || [];
-              const cheapest = prices.length ? prices.reduce((min, cur) => cur.price < min.price ? cur : min) : null;
-              return {
-                partName: p.partName,
-                damageType: p.damageType || "Dent",
-                damageSeverity: p.damageSeverity || "Moderate",
-                quantity: typeof p.estimatedQuantity === "number" ? p.estimatedQuantity : 1,
-                unitPrice: cheapest?.price || cp?.unitPrice || 0,
-                labourCost: cp?.labourCost || 0,
-                selectedSupplier: cheapest?.supplier || "",
-              };
-            })
-          );
-        } else {
-          setEditableParts(
-            result.replacement_parts.map((p) => {
-              const prices = supplierData[p.partName] || [];
-              const cheapest = prices.length ? prices.reduce((min, cur) => cur.price < min.price ? cur : min) : null;
-              return {
-                partName: p.partName,
-                damageType: p.damageType || "Dent",
-                damageSeverity: p.damageSeverity || "Moderate",
-                quantity: typeof p.estimatedQuantity === "number" ? p.estimatedQuantity : 1,
-                unitPrice: cheapest?.price || 0,
-                labourCost: 0,
-                selectedSupplier: cheapest?.supplier || "",
-              };
-            })
-          );
-        }
-      } catch {
-        setEditableParts(
-          result.replacement_parts.map((p) => ({
-            partName: p.partName,
-            damageType: p.damageType || "Dent",
-            damageSeverity: p.damageSeverity || "Moderate",
-            quantity: typeof p.estimatedQuantity === "number" ? p.estimatedQuantity : 1,
-            unitPrice: 0,
-            labourCost: 0,
-            selectedSupplier: "",
-          }))
-        );
-      } finally {
-        setCatalogueLoading(false);
-      }
-    }
-    setStep("results", assessmentId);
-
-    // Update saved assessment with confirmed vehicle and parts
-    if (assessmentId) {
-      try {
-        await fetch("/api/assessments/save", {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            id: assessmentId,
-            vehicle: confirmedVehicle,
-            damage: result?.damage,
-            parts: editableParts.map((p) => ({
-              partName: p.partName,
-              quantity: p.quantity,
-              unitPrice: p.unitPrice,
-              labourCost: p.labourCost,
-              subtotal: p.quantity * p.unitPrice,
-              found: p.unitPrice > 0,
-            })),
-            structural_concerns: result?.structural_concerns,
-            recommendations: result?.recommendations,
-          }),
-        });
-      } catch {
-        // Non-blocking
-      }
-    }
-  };
-
-  const handlePayment = async () => {
-    if (!assessmentId || !user?.email) return;
-    setPaying(true);
-    try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 20000);
-
-      let res: Response;
-      try {
-        res = await fetch("/api/paystack/initialize", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ assessmentId, email: user.email }),
-          signal: controller.signal,
-        });
-      } catch {
-        throw new Error("Could not reach payment server. Please try again.");
-      } finally {
-        clearTimeout(timeout);
-      }
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Payment init failed");
-
-      if (data.authorization_url) {
-        window.location.href = data.authorization_url;
-      } else {
-        throw new Error("No payment URL returned");
-      }
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Payment failed");
-      setPaying(false);
-    }
-  };
-
-  const handleDownloadPdf = async () => {
-    if (!result) return;
-    setDownloadingPdf(true);
-    try {
-      await savePartsNow();
-
-      const res = await fetch("/api/reports/pdf", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          customer: customerInfo,
-          vehicle: confirmedVehicle,
-          damage: result.damage,
-          parts: editableParts.map((p) => ({
-                partName: p.partName,
-                quantity: p.quantity,
-                unitPrice: p.unitPrice,
-                labourCost: p.labourCost,
-                subtotal: p.quantity * p.unitPrice,
-                found: p.unitPrice > 0,
-                selectedSupplier: p.selectedSupplier || undefined,
-              })),
-          structural_concerns: result.structural_concerns,
-          recommendations: result.recommendations,
-          images: previews,
-        }),
-      });
-
-      if (!res.ok) throw new Error("PDF generation failed");
-
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `vehicle-report-${confirmedVehicle.make}-${confirmedVehicle.model}-${Date.now()}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      toast.success("PDF downloaded!");
-    } catch {
-      toast.error("Failed to download PDF");
-    } finally {
-      setDownloadingPdf(false);
-    }
-  };
-
-  const reset = () => {
-    setStepInternal("details");
-    router.replace("/analyze?step=details", { scroll: false });
-    setFiles([]);
-    setPreviews([]);
-    setResult(null);
-    setCatalogueParts([]);
-    setEditableParts([]);
-    setSupplierPrices({});
-    setCustomerInfo({ fullName: "", phone: "", email: "", address: "" });
-    setConfirmedVehicle({ make: "", model: "", variant: "", year: "", body_type: "", color: "", registration: "", confidence: 0 });
-    setAssessmentId(null);
-  };
-
-  const patchAssessment = async (payload: Record<string, unknown>) => {
-    if (!assessmentId) return false;
-    const res = await fetch("/api/assessments/save", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: assessmentId, ...payload }),
-    });
-    return res.ok;
-  };
-
-  const saveParts = async () => {
-    if (!assessmentId) return;
-    setSavingParts(true);
-    const ok = await patchAssessment({
-      parts: editableParts.map((p) => ({
-        partName: p.partName,
-        quantity: p.quantity,
-        unitPrice: p.unitPrice,
-        labourCost: p.labourCost,
-        subtotal: p.quantity * p.unitPrice,
-        found: p.unitPrice > 0,
-      })),
-    });
-    setSavingParts(false);
-    toast[ok ? "success" : "error"](ok ? "Parts saved" : "Failed to save parts");
-  };
-
-  const autoSaveParts = (parts: typeof editableParts) => {
-    if (!assessmentId) return;
-    if (savePartsTimerRef.current) clearTimeout(savePartsTimerRef.current);
-    savePartsTimerRef.current = setTimeout(async () => {
       await fetch("/api/assessments/save", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          id: assessmentId,
-          parts: parts.map((p) => ({
-            partName: p.partName,
-            quantity: p.quantity,
-            unitPrice: p.unitPrice,
-            labourCost: p.labourCost,
-            subtotal: p.quantity * p.unitPrice,
-            found: p.unitPrice > 0,
-          })),
+          id,
+          status: resolvedStatus,
+          currentStep: STEP_PARAM[store.step],
+          insuranceCompanyId: store.insuranceCompanyId,
+          repairerId: store.repairerId,
+          feeNote: store.feeNote,
+          claim: store.claim,
+          vehicle: store.vehicle,
+          vehicleCondition: store.vehicleCondition,
+          accidentDetail: store.accidentDetail,
+          damageItems: store.damageItems,
+          parts: store.parts,
+          services: store.services,
+          remark: store.remark,
+          additionalObservations: store.additionalObservations,
+          authorization: store.authorization,
+          specialInstructions: store.specialInstructions,
+          signatures: store.signatures,
+          photos: store.photos,
+          aiRawResponse: store.result ? JSON.stringify(store.result) : undefined,
         }),
       });
-    }, 800);
-  };
-
-  const savePartsNow = async () => {
-    if (!assessmentId) return;
-    if (savePartsTimerRef.current) clearTimeout(savePartsTimerRef.current);
-    await fetch("/api/assessments/save", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        id: assessmentId,
-        parts: editableParts.map((p) => ({
-          partName: p.partName,
-          quantity: p.quantity,
-          unitPrice: p.unitPrice,
-          labourCost: p.labourCost,
-          subtotal: p.quantity * p.unitPrice,
-          found: p.unitPrice > 0,
-        })),
-      }),
-    });
-  };
-
-  const openCustomerModal = () => {
-    setCustomerForm({ ...customerInfo });
-    setCustomerModalOpen(true);
-  };
-
-  const saveCustomer = async () => {
-    setSavingModal(true);
-    const ok = await patchAssessment({ customer: customerForm });
-    setSavingModal(false);
-    if (ok) {
-      setCustomerInfo({ ...customerForm });
-      setCustomerModalOpen(false);
-      toast.success("Customer info updated");
-    } else {
-      toast.error("Failed to update customer info");
+      if (!silent) toast.success("Assessment saved!");
+      return id as string;
+    } catch (e) {
+      if (!silent) toast.error("Failed to save assessment");
+      return null;
+    } finally {
+      store.setSaving(false);
+      savingRef.current = false;
     }
   };
 
-  const openVehicleModal = () => {
-    setVehicleForm({ ...confirmedVehicle });
-    setVehicleModalOpen(true);
-  };
+  const handleUpload = async () => {
+    if (!store.files.length) return;
 
-  const saveVehicle = async () => {
-    setSavingModal(true);
-    const ok = await patchAssessment({ vehicle: vehicleForm });
-    setSavingModal(false);
-    if (ok) {
-      setConfirmedVehicle({ ...vehicleForm });
-      setVehicleModalOpen(false);
-      toast.success("Vehicle details updated");
-    } else {
-      toast.error("Failed to update vehicle details");
+    // Auto-create assessment if needed
+    let assessmentId = store.assessmentId;
+    if (!assessmentId) {
+      const id = await saveAssessment();
+      if (!id) return;
+      assessmentId = id;
     }
-  };
-
-  const addVehiclePhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newFiles = e.target.files;
-    if (!newFiles?.length || !assessmentId) return;
-
-    const arr = Array.from(newFiles).filter((f) => f.type.startsWith("image/"));
-    if (!arr.length) return;
-
-    // Show local previews immediately
-    const localUrls = arr.map((f) => URL.createObjectURL(f));
-    setPreviews((prev) => [...prev, ...localUrls]);
 
     setUploading(true);
-    setUploadProgress({ done: 0, total: arr.length });
-
+    setUploadProgress({ done: 0, total: store.files.length });
     try {
-      const imageUrls = await supabaseUpload(arr, assessmentId);
-
-      for (let i = 0; i < imageUrls.length; i++) {
-        setUploadProgress({ done: i + 1, total: arr.length });
-        await fetch("/api/assessments/save", {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            id: assessmentId,
-            addImage: { filename: `photo-${previews.length + i + 1}`, originalName: arr[i].name, path: imageUrls[i], mimeType: arr[i].type, size: arr[i].size, sortOrder: previews.length + i },
-          }),
+      const urls = await supabaseUpload(store.files, assessmentId);
+      for (let i = 0; i < urls.length; i++) {
+        store.addPhoto({
+          filename: urls[i].split("/").pop() || "",
+          originalName: store.files[i]?.name || "",
+          path: urls[i],
+          mimeType: store.files[i]?.type || "image/jpeg",
+          size: store.files[i]?.size || 0,
+          sortOrder: i,
         });
+        setUploadProgress((p) => ({ ...p, done: p.done + 1 }));
       }
+      store.setFiles([]);
+      store.setPreviews([]);
 
-      // Replace local blob URLs with actual URLs
-      setPreviews((prev) => {
-        const updated = [...prev];
-        for (let i = 0; i < imageUrls.length; i++) {
-          updated[previews.length + i] = imageUrls[i];
-        }
-        return updated;
-      });
-      toast.success(`${arr.length} photo${arr.length > 1 ? "s" : ""} added`);
-    } catch {
-      // Remove the local previews on failure
-      setPreviews((prev) => prev.slice(0, prev.length - arr.length));
-      localUrls.forEach((u) => URL.revokeObjectURL(u));
-      toast.error("Failed to upload photos");
-    } finally {
-      setUploading(false);
-      setUploadProgress({ done: 0, total: 0 });
+      // Persist photos to DB immediately so they survive page refresh
+      await saveAssessment(undefined, true);
+
+      toast.success("Photos uploaded!");
+    } catch (e) {
+      toast.error("Upload failed");
     }
-    if (vehiclePhotoInputRef.current) vehiclePhotoInputRef.current.value = "";
+    setUploading(false);
   };
 
-  const removeVehiclePhoto = async (idx: number) => {
-    const src = previews[idx];
-    if (!src) return;
-
-    // Remove immediately (optimistic)
-    setDeletingIdx(idx);
-    setPreviews((prev) => prev.filter((_, i) => i !== idx));
-
-    // Cleanup in background
-    if (assessmentId && src && !src.startsWith("blob:")) {
-      supabaseDelete(src).catch(() => {});
-      fetch("/api/assessments/save", {
-        method: "PATCH",
+  const handleDownloadPdf = async () => {
+    if (!store.assessmentId) return;
+    store.setDownloadingPdf(true);
+    try {
+      await saveAssessment();
+      const res = await fetch("/api/reports/pdf", {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: assessmentId, removeImage: src }),
-      }).catch(() => {});
-    } else if (src.startsWith("blob:")) {
-      URL.revokeObjectURL(src);
+        body: JSON.stringify({ assessmentId: store.assessmentId }),
+      });
+      if (!res.ok) throw new Error("PDF generation failed");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `assessment-${store.assessmentId}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      toast.error("Failed to generate PDF");
     }
-
-    setDeletingIdx(null);
-    toast.success("Photo removed");
+    store.setDownloadingPdf(false);
   };
 
-  const openSummaryModal = () => {
-    if (result) {
-      setSummaryForm({ ...result.damage });
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    store.setFiles([...store.files, ...files]);
+    const newPreviews = files.map((f) => URL.createObjectURL(f));
+    store.setPreviews([...store.previews, ...newPreviews]);
+  };
+
+  const handlePayment = async () => {
+    if (!store.assessmentId) {
+      const id = await saveAssessment();
+      if (!id) return;
     }
-    setSummaryModalOpen(true);
-  };
-
-  const saveSummary = async () => {
-    if (!result) return;
-    setSavingModal(true);
-    const ok = await patchAssessment({ damage: summaryForm });
-    setSavingModal(false);
-    if (ok) {
-      setResult({ ...result, damage: summaryForm });
-      setSummaryModalOpen(false);
-      toast.success("Summary updated");
-    } else {
-      toast.error("Failed to update summary");
+    store.setPaying(true);
+    try {
+      const res = await fetch("/api/paystack/initialize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          assessmentId: store.assessmentId,
+          amount: paymentAmount,
+          email: store.claim.insuredEmail || "user@example.com",
+        }),
+      });
+      const data = await res.json();
+      if (data.authorization_url) {
+        window.location.href = data.authorization_url;
+      } else {
+        toast.error(data.error || "Payment initialization failed");
+      }
+    } catch {
+      toast.error("Payment failed");
     }
+    store.setPaying(false);
   };
 
-  const openStructuralModal = () => {
-    setStructuralForm([...(result?.structural_concerns || [])]);
-    setStructuralModalOpen(true);
-  };
-
-  const saveStructural = async () => {
-    if (!result) return;
-    setSavingModal(true);
-    const ok = await patchAssessment({ structural_concerns: structuralForm });
-    setSavingModal(false);
-    if (ok) {
-      setResult({ ...result, structural_concerns: structuralForm });
-      setStructuralModalOpen(false);
-      toast.success("Structural concerns updated");
-    } else {
-      toast.error("Failed to update structural concerns");
-    }
-  };
-
-  const openRecommendationsModal = () => {
-    setRecommendationsForm([...(result?.recommendations || [])]);
-    setRecommendationsModalOpen(true);
-  };
-
-  const saveRecommendations = async () => {
-    if (!result) return;
-    setSavingModal(true);
-    const ok = await patchAssessment({ recommendations: recommendationsForm });
-    setSavingModal(false);
-    if (ok) {
-      setResult({ ...result, recommendations: recommendationsForm });
-      setRecommendationsModalOpen(false);
-      toast.success("Recommendations updated");
-    } else {
-      toast.error("Failed to update recommendations");
+  const canAdvance = (): boolean => {
+    switch (store.step) {
+      case "upload": return true;
+      case "analyze": return true;
+      case "payment": return true;
+      case "intake": return !!store.claim.insuredName;
+      case "vehicle": return true;
+      case "condition": return true;
+      case "damage": return true;
+      case "estimate": return true;
+      case "remarks": return true;
+      case "authorization": return true;
+      case "results": return true;
+      default: return true;
     }
   };
 
-  const stepOrder: Step[] = ["details", "upload", "analyze", "confirm", "payment", "results"];
-  const stepLabels: Record<Step, string> = {
-    details: "Your Details", upload: "Upload Photos", analyze: "Analyzing", confirm: "Confirm Vehicle", payment: "Payment", results: "Results",
+  const advanceStep = async () => {
+    // Always save current state before advancing
+    const id = await saveAssessment(undefined, true);
+    if (!id && !store.assessmentId) return;
+    const idx = STEPS.findIndex((s) => s.key === store.step);
+    if (idx < STEPS.length - 1) setStep(STEPS[idx + 1].key);
   };
-  const currentIdx = stepOrder.indexOf(step);
 
-  const partsTotal = editableParts.reduce((sum, p) => sum + (p.quantity * p.unitPrice), 0);
-  const labourTotal = editableParts.reduce((sum, p) => sum + p.labourCost, 0);
-  const foundCount = editableParts.filter((p) => p.unitPrice > 0).length;
-  const notFoundCount = editableParts.filter((p) => p.unitPrice === 0).length;
+  const prevStep = async () => {
+    // Save current state before going back
+    await saveAssessment(undefined, true);
+    const idx = STEPS.findIndex((s) => s.key === store.step);
+    if (idx > 0) setStep(STEPS[idx - 1].key);
+  };
+
+  if (loadingAssessment || sessionLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+      </div>
+    );
+  }
+
+  if (!sessionUser) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <p className="text-sm text-gray-500">Redirecting to login...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar showNewAnalysis={step === "results"} onNewAnalysis={reset} />
-
-      {/* Progress bar — clickable */}
-      <div className="bg-white border-b border-gray-100 pt-[72px]">
-        <div className="mx-auto max-w-4xl px-6 py-4">
-          <div className="flex items-center justify-between text-xs font-medium">
-            {stepOrder.map((s, i) => {
-              const active = s === step;
-              const done = currentIdx > i;
-              const clickable = done && s !== "analyze";
-              return (
-                <button
-                  key={s}
-                  onClick={() => clickable && setStep(s)}
-                  disabled={!clickable}
-                  className={`flex items-center gap-2 ${clickable ? "cursor-pointer hover:opacity-80" : "cursor-default"}`}
-                >
-                  <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold transition ${
-                    active ? "bg-blue-600 text-white" : done ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-400"
-                  }`}>
-                    {done ? <CheckCircle className="w-4 h-4" /> : i + 1}
-                  </div>
-                  <span className={`hidden sm:block ${active ? "text-gray-900" : "text-gray-400"}`}>{stepLabels[s]}</span>
-                </button>
-              );
-            })}
+      <Navbar />
+      <div className="max-w-5xl mx-auto px-4 py-6">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-xl font-bold text-gray-900">Vehicle Assessment</h1>
+            <p className="text-sm text-gray-500">
+              {store.assessmentId ? `ID: ${store.assessmentId.slice(0, 8)}...` : "New Assessment"}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => saveAssessment()}
+              disabled={store.saving}
+              className="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 transition"
+            >
+              {store.saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileText className="w-3.5 h-3.5" />}
+              Save Draft
+            </button>
           </div>
         </div>
-      </div>
 
-      <div className="mx-auto max-w-4xl px-6 py-10">
-
-        {loadingAssessment && (
-          <div className="max-w-lg mx-auto text-center py-20">
-            <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center mx-auto"><Loader2 className="w-8 h-8 text-blue-600 animate-spin" /></div>
-            <h2 className="mt-6 text-xl font-bold">Loading assessment...</h2>
-            <p className="mt-2 text-sm text-gray-500">Fetching report data from the database.</p>
-          </div>
-        )}
-
-        {/* STEP 1: Customer Details */}
-        {step === "details" && (
-          <div className="max-w-lg mx-auto">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center"><User className="w-5 h-5 text-blue-600" /></div>
-              <h1 className="text-2xl font-bold tracking-tight">Your Details</h1>
-            </div>
-            <p className="mt-1 text-sm text-gray-500 ml-[52px]">Enter your contact information to get started.</p>
-            <div className="mt-8 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
-                <input type="text" placeholder="e.g. John Smith" value={customerInfo.fullName} onChange={(e) => setCustomerInfo({ ...customerInfo, fullName: e.target.value })}
-                  className="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition bg-white" />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Phone *</label>
-                  <input type="tel" placeholder="e.g. 0412 345 678" value={customerInfo.phone} onChange={(e) => setCustomerInfo({ ...customerInfo, phone: e.target.value })}
-                    className="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition bg-white" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                  <input type="email" placeholder="e.g. john@email.com" value={customerInfo.email} onChange={(e) => setCustomerInfo({ ...customerInfo, email: e.target.value })}
-                    className="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition bg-white" />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
-                <input type="text" placeholder="e.g. 123 Main St, Sydney NSW" value={customerInfo.address} onChange={(e) => setCustomerInfo({ ...customerInfo, address: e.target.value })}
-                  className="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition bg-white" />
-              </div>
-              <div className="pt-4 flex justify-end">
-                <button onClick={() => {
-                  if (!customerInfo.fullName.trim() || !customerInfo.phone.trim()) { toast.error("Please enter your name and phone number"); return; }
-                  setStep("upload");
-                }} className="inline-flex items-center gap-2 px-6 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition shadow-lg shadow-blue-500/25">
-                  Continue <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* STEP 2: Upload Photos */}
-        {step === "upload" && (
-          <div className="max-w-lg mx-auto">
-            <button onClick={() => setStep("details")} className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-900 mb-6 transition"><ChevronLeft className="w-4 h-4" /> Back</button>
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center"><Camera className="w-5 h-5 text-blue-600" /></div>
-              <h1 className="text-2xl font-bold tracking-tight">Upload Photos</h1>
-            </div>
-            <p className="mt-1 text-sm text-gray-500 ml-[52px]">Upload clear photos of the damaged vehicle. Our AI will detect the vehicle and assess the damage.</p>
-            <div className="mt-8 border-2 border-dashed border-gray-200 rounded-2xl p-8 text-center hover:border-blue-300 hover:bg-blue-50/30 transition cursor-pointer"
-              onClick={() => fileInputRef.current?.click()} onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); handleFiles(e.dataTransfer.files); }}>
-              <Camera className="w-10 h-10 text-gray-300 mx-auto" />
-              <p className="mt-3 text-sm font-medium text-gray-600">Click to upload or drag and drop</p>
-              <p className="mt-1 text-xs text-gray-400">PNG, JPG up to 10MB each</p>
-            </div>
-            <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={(e) => e.target.files && handleFiles(e.target.files)} />
-            {previews.length > 0 && (
-              <div className="mt-6 grid grid-cols-3 gap-3">
-                {previews.map((src, i) => (
-                  <div key={i} className="relative group rounded-xl overflow-hidden aspect-square bg-gray-100">
-                    <img src={src} alt="" className="w-full h-full object-cover" />
-                    <button onClick={() => removeFile(i)} className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition"><X className="w-3.5 h-3.5" /></button>
-                  </div>
-                ))}
-              </div>
-            )}
-            <div className="mt-8 flex justify-between">
-              <button onClick={() => setStep("details")} className="px-5 py-2.5 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition">Back</button>
-              <button onClick={handleAnalyze} disabled={files.length === 0}
-                className="inline-flex items-center gap-2 px-6 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition shadow-lg shadow-blue-500/25 disabled:opacity-40 disabled:cursor-not-allowed">
-                <BarChart3 className="w-4 h-4" /> Analyze Vehicle
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* STEP 3: Analyzing */}
-        {step === "analyze" && (
-          <div className="max-w-lg mx-auto text-center py-20">
-            <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center mx-auto"><Loader2 className="w-8 h-8 text-blue-600 animate-spin" /></div>
-            <h2 className="mt-6 text-xl font-bold">Analyzing vehicle...</h2>
-            <p className="mt-2 text-sm text-gray-500">Our AI is scanning {files.length} image{files.length !== 1 ? "s" : ""} to detect the vehicle and assess damage.</p>
-            <p className="mt-1 text-xs text-gray-400">This usually takes 5-15 seconds.</p>
-          </div>
-        )}
-
-        {/* STEP 4: Confirm Vehicle */}
-        {step === "confirm" && result && (
-          <div className="max-w-lg mx-auto">
-            <button onClick={() => setStep("upload")} className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-900 mb-6 transition"><ChevronLeft className="w-4 h-4" /> Back</button>
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center"><Car className="w-5 h-5 text-blue-600" /></div>
-              <h1 className="text-2xl font-bold tracking-tight">Confirm Vehicle</h1>
-            </div>
-            <p className="mt-1 text-sm text-gray-500 ml-[52px]">Our AI detected the following vehicle. Please review and correct if needed.</p>
-            {confirmedVehicle.confidence > 0 && (
-              <div className="mt-4 flex items-center gap-2 text-xs text-gray-500">
-                <span className="px-2 py-0.5 bg-green-50 text-green-700 rounded-full font-medium">{confirmedVehicle.confidence}% confidence</span>
-                <span>AI detection confidence</span>
-              </div>
-            )}
-            <div className="mt-6 bg-white rounded-2xl border border-gray-100 p-6 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-medium text-gray-400 mb-1">Make</label>
-                  <input type="text" value={confirmedVehicle.make} onChange={(e) => setConfirmedVehicle({ ...confirmedVehicle, make: e.target.value })}
-                    className="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition bg-white" />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-400 mb-1">Model</label>
-                  <input type="text" value={confirmedVehicle.model} onChange={(e) => setConfirmedVehicle({ ...confirmedVehicle, model: e.target.value })}
-                    className="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition bg-white" />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-medium text-gray-400 mb-1">Variant</label>
-                  <input type="text" value={confirmedVehicle.variant} onChange={(e) => setConfirmedVehicle({ ...confirmedVehicle, variant: e.target.value })}
-                    className="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition bg-white" />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-400 mb-1">Year</label>
-                  <input type="text" value={confirmedVehicle.year} onChange={(e) => setConfirmedVehicle({ ...confirmedVehicle, year: e.target.value })}
-                    className="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition bg-white" />
-                </div>
-              </div>
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-xs font-medium text-gray-400 mb-1">Body Type</label>
-                  <input type="text" value={confirmedVehicle.body_type} onChange={(e) => setConfirmedVehicle({ ...confirmedVehicle, body_type: e.target.value })}
-                    className="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition bg-white" />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-400 mb-1">Color</label>
-                  <input type="text" value={confirmedVehicle.color} onChange={(e) => setConfirmedVehicle({ ...confirmedVehicle, color: e.target.value })}
-                    className="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition bg-white" />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-400 mb-1">Registration</label>
-                  <input type="text" value={confirmedVehicle.registration} onChange={(e) => setConfirmedVehicle({ ...confirmedVehicle, registration: e.target.value })}
-                    className="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition bg-white" />
-                </div>
-              </div>
-            </div>
-            <div className="mt-4 flex items-center gap-2 text-xs text-gray-400"><Pencil className="w-3.5 h-3.5" /> Edit any field to correct the AI detection</div>
-            <div className="mt-8 flex justify-between">
-              <button onClick={() => setStep("upload")} className="px-5 py-2.5 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition">Back</button>
-              <button onClick={() => setStep("payment")}
-                className="inline-flex items-center gap-2 px-6 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition shadow-lg shadow-blue-500/25">
-                Confirm & Pay <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* STEP 5: Payment */}
-        {step === "payment" && (
-          <div className="max-w-lg mx-auto text-center py-10">
-            <button onClick={() => setStep("confirm")} className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-900 mb-6 transition"><ChevronLeft className="w-4 h-4" /> Back</button>
-            <div className="w-14 h-14 rounded-2xl bg-emerald-50 flex items-center justify-center mx-auto mb-4">
-              <CreditCard className="w-7 h-7 text-emerald-600" />
-            </div>
-            <h1 className="text-2xl font-bold tracking-tight">Pay for Report</h1>
-            <p className="mt-2 text-sm text-gray-500">A one-time fee to generate your detailed PDF report.</p>
-            <div className="mt-8 bg-white rounded-2xl border border-gray-100 p-8">
-              <div className="text-4xl font-bold text-gray-900">KES {paymentAmount.toLocaleString()}</div>
-              <p className="mt-2 text-xs text-gray-400">One-time payment via Paystack</p>
-              <ul className="mt-6 space-y-2 text-sm text-gray-600 text-left max-w-xs mx-auto">
-                <li className="flex items-start gap-2"><CheckCircle className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" /> Detailed PDF report</li>
-                <li className="flex items-start gap-2"><CheckCircle className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" /> Per-part cost breakdown</li>
-                <li className="flex items-start gap-2"><CheckCircle className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" /> Supplier recommendations</li>
-                <li className="flex items-start gap-2"><CheckCircle className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" /> Structural concerns &amp; advice</li>
-              </ul>
+        {/* Progress Bar */}
+        <div className="flex items-center gap-1 mb-6 overflow-x-auto pb-2">
+          {STEPS.map((s, i) => {
+            const active = store.step === s.key;
+            const completed = STEPS.findIndex((x) => x.key === store.step) > i;
+            return (
               <button
-                onClick={handlePayment}
-                disabled={paying || loadingPrice}
-                className="mt-8 w-full inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-semibold text-white bg-gradient-to-r from-emerald-600 to-green-600 rounded-xl hover:from-emerald-700 hover:to-green-700 transition shadow-lg shadow-emerald-500/25 disabled:opacity-50"
+                key={s.key}
+                onClick={async () => {
+                  await saveAssessment(undefined, true);
+                  setStep(s.key);
+                }}
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium whitespace-nowrap transition ${
+                  active
+                    ? "bg-gray-900 text-white"
+                    : completed
+                    ? "bg-emerald-100 text-emerald-700"
+                    : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                }`}
               >
-                {paying ? <><Loader2 className="w-4 h-4 animate-spin" /> Processing...</> : <>Pay KES {paymentAmount.toLocaleString()}</>}
+                {completed ? <CheckCircle className="w-3.5 h-3.5" /> : s.icon}
+                <span className="hidden sm:inline">{s.label}</span>
               </button>
-              <p className="mt-4 text-[11px] text-gray-400">Secure payment powered by Paystack</p>
-            </div>
-            <button
-              onClick={goToResults}
-              className="mt-6 text-sm text-gray-400 hover:text-gray-600 underline underline-offset-2 transition"
-            >
-              Skip for now (no PDF)
-            </button>
-          </div>
-        )}
+            );
+          })}
+        </div>
 
-        {/* STEP 6: Results */}
-        {step === "results" && result && (
-          <div>
-            <button onClick={reset} className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-900 mb-6 transition"><ArrowLeft className="w-4 h-4" /> New Analysis</button>
-
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <h1 className="text-2xl font-bold tracking-tight">Analysis Results</h1>
-                <p className="mt-1 text-sm text-gray-500">{customerInfo.fullName} &middot; {confirmedVehicle.year} {confirmedVehicle.make} {confirmedVehicle.model} {confirmedVehicle.variant}</p>
-              </div>
-              <div className="flex items-center gap-3">
-                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${
-                  result.damage.severity === "Severe" || result.damage.severity === "Critical" ? "bg-red-50 text-red-700"
-                    : result.damage.severity === "Moderate" ? "bg-amber-50 text-amber-700" : "bg-green-50 text-green-700"
-                }`}>
-                  <AlertCircle className="w-3.5 h-3.5" /> {result.damage.severity} Damage
-                </span>
-                <button onClick={handleDownloadPdf} disabled={downloadingPdf}
-                  className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-gray-900 rounded-lg hover:bg-gray-800 transition disabled:opacity-50">
-                  {downloadingPdf ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-                  Download PDF
-                </button>
-              </div>
-            </div>
-
-            {/* Customer Info */}
-            <div className="mt-6 bg-white rounded-2xl border border-gray-100 p-6">
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="font-semibold text-gray-900">Customer</h2>
-                <button onClick={openCustomerModal} className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"><Pencil className="w-3 h-3" /> Edit</button>
-              </div>
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <div><span className="text-gray-400">Name:</span> <span className="font-medium text-gray-900 ml-1">{customerInfo.fullName}</span></div>
-                <div><span className="text-gray-400">Phone:</span> <span className="font-medium text-gray-900 ml-1">{customerInfo.phone}</span></div>
-                {customerInfo.email && <div><span className="text-gray-400">Email:</span> <span className="font-medium text-gray-900 ml-1">{customerInfo.email}</span></div>}
-                {customerInfo.address && <div><span className="text-gray-400">Address:</span> <span className="font-medium text-gray-900 ml-1">{customerInfo.address}</span></div>}
-              </div>
-            </div>
-
-            {/* Vehicle Details + Photos */}
-            <div className="mt-6 bg-white rounded-2xl border border-gray-100 p-6">
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="font-semibold text-gray-900">Vehicle Details</h2>
-                <button onClick={openVehicleModal} className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"><Pencil className="w-3 h-3" /> Edit</button>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
-                {confirmedVehicle.make && <div><span className="text-gray-400">Make:</span> <span className="font-medium text-gray-900 ml-1">{confirmedVehicle.make}</span></div>}
-                {confirmedVehicle.model && <div><span className="text-gray-400">Model:</span> <span className="font-medium text-gray-900 ml-1">{confirmedVehicle.model}</span></div>}
-                {confirmedVehicle.variant && <div><span className="text-gray-400">Variant:</span> <span className="font-medium text-gray-900 ml-1">{confirmedVehicle.variant}</span></div>}
-                {confirmedVehicle.year && <div><span className="text-gray-400">Year:</span> <span className="font-medium text-gray-900 ml-1">{confirmedVehicle.year}</span></div>}
-                {confirmedVehicle.body_type && <div><span className="text-gray-400">Body Type:</span> <span className="font-medium text-gray-900 ml-1">{confirmedVehicle.body_type}</span></div>}
-                {confirmedVehicle.color && <div><span className="text-gray-400">Color:</span> <span className="font-medium text-gray-900 ml-1">{confirmedVehicle.color}</span></div>}
-                {confirmedVehicle.registration && <div><span className="text-gray-400">Registration:</span> <span className="font-medium text-gray-900 ml-1">{confirmedVehicle.registration}</span></div>}
-                <div><span className="text-gray-400">AI Confidence:</span> <span className="font-medium text-gray-900 ml-1">{Math.round(confirmedVehicle.confidence * 100)}%</span></div>
-              </div>
-
-              {previews.length > 0 && (
-                <div className="mt-5 pt-5 border-t border-gray-100">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-3">Uploaded Photos ({previews.length})</h3>
-                  <div className="flex flex-wrap gap-3">
-                    {previews.map((src, i) => (
-                      <button key={i} onClick={() => setLightboxImage(src)}
-                        className="relative w-24 h-24 rounded-xl overflow-hidden border border-gray-200 hover:border-blue-400 hover:shadow-md transition group">
-                        <img src={src} alt={`Photo ${i + 1}`} className="w-full h-full object-cover" />
-                        <span className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/20 transition text-white text-xs font-medium opacity-0 group-hover:opacity-100">#{i + 1}</span>
-                      </button>
-                    ))}
-                  </div>
+        {/* Step Content */}
+        <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+          {/* ═══════════════════════════════════════════════════════════════════ */}
+          {/* STEP: Intake (Fee Note + Insurance + Claim)                       */}
+          {/* ═══════════════════════════════════════════════════════════════════ */}
+          {store.step === "intake" && (
+            <div className="space-y-6">
+              <Section title="Assessment / Fee Note">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <Field label="Reference Number">
+                    <Input value={store.feeNote.referenceNumber || ""} onChange={(e) => store.updateFeeNote({ referenceNumber: e.target.value })} placeholder="e.g. REF-001" />
+                  </Field>
+                  <Field label="Assessment Date">
+                    <Input type="date" value={store.feeNote.assessmentDate || ""} onChange={(e) => store.updateFeeNote({ assessmentDate: e.target.value })} />
+                  </Field>
+                  <Field label={`Professional Fee (${CURRENCY})`}>
+                    <Input type="number" min="0" step="0.01" value={store.feeNote.professionalFee || ""} onChange={(e) => store.updateFeeNote({ professionalFee: parseFloat(e.target.value) || 0 })} />
+                  </Field>
+                  <Field label={`VAT (${CURRENCY})`}>
+                    <Input type="number" min="0" step="0.01" value={store.feeNote.vat || ""} onChange={(e) => store.updateFeeNote({ vat: parseFloat(e.target.value) || 0 })} />
+                  </Field>
+                  <Field label={`Reimbursement (${CURRENCY})`}>
+                    <Input type="number" min="0" step="0.01" value={store.feeNote.reimbursement || ""} onChange={(e) => store.updateFeeNote({ reimbursement: parseFloat(e.target.value) || 0 })} />
+                  </Field>
+                  <Field label={`Total Professional Fee (${CURRENCY})`}>
+                    <Input type="number" value={store.feeNote.totalProfessionalFee || ""} readOnly className="bg-gray-50 font-semibold" />
+                  </Field>
                 </div>
-              )}
-            </div>
+              </Section>
 
-            {/* Summary */}
-            <div className="mt-6 bg-white rounded-2xl border border-gray-100 p-6">
-              <div className="flex items-center justify-between">
-                <h2 className="font-semibold text-gray-900">Summary</h2>
-                <button onClick={openSummaryModal} className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"><Pencil className="w-3 h-3" /> Edit</button>
-              </div>
-              <p className="mt-2 text-sm text-gray-600 leading-relaxed">{result.damage.summary}</p>
-              {/*<div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <div className="bg-gray-50 rounded-xl p-3">
-                  <p className="text-xs text-gray-400 font-medium">Vehicle</p>
-                  <p className="mt-0.5 text-sm font-semibold text-gray-900">{confirmedVehicle.make} {confirmedVehicle.model}</p>
-                </div>
-                <div className="bg-gray-50 rounded-xl p-3">
-                  <p className="text-xs text-gray-400 font-medium">Est. Labor</p>
-                  <p className="mt-0.5 text-sm font-semibold text-gray-900">{result.damage.estimated_total_labor_hours} hrs</p>
-                </div>
-                <div className="bg-gray-50 rounded-xl p-3">
-                  <p className="text-xs text-gray-400 font-medium">Est. Cost</p>
-                   <p className="mt-0.5 text-sm font-semibold text-gray-900">{formatCurrency(result.damage.estimated_total_cost)}</p>
-                </div>
-                <div className="bg-gray-50 rounded-xl p-3">
-                  <p className="text-xs text-gray-400 font-medium">Total Loss</p>
-                  <p className="mt-0.5 text-sm font-semibold text-gray-900">{result.damage.possible_total_loss ? "Yes" : "No"}</p>
-                </div>
-              </div>*/}
-            </div>
-
-            {/* Parts with Cost Breakdown — Editable */}
-            <div className="mt-6 bg-white rounded-2xl border border-gray-100 overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-                <h2 className="font-semibold text-gray-900 flex items-center gap-2">
-                  <Package className="w-4 h-4 text-gray-400" />
-                  Parts & Cost ({editableParts.length})
-                </h2>
-                <div className="flex items-center gap-2">
-                  {catalogueLoading && <Loader2 className="w-4 h-4 animate-spin text-gray-400" />}
-                  {assessmentId && editableParts.length > 0 && (
-                    <button onClick={saveParts} disabled={savingParts}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-white bg-gray-900 rounded-lg hover:bg-gray-800 transition disabled:opacity-50">
-                      {savingParts ? <Loader2 className="w-3 h-3 animate-spin" /> : null} Save
-                    </button>
-                  )}
-                  <button onClick={addEditablePart}
-                    className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition">
-                    + Add Part
-                  </button>
-                </div>
-              </div>
-
-              {editableParts.length === 0 && (
-                <div className="px-6 py-12 text-center">
-                  <Package className="w-8 h-8 text-gray-300 mx-auto" />
-                  <p className="mt-2 text-sm text-gray-400">No parts detected. Click &quot;Add Part&quot; to add one.</p>
-                </div>
-              )}
-
-              {editableParts.length > 0 && (
-                <>
-                  {/* Desktop table */}
-                  <div className="hidden sm:block">
-                  <div className="px-6 py-2 bg-gray-50 grid grid-cols-[3fr_2fr_2fr_1fr_2fr_2fr_1fr_1fr_auto] gap-1 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
-                    <div>Part Name</div>
-                    <div>Type</div>
-                    <div>Severity</div>
-                    <div className="text-center">Qty</div>
-                    <div>Supplier</div>
-                    <div className="text-right">Unit Price</div>
-                    <div className="text-right">Labour</div>
-                    <div className="text-right">Subtotal</div>
-                    <div className="w-8"></div>
-                    </div>
-                    <div className="divide-y divide-gray-50">
-                      {editableParts.map((part, i) => (
-                        <div key={i} className="px-6 py-2 grid grid-cols-[3fr_2fr_2fr_1fr_2fr_2fr_1fr_1fr_auto] gap-1 items-center text-sm">
-                          <div>
-                            <input type="text" value={part.partName} onChange={(e) => updateEditablePart(i, "partName", e.target.value)}
-                              className="w-full px-2 py-1.5 rounded border border-gray-200 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500/20 focus:border-blue-400 transition bg-white" placeholder="Part name" />
-                          </div>
-                          <div>
-                            <select value={part.damageType} onChange={(e) => updateEditablePart(i, "damageType", e.target.value)}
-                              className="w-full px-2 py-1.5 rounded border border-gray-200 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500/20 focus:border-blue-400 transition bg-white">
-                              {["Scratch", "Dent", "Crack", "Broken", "Misaligned", "Crushed", "Torn", "Scraped"].map((t) => <option key={t} value={t}>{t}</option>)}
-                            </select>
-                          </div>
-                          <div>
-                            <select value={part.damageSeverity} onChange={(e) => updateEditablePart(i, "damageSeverity", e.target.value)}
-                              className="w-full px-2 py-1.5 rounded border border-gray-200 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500/20 focus:border-blue-400 transition bg-white">
-                              {["Minor", "Moderate", "Severe", "Critical"].map((s) => <option key={s} value={s}>{s}</option>)}
-                            </select>
-                          </div>
-                          <div>
-                            <input type="number" min="1" value={part.quantity} onChange={(e) => updateEditablePart(i, "quantity", Math.max(1, parseInt(e.target.value) || 1))}
-                              className="w-full px-2 py-1.5 rounded border border-gray-200 text-xs text-center focus:outline-none focus:ring-1 focus:ring-blue-500/20 focus:border-blue-400 transition bg-white" />
-                          </div>
-                          <div>
-                            {supplierPrices[part.partName]?.length ? (
-                              <select value={part.selectedSupplier} onChange={(e) => selectSupplier(i, e.target.value)}
-                                className="w-full px-2 py-1.5 rounded border border-gray-200 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500/20 focus:border-blue-400 transition bg-white">
-                                <option value="">Select supplier</option>
-                                {supplierPrices[part.partName].map((sp) => (
-                                  <option key={sp.supplier} value={sp.supplier}>{sp.supplier} ({CURRENCY} {sp.price.toLocaleString()})</option>
-                                ))}
-                              </select>
-                            ) : (
-                              <span className="text-xs text-gray-400 italic">No suppliers found</span>
-                            )}
-                          </div>
-                          <div>
-                            <input type="number" min="0" step="0.01" value={part.unitPrice || ""} onChange={(e) => updateEditablePart(i, "unitPrice", parseFloat(e.target.value) || 0)}
-                              className="w-full px-2 py-1.5 rounded border border-gray-200 text-xs text-right focus:outline-none focus:ring-1 focus:ring-blue-500/20 focus:border-blue-400 transition bg-white" placeholder="0.00" />
-                          </div>
-                          <div>
-                            <input type="number" min="0" step="0.01" value={part.labourCost || ""} onChange={(e) => updateEditablePart(i, "labourCost", parseFloat(e.target.value) || 0)}
-                              className="w-full px-2 py-1.5 rounded border border-gray-200 text-xs text-right focus:outline-none focus:ring-1 focus:ring-blue-500/20 focus:border-blue-400 transition bg-white" placeholder="0" />
-                          </div>
-                          <div className="text-right text-xs font-medium text-gray-900">
-                            {part.quantity * part.unitPrice > 0 ? `${CURRENCY} ${(part.quantity * part.unitPrice).toLocaleString()}` : <span className="text-gray-300">&mdash;</span>}
-                          </div>
-                          <div className="text-center w-8">
-                            <button onClick={() => removeEditablePart(i)}
-                              className="p-1 text-gray-300 hover:text-red-500 transition rounded hover:bg-red-50">
-                              <X className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </div>
+              <Section title="Insurance Details">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <Field label="Insurance Company">
+                    <Select value={store.insuranceCompanyId || ""} onChange={(e) => store.setInsuranceCompanyId(e.target.value || null)}>
+                      <option value="">Select company...</option>
+                      {insuranceCompanies.map((ic) => (
+                        <option key={ic.id} value={ic.id}>{ic.name}</option>
                       ))}
-                    </div>
-                  </div>
+                    </Select>
+                  </Field>
+                  <Field label="Policy Number">
+                    <Input value={store.claim.policyNumber || ""} onChange={(e) => store.updateClaim({ policyNumber: e.target.value })} />
+                  </Field>
+                  <Field label={`Sum Insured (${CURRENCY})`}>
+                    <Input type="number" min="0" step="0.01" value={store.claim.sumInsured || ""} onChange={(e) => store.updateClaim({ sumInsured: parseFloat(e.target.value) || undefined })} />
+                  </Field>
+                </div>
+              </Section>
 
-                  {/* Mobile cards */}
-                  <div className="sm:hidden divide-y divide-gray-50">
-                    {editableParts.map((part, i) => (
-                      <div key={i} className="px-4 py-3 space-y-2">
-                        <div className="flex items-center justify-between gap-2">
-                          <input type="text" value={part.partName} onChange={(e) => updateEditablePart(i, "partName", e.target.value)}
-                            className="flex-1 px-2 py-1.5 rounded border border-gray-200 text-sm font-medium focus:outline-none focus:ring-1 focus:ring-blue-500/20 focus:border-blue-400 transition bg-white" placeholder="Part name" />
-                          <button onClick={() => removeEditablePart(i)} className="p-1 text-gray-300 hover:text-red-500 transition"><X className="w-4 h-4" /></button>
-                        </div>
-                        <div className="grid grid-cols-3 gap-2">
-                          <select value={part.damageType} onChange={(e) => updateEditablePart(i, "damageType", e.target.value)}
-                            className="px-2 py-1.5 rounded border border-gray-200 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500/20 transition bg-white">
-                            {["Scratch", "Dent", "Crack", "Broken", "Misaligned", "Crushed", "Torn", "Scraped"].map((t) => <option key={t} value={t}>{t}</option>)}
-                          </select>
-                          <select value={part.damageSeverity} onChange={(e) => updateEditablePart(i, "damageSeverity", e.target.value)}
-                            className="px-2 py-1.5 rounded border border-gray-200 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500/20 transition bg-white">
-                            {["Minor", "Moderate", "Severe", "Critical"].map((s) => <option key={s} value={s}>{s}</option>)}
-                          </select>
-                          <input type="number" min="1" value={part.quantity} onChange={(e) => updateEditablePart(i, "quantity", Math.max(1, parseInt(e.target.value) || 1))}
-                            className="px-2 py-1.5 rounded border border-gray-200 text-xs text-center focus:outline-none focus:ring-1 focus:ring-blue-500/20 transition bg-white" placeholder="Qty" />
-                        </div>
-                        {supplierPrices[part.partName]?.length ? (
-                          <div>
-                            <label className="text-[10px] text-gray-400">Supplier</label>
-                            <select value={part.selectedSupplier} onChange={(e) => selectSupplier(i, e.target.value)}
-                              className="w-full px-2 py-1.5 rounded border border-gray-200 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500/20 transition bg-white">
-                              <option value="">Select supplier</option>
-                              {supplierPrices[part.partName].map((sp) => (
-                                <option key={sp.supplier} value={sp.supplier}>{sp.supplier} ({CURRENCY} {sp.price.toLocaleString()})</option>
-                              ))}
-                            </select>
-                          </div>
-                        ) : null}
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <label className="text-[10px] text-gray-400">Unit Price</label>
-                            <input type="number" min="0" step="0.01" value={part.unitPrice || ""} onChange={(e) => updateEditablePart(i, "unitPrice", parseFloat(e.target.value) || 0)}
-                              className="w-full px-2 py-1.5 rounded border border-gray-200 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500/20 transition bg-white" placeholder="0.00" />
-                          </div>
-                          <div>
-                            <label className="text-[10px] text-gray-400">Labour</label>
-                            <input type="number" min="0" step="0.01" value={part.labourCost || ""} onChange={(e) => updateEditablePart(i, "labourCost", parseFloat(e.target.value) || 0)}
-                              className="w-full px-2 py-1.5 rounded border border-gray-200 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500/20 transition bg-white" placeholder="0" />
-                          </div>
-                        </div>
-                        <div className="text-right text-xs font-medium text-gray-900">
-                          Subtotal: {part.quantity * part.unitPrice > 0 ? `${CURRENCY} ${(part.quantity * part.unitPrice).toLocaleString()}` : <span className="text-gray-300 font-normal">—</span>}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+              <Section title="Claim Details">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <Field label="Claim Number">
+                    <Input value={store.claim.claimNumber || ""} onChange={(e) => store.updateClaim({ claimNumber: e.target.value })} />
+                  </Field>
+                  <Field label="Insured Name *">
+                    <Input value={store.claim.insuredName || ""} onChange={(e) => store.updateClaim({ insuredName: e.target.value })} required />
+                  </Field>
+                  <Field label="Insured Phone">
+                    <Input value={store.claim.insuredPhone || ""} onChange={(e) => store.updateClaim({ insuredPhone: e.target.value })} />
+                  </Field>
+                  <Field label="Insured Email">
+                    <Input type="email" value={store.claim.insuredEmail || ""} onChange={(e) => store.updateClaim({ insuredEmail: e.target.value })} />
+                  </Field>
+                  <Field label="Insured Address" className="sm:col-span-2">
+                    <Input value={store.claim.insuredAddress || ""} onChange={(e) => store.updateClaim({ insuredAddress: e.target.value })} />
+                  </Field>
+                  <Field label="Excess Percentage (%)">
+                    <Input type="number" min="0" max="100" step="0.1" value={store.claim.excessPercentage || ""} onChange={(e) => store.updateClaim({ excessPercentage: parseFloat(e.target.value) || undefined })} />
+                  </Field>
+                  <Field label={`Excess Amount (${CURRENCY})`}>
+                    <Input type="number" value={store.claim.excessAmount?.toFixed(2) || ""} readOnly className="bg-gray-50" />
+                  </Field>
+                  <Field label="Date of Instruction">
+                    <Input type="date" value={store.claim.dateOfInstruction || ""} onChange={(e) => store.updateClaim({ dateOfInstruction: e.target.value })} />
+                  </Field>
+                  <Field label="Date of Assessment">
+                    <Input type="date" value={store.claim.dateOfAssessment || ""} onChange={(e) => store.updateClaim({ dateOfAssessment: e.target.value })} />
+                  </Field>
+                </div>
+              </Section>
+            </div>
+          )}
 
-                  {/* Totals */}
-                  <div className="px-6 py-4 bg-gray-50 border-t border-gray-100">
-                    <div className="flex justify-end flex-col items-end space-y-1">
-                      {foundCount > 0 && (
-                        <span className="text-xs text-gray-500">{foundCount} part{foundCount !== 1 ? "s" : ""} with pricing</span>
-                      )}
-                      {notFoundCount > 0 && (
-                        <span className="text-xs text-amber-500">{notFoundCount} part{notFoundCount !== 1 ? "s" : ""} without pricing</span>
-                      )}
-                      <div className="w-48 border-t border-gray-200 pt-2 mt-1" />
-                      {partsTotal > 0 && (
-                        <div className="flex justify-between w-48 text-sm">
-                          <span className="text-gray-500">Parts Total</span>
-                          <span className="font-medium text-gray-900">{CURRENCY} {partsTotal.toLocaleString()}</span>
-                        </div>
-                      )}
-                      {labourTotal > 0 && (
-                        <div className="flex justify-between w-48 text-sm">
-                          <span className="text-gray-500">Labour Total</span>
-                          <span className="font-medium text-gray-900">{CURRENCY} {labourTotal.toLocaleString()}</span>
-                        </div>
-                      )}
-                      <div className="flex justify-between w-48 text-base font-bold pt-1">
-                        <span className="text-gray-900">Grand Total</span>
-                        <span className="text-gray-900">{CURRENCY} {(partsTotal + labourTotal).toLocaleString()}</span>
-                      </div>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
+          {/* ═══════════════════════════════════════════════════════════════════ */}
+          {/* STEP: Vehicle Details                                             */}
+          {/* ═══════════════════════════════════════════════════════════════════ */}
+          {store.step === "vehicle" && (
+            <div className="space-y-6">
+              <Section title="Vehicle Identification">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <Field label="Registration Number">
+                    <Input value={store.vehicle.registrationNumber || ""} onChange={(e) => store.updateVehicle({ registrationNumber: e.target.value })} placeholder="e.g. KAA 123A" />
+                  </Field>
+                  <Field label="Vehicle Make">
+                    <Select value={store.vehicle.makeId || ""} onChange={(e) => store.updateVehicle({ makeId: e.target.value || undefined, modelId: undefined, variantId: undefined })}>
+                      <option value="">Select make...</option>
+                      {vehicleCatalog.makes.map((m) => (
+                        <option key={m.id} value={m.id}>{m.name}</option>
+                      ))}
+                    </Select>
+                  </Field>
+                  <Field label="Vehicle Model">
+                    <Select value={store.vehicle.modelId || ""} onChange={(e) => store.updateVehicle({ modelId: e.target.value || undefined, variantId: undefined })}>
+                      <option value="">Select model...</option>
+                      {vehicleCatalog.makes.find((m) => m.id === store.vehicle.makeId)?.models.map((m) => (
+                        <option key={m.id} value={m.id}>{m.name}</option>
+                      ))}
+                    </Select>
+                  </Field>
+                  <Field label="Variant / Trim">
+                    <Select value={store.vehicle.variantId || ""} onChange={(e) => store.updateVehicle({ variantId: e.target.value || undefined })}>
+                      <option value="">Select variant...</option>
+                      {vehicleCatalog.makes.find((m) => m.id === store.vehicle.makeId)?.models.find((m) => m.id === store.vehicle.modelId)?.variants.map((v) => (
+                        <option key={v.id} value={v.id}>{v.name}</option>
+                      ))}
+                    </Select>
+                  </Field>
+                  <Field label="Colour">
+                    <Input value={store.vehicle.colour || ""} onChange={(e) => store.updateVehicle({ colour: e.target.value })} />
+                  </Field>
+                  <Field label="Year of Manufacture">
+                    <Input type="number" min="1900" max="2100" value={store.vehicle.yearOfManufacture || ""} onChange={(e) => store.updateVehicle({ yearOfManufacture: parseInt(e.target.value) || undefined })} />
+                  </Field>
+                </div>
+              </Section>
 
-            {/* Structural Concerns */}
-            <div className="mt-6 bg-amber-50 rounded-2xl border border-amber-100 p-6">
-              <div className="flex items-center justify-between">
-                <h2 className="font-semibold text-amber-800 flex items-center gap-2"><AlertCircle className="w-4 h-4" /> Structural Concerns</h2>
-                <button onClick={openStructuralModal} className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-amber-600 hover:text-amber-800 hover:bg-amber-100 rounded-lg transition"><Pencil className="w-3 h-3" /> Edit</button>
-              </div>
-              {result.structural_concerns?.length > 0 ? (
-                <ul className="mt-3 space-y-1.5">
-                  {result.structural_concerns.map((c, i) => (
-                    <li key={i} className="text-sm text-amber-700 flex items-start gap-2"><span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />{c}</li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="mt-2 text-sm text-amber-600 italic">No structural concerns identified</p>
-              )}
+              <Section title="Technical Details">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <Field label="Engine Type">
+                    <Input value={store.vehicle.engineType || ""} onChange={(e) => store.updateVehicle({ engineType: e.target.value })} placeholder="e.g. 2.4L Diesel" />
+                  </Field>
+                  <Field label="Engine Number">
+                    <Input value={store.vehicle.engineNumber || ""} onChange={(e) => store.updateVehicle({ engineNumber: e.target.value })} />
+                  </Field>
+                  <Field label="Chassis Number / VIN">
+                    <Input value={store.vehicle.chassisNumber || store.vehicle.vin || ""} onChange={(e) => store.updateVehicle({ chassisNumber: e.target.value, vin: e.target.value })} />
+                  </Field>
+                  <Field label="Mileage">
+                    <Input value={store.vehicle.mileage || ""} onChange={(e) => store.updateVehicle({ mileage: e.target.value })} placeholder="e.g. 85,000 km" />
+                  </Field>
+                  <Field label="Mode of Transport">
+                    <Input value={store.vehicle.modeOfTransport || ""} onChange={(e) => store.updateVehicle({ modeOfTransport: e.target.value })} placeholder="e.g. Driven" />
+                  </Field>
+                  <Field label="Vehicle Popularity">
+                    <Input value={store.vehicle.vehiclePopularity || ""} onChange={(e) => store.updateVehicle({ vehiclePopularity: e.target.value })} placeholder="e.g. Popular" />
+                  </Field>
+                  <Field label="Repairer / Garage">
+                    <Select value={store.repairerId || ""} onChange={(e) => store.setRepairerId(e.target.value || null)}>
+                      <option value="">Select repairer...</option>
+                      {repairers.map((r) => (
+                        <option key={r.id} value={r.id}>{r.name}</option>
+                      ))}
+                    </Select>
+                  </Field>
+                </div>
+              </Section>
             </div>
+          )}
 
-            {/* Recommendations */}
-            <div className="mt-6 bg-blue-50 rounded-2xl border border-blue-100 p-6">
-              <div className="flex items-center justify-between">
-                <h2 className="font-semibold text-blue-800 flex items-center gap-2"><FileText className="w-4 h-4" /> Recommendations</h2>
-                <button onClick={openRecommendationsModal} className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-100 rounded-lg transition"><Pencil className="w-3 h-3" /> Edit</button>
-              </div>
-              {result.recommendations?.length > 0 ? (
-                <ul className="mt-3 space-y-1.5">
-                  {result.recommendations.map((r, i) => (
-                    <li key={i} className="text-sm text-blue-700 flex items-start gap-2"><span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0" />{r}</li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="mt-2 text-sm text-blue-600 italic">No recommendations</p>
-              )}
-            </div>
+          {/* ═══════════════════════════════════════════════════════════════════ */}
+          {/* STEP: Vehicle Condition                                           */}
+          {/* ═══════════════════════════════════════════════════════════════════ */}
+          {store.step === "condition" && (
+            <div className="space-y-6">
+              <Section title="Vehicle Condition">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <Field label="Overall Condition">
+                    <Select value={store.vehicleCondition.overallCondition || ""} onChange={(e) => store.updateVehicleCondition({ overallCondition: e.target.value })}>
+                      <option value="">Select...</option>
+                      <option value="Excellent">Excellent</option>
+                      <option value="Good">Good</option>
+                      <option value="Fair">Fair</option>
+                      <option value="Poor">Poor</option>
+                      <option value="Very Poor">Very Poor</option>
+                    </Select>
+                  </Field>
+                  <Field label="Spare Tyre Condition">
+                    <Select value={store.vehicleCondition.spareTyreCondition || ""} onChange={(e) => store.updateVehicleCondition({ spareTyreCondition: e.target.value })}>
+                      <option value="">Select...</option>
+                      <option value="Good">Good</option>
+                      <option value="Fair">Fair</option>
+                      <option value="Poor">Poor</option>
+                      <option value="Missing">Missing</option>
+                    </Select>
+                  </Field>
+                  <Field label="General Mechanical">
+                    <Select value={store.vehicleCondition.mechanicalCondition || ""} onChange={(e) => store.updateVehicleCondition({ mechanicalCondition: e.target.value })}>
+                      <option value="">Select...</option>
+                      <option value="Excellent">Excellent</option>
+                      <option value="Good">Good</option>
+                      <option value="Fair">Fair</option>
+                      <option value="Poor">Poor</option>
+                    </Select>
+                  </Field>
+                  <Field label="Interior Condition">
+                    <Select value={store.vehicleCondition.interiorCondition || ""} onChange={(e) => store.updateVehicleCondition({ interiorCondition: e.target.value })}>
+                      <option value="">Select...</option>
+                      <option value="Excellent">Excellent</option>
+                      <option value="Good">Good</option>
+                      <option value="Fair">Fair</option>
+                      <option value="Poor">Poor</option>
+                    </Select>
+                  </Field>
+                  <Field label="Exterior Condition">
+                    <Select value={store.vehicleCondition.exteriorCondition || ""} onChange={(e) => store.updateVehicleCondition({ exteriorCondition: e.target.value })}>
+                      <option value="">Select...</option>
+                      <option value="Excellent">Excellent</option>
+                      <option value="Good">Good</option>
+                      <option value="Fair">Fair</option>
+                      <option value="Poor">Poor</option>
+                    </Select>
+                  </Field>
+                </div>
+              </Section>
 
-            {/* AI Notice */}
-            <div className="mt-8 bg-gray-100 rounded-xl p-4 flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-gray-400 mt-0.5 shrink-0" />
-              <p className="text-xs text-gray-500 leading-relaxed">
-                This analysis is AI-generated and should be treated as an estimate only. Results may not be 100% accurate. Please verify all findings with a qualified professional before making any decisions.
-              </p>
-            </div>
-
-            <div className="mt-6 flex justify-center gap-4">
-              <button onClick={handleDownloadPdf} disabled={downloadingPdf}
-                className="inline-flex items-center gap-2 px-6 py-2.5 text-sm font-semibold text-white bg-gray-900 rounded-lg hover:bg-gray-800 transition disabled:opacity-50">
-                {downloadingPdf ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-                Download PDF Report
-              </button>
-              <button onClick={reset}
-                className="inline-flex items-center gap-2 px-6 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition shadow-lg shadow-blue-500/25">
-                <Camera className="w-4 h-4" /> Analyze Another
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* ===== EDIT MODALS ===== */}
-
-      {/* Customer Info Modal */}
-      <Dialog open={customerModalOpen} onOpenChange={setCustomerModalOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Edit Customer Info</DialogTitle>
-            <DialogDescription>Update the customer contact details for this assessment.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
-              <input type="text" value={customerForm.fullName} onChange={(e) => setCustomerForm({ ...customerForm, fullName: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition bg-white" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Phone *</label>
-              <input type="tel" value={customerForm.phone} onChange={(e) => setCustomerForm({ ...customerForm, phone: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition bg-white" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-              <input type="email" value={customerForm.email} onChange={(e) => setCustomerForm({ ...customerForm, email: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition bg-white" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
-              <input type="text" value={customerForm.address} onChange={(e) => setCustomerForm({ ...customerForm, address: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition bg-white" />
-            </div>
-          </div>
-          <DialogFooter>
-            <button onClick={() => setCustomerModalOpen(false)} className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition">Cancel</button>
-            <button onClick={saveCustomer} disabled={savingModal || !customerForm.fullName.trim() || !customerForm.phone.trim()}
-              className="px-4 py-2 text-sm font-semibold text-white bg-gray-900 rounded-lg hover:bg-gray-800 transition disabled:opacity-50 inline-flex items-center gap-2">
-              {savingModal && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Save Changes
-            </button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Vehicle Details Modal */}
-      <Dialog open={vehicleModalOpen} onOpenChange={setVehicleModalOpen}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Edit Vehicle Details</DialogTitle>
-            <DialogDescription>Update the detected vehicle information.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">Make</label>
-                <input type="text" value={vehicleForm.make} onChange={(e) => setVehicleForm({ ...vehicleForm, make: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition bg-white" />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">Model</label>
-                <input type="text" value={vehicleForm.model} onChange={(e) => setVehicleForm({ ...vehicleForm, model: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition bg-white" />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">Variant</label>
-                <input type="text" value={vehicleForm.variant} onChange={(e) => setVehicleForm({ ...vehicleForm, variant: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition bg-white" />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">Year</label>
-                <input type="text" value={vehicleForm.year} onChange={(e) => setVehicleForm({ ...vehicleForm, year: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition bg-white" />
-              </div>
-            </div>
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">Body Type</label>
-                <input type="text" value={vehicleForm.body_type} onChange={(e) => setVehicleForm({ ...vehicleForm, body_type: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition bg-white" />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">Color</label>
-                <input type="text" value={vehicleForm.color} onChange={(e) => setVehicleForm({ ...vehicleForm, color: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition bg-white" />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">Registration</label>
-                <input type="text" value={vehicleForm.registration} onChange={(e) => setVehicleForm({ ...vehicleForm, registration: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition bg-white" />
-              </div>
-            </div>
-              <div className="pt-2 border-t border-gray-100">
-              <div className="flex items-center justify-between mb-2">
-                <label className="text-xs font-medium text-gray-500">Photos ({previews.length})</label>
-                {uploading ? (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-blue-600 bg-blue-50 rounded-lg">
-                    <Loader2 className="w-3 h-3 animate-spin" /> Uploading {uploadProgress.done}/{uploadProgress.total}
-                  </span>
-                ) : (
-                  <button type="button" onClick={() => vehiclePhotoInputRef.current?.click()}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition">
-                    <Camera className="w-3 h-3" /> Add Photo
-                  </button>
-                )}
-                <input ref={vehiclePhotoInputRef} type="file" accept="image/*" multiple className="hidden" onChange={addVehiclePhoto} />
-              </div>
-              {previews.length > 0 ? (
-                <div className="grid grid-cols-4 gap-2">
-                  {previews.map((src, i) => {
-                    const isBlob = src.startsWith("blob:");
+              <Section title="Tyre Details">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                  <Field label="Tyre Brand">
+                    <Input value={store.vehicleCondition.tyreBrand || ""} onChange={(e) => store.updateVehicleCondition({ tyreBrand: e.target.value })} placeholder="e.g. Bridgestone" />
+                  </Field>
+                  <Field label="Tyre Size">
+                    <Input value={store.vehicleCondition.tyreSize || ""} onChange={(e) => store.updateVehicleCondition({ tyreSize: e.target.value })} placeholder="e.g. 265/65R17" />
+                  </Field>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {TYRE_POSITIONS.map((pos) => {
+                    const tyre = store.vehicleCondition.tyres.find((t) => t.position === pos);
+                    const pct = tyre?.percentage || 0;
                     return (
-                      <div key={i} className="relative group rounded-lg overflow-hidden aspect-square bg-gray-100">
-                        <img src={src} alt="" className="w-full h-full object-cover" />
-                        {isBlob && (
-                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                            <Loader2 className="w-5 h-5 text-white animate-spin" />
-                          </div>
-                        )}
-                        {!uploading && (
-                          <button type="button" onClick={() => removeVehiclePhoto(i)}
-                            className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
-                            <X className="w-3 h-3" />
-                          </button>
-                        )}
+                      <div key={pos} className="rounded-lg border border-gray-200 p-3 text-center">
+                        <div className="text-xs font-semibold text-gray-500 mb-2">{pos}</div>
+                        <input
+                          type="range"
+                          min="0"
+                          max="100"
+                          value={pct}
+                          onChange={(e) => {
+                            const newTyres = store.vehicleCondition.tyres.map((t) =>
+                              t.position === pos ? { ...t, percentage: parseInt(e.target.value) } : t
+                            );
+                            store.updateVehicleCondition({ tyres: newTyres });
+                          }}
+                          className="w-full"
+                        />
+                        <div className={`text-lg font-bold mt-1 ${pct <= 30 ? "text-red-600" : pct <= 60 ? "text-amber-600" : "text-emerald-600"}`}>
+                          {pct}%
+                        </div>
                       </div>
                     );
                   })}
                 </div>
-              ) : (
-                <p className="text-xs text-gray-400 italic">No photos uploaded</p>
+              </Section>
+
+              <Section title="Accident Details">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <Field label="Accident Date">
+                    <Input type="date" value={store.accidentDetail.accidentDate || ""} onChange={(e) => store.updateAccidentDetail({ accidentDate: e.target.value })} />
+                  </Field>
+                  <Field label="Accident Location">
+                    <Input value={store.accidentDetail.accidentLocation || ""} onChange={(e) => store.updateAccidentDetail({ accidentLocation: e.target.value })} />
+                  </Field>
+                  <Field label="Accident Description" className="sm:col-span-2">
+                    <Textarea value={store.accidentDetail.accidentDescription || ""} onChange={(e) => store.updateAccidentDetail({ accidentDescription: e.target.value })} />
+                  </Field>
+                  <Field label="Accident Circumstances" className="sm:col-span-2">
+                    <Textarea value={store.accidentDetail.accidentCircumstances || ""} onChange={(e) => store.updateAccidentDetail({ accidentCircumstances: e.target.value })} />
+                  </Field>
+                  <Field label="Damage Description" className="sm:col-span-2">
+                    <Textarea value={store.accidentDetail.damageDescription || ""} onChange={(e) => store.updateAccidentDetail({ damageDescription: e.target.value })} />
+                  </Field>
+                  <Field label="Insured's Explanation" className="sm:col-span-2">
+                    <Textarea value={store.accidentDetail.insuredExplanation || ""} onChange={(e) => store.updateAccidentDetail({ insuredExplanation: e.target.value })} />
+                  </Field>
+                  <Field label="Assessor's Observation" className="sm:col-span-2">
+                    <Textarea value={store.accidentDetail.assessorObservation || ""} onChange={(e) => store.updateAccidentDetail({ assessorObservation: e.target.value })} />
+                  </Field>
+                  <Field label="Damage Consistent with Accident">
+                    <div className="flex items-center gap-4 py-2">
+                      <label className="flex items-center gap-1.5 text-sm">
+                        <input type="radio" checked={store.accidentDetail.damageConsistentWithAccident === true} onChange={() => store.updateAccidentDetail({ damageConsistentWithAccident: true })} className="text-emerald-600" />
+                        Yes
+                      </label>
+                      <label className="flex items-center gap-1.5 text-sm">
+                        <input type="radio" checked={store.accidentDetail.damageConsistentWithAccident === false} onChange={() => store.updateAccidentDetail({ damageConsistentWithAccident: false })} className="text-red-600" />
+                        No
+                      </label>
+                    </div>
+                  </Field>
+                  <Field label="Consistency Note">
+                    <Input value={store.accidentDetail.damageConsistencyNote || ""} onChange={(e) => store.updateAccidentDetail({ damageConsistencyNote: e.target.value })} placeholder='e.g. "Damage consistent with moderate collision on LHR side."' />
+                  </Field>
+                </div>
+              </Section>
+            </div>
+          )}
+
+          {/* ═══════════════════════════════════════════════════════════════════ */}
+          {/* STEP: Photo Upload                                                */}
+          {/* ═══════════════════════════════════════════════════════════════════ */}
+          {store.step === "upload" && (
+            <div className="space-y-4">
+              <Section title="Vehicle & Damage Photos">
+                <div className="flex items-center gap-2 mb-4">
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 transition"
+                  >
+                    <Camera className="w-3.5 h-3.5" /> Add Photos
+                  </button>
+                  <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={handleFileSelect} className="hidden" />
+                  {store.files.length > 0 && (
+                    <button
+                      onClick={handleUpload}
+                      disabled={uploading}
+                      className="flex items-center gap-1.5 rounded-lg bg-gray-900 px-3 py-2 text-xs font-medium text-white hover:bg-gray-800 transition"
+                    >
+                      {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Camera className="w-3.5 h-3.5" />}
+                      Upload {store.files.length} {store.files.length === 1 ? "file" : "files"}
+                      {uploading && ` (${uploadProgress.done}/${uploadProgress.total})`}
+                    </button>
+                  )}
+                </div>
+
+                {/* Preview grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {store.previews.map((src, i) => (
+                    <div key={i} className="relative group rounded-lg overflow-hidden border border-gray-200 aspect-square">
+                      <img src={src} alt={`Photo ${i + 1}`} className="w-full h-full object-cover" />
+                      <button
+                        onClick={() => {
+                          const newPreviews = store.previews.filter((_, j) => j !== i);
+                          const newFiles = store.files.filter((_, j) => j !== i);
+                          store.setPreviews(newPreviews);
+                          store.setFiles(newFiles);
+                        }}
+                        className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                  {store.photos.map((photo, i) => (
+                    <div key={`saved-${i}`} className="relative group rounded-lg overflow-hidden border border-gray-200 aspect-square">
+                      <img src={photo.path} alt={photo.originalName} className="w-full h-full object-cover" />
+                      <button
+                        onClick={async () => {
+                          if (photo.path.startsWith("http")) {
+                            await supabaseDelete(photo.path).catch(() => {});
+                          }
+                          store.removePhoto(i);
+                          if (store.assessmentId) await saveAssessment(undefined, true);
+                        }}
+                        className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                {store.photos.length === 0 && store.previews.length === 0 && (
+                  <div className="text-center py-12 text-gray-400">
+                    <Camera className="w-10 h-10 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">No photos uploaded yet</p>
+                  </div>
+                )}
+              </Section>
+            </div>
+          )}
+
+          {/* ═══════════════════════════════════════════════════════════════════ */}
+          {/* STEP: AI Analysis                                                 */}
+          {/* ═══════════════════════════════════════════════════════════════════ */}
+          {store.step === "analyze" && (
+            <div className="space-y-4">
+              <Section title="AI-Powered Analysis">
+                <p className="text-sm text-gray-500 mb-4">
+                  Upload photos and run AI analysis to automatically detect damage and identify parts. You can also skip this step and manually enter damage details in the next step.
+                </p>
+                {store.photos.length === 0 && store.previews.length === 0 ? (
+                  <div className="text-center py-8 bg-amber-50 rounded-lg border border-amber-200">
+                    <AlertCircle className="w-8 h-8 text-amber-500 mx-auto mb-2" />
+                    <p className="text-sm text-amber-700">Upload photos in the previous step before running AI analysis.</p>
+                  </div>
+                ) : (
+                  <button
+                    onClick={async () => {
+                      store.setAnalyzing(true);
+                      try {
+                        const imageUrls = [
+                          ...store.photos.map((p) => p.path),
+                          ...store.previews.filter((p) => p.startsWith("data:")),
+                        ];
+                        const res = await fetch("/api/analyze", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ images: imageUrls, vin: store.vehicle.vin, registrationNumber: store.vehicle.registrationNumber }),
+                        });
+                        const data = await res.json();
+                        if (data.error) throw new Error(data.error);
+                        store.setResult(data);
+                        toast.success("AI analysis complete!");
+                      } catch (e) {
+                        toast.error("AI analysis failed");
+                      }
+                      store.setAnalyzing(false);
+                    }}
+                    disabled={store.analyzing}
+                    className="flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-3 text-sm font-medium text-white hover:bg-gray-800 transition"
+                  >
+                    {store.analyzing ? <Loader2 className="w-4 h-4 animate-spin" /> : <PenTool className="w-4 h-4" />}
+                    {store.analyzing ? "Analyzing..." : "Run AI Analysis"}
+                  </button>
+                )}
+                {store.result !== null && (
+                  <div className="mt-4 rounded-lg bg-emerald-50 border border-emerald-200 p-4">
+                    <CheckCircle className="w-5 h-5 text-emerald-600 mb-2" />
+                    <p className="text-sm text-emerald-700 font-medium">Analysis complete! Review results in the Damage Assessment step.</p>
+                  </div>
+                )}
+              </Section>
+            </div>
+          )}
+
+          {/* ═══════════════════════════════════════════════════════════════════ */}
+          {/* STEP: Damage Assessment Table                                     */}
+          {/* ═══════════════════════════════════════════════════════════════════ */}
+          {store.step === "damage" && (
+            <div className="space-y-4">
+              <Section title="Damage Assessment">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-gray-200">
+                        <th className="px-2 py-2 text-left text-xs font-medium text-gray-500">Area</th>
+                        <th className="px-2 py-2 text-left text-xs font-medium text-gray-500">Part</th>
+                        <th className="px-2 py-2 text-left text-xs font-medium text-gray-500">Side</th>
+                        <th className="px-2 py-2 text-left text-xs font-medium text-gray-500">Description</th>
+                        <th className="px-2 py-2 text-left text-xs font-medium text-gray-500">Action</th>
+                        <th className="px-2 py-2 text-center text-xs font-medium text-gray-500">Accident</th>
+                        <th className="px-2 py-2 text-center text-xs font-medium text-gray-500">Pre</th>
+                        <th className="px-2 py-2"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {store.damageItems.map((item, i) => (
+                        <tr key={i} className="border-b border-gray-100">
+                          <td className="px-1 py-1"><Input value={item.damageArea || ""} onChange={(e) => store.updateDamageItem(i, { damageArea: e.target.value })} className="text-xs" /></td>
+                          <td className="px-1 py-1"><Input value={item.partName || ""} onChange={(e) => store.updateDamageItem(i, { partName: e.target.value })} className="text-xs" /></td>
+                          <td className="px-1 py-1"><Input value={item.side || ""} onChange={(e) => store.updateDamageItem(i, { side: e.target.value })} className="text-xs" placeholder="LHR" /></td>
+                          <td className="px-1 py-1"><Input value={item.damageDescription || ""} onChange={(e) => store.updateDamageItem(i, { damageDescription: e.target.value })} className="text-xs" /></td>
+                          <td className="px-1 py-1">
+                            <Select value={item.actionRequired || ""} onChange={(e) => store.updateDamageItem(i, { actionRequired: e.target.value as never })} className="text-xs">
+                              <option value="">Select</option>
+                              {DAMAGE_ACTIONS.map((a) => <option key={a} value={a}>{a}</option>)}
+                            </Select>
+                          </td>
+                          <td className="px-1 py-1 text-center">
+                            <input type="checkbox" checked={item.accidentRelated} onChange={(e) => store.updateDamageItem(i, { accidentRelated: e.target.checked })} className="rounded text-emerald-600" />
+                          </td>
+                          <td className="px-1 py-1 text-center">
+                            <input type="checkbox" checked={item.preAccidentDamage} onChange={(e) => store.updateDamageItem(i, { preAccidentDamage: e.target.checked })} className="rounded text-amber-600" />
+                          </td>
+                          <td className="px-1 py-1">
+                            <button onClick={() => store.removeDamageItem(i)} className="text-red-400 hover:text-red-600"><Trash2 className="w-3.5 h-3.5" /></button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <button onClick={store.addDamageItem} className="flex items-center gap-1.5 rounded-lg border border-dashed border-gray-300 px-3 py-2 text-xs font-medium text-gray-600 hover:bg-gray-50 transition">
+                  <Plus className="w-3.5 h-3.5" /> Add Damage Item
+                </button>
+              </Section>
+            </div>
+          )}
+
+          {/* ═══════════════════════════════════════════════════════════════════ */}
+          {/* STEP: Parts + Services + Cost Summary                             */}
+          {/* ═══════════════════════════════════════════════════════════════════ */}
+          {store.step === "estimate" && (
+            <div className="space-y-6">
+              {/* Parts */}
+              <Section title="Parts Required">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-gray-200">
+                        <th className="px-2 py-2 text-left text-xs font-medium text-gray-500">Part Name</th>
+                        <th className="px-2 py-2 text-left text-xs font-medium text-gray-500">Part No.</th>
+                        <th className="px-2 py-2 text-center text-xs font-medium text-gray-500">Qty</th>
+                        <th className="px-2 py-2 text-right text-xs font-medium text-gray-500">Unit Price</th>
+                        <th className="px-2 py-2 text-center text-xs font-medium text-gray-500">Disc %</th>
+                        <th className="px-2 py-2 text-right text-xs font-medium text-gray-500">Disc Amt</th>
+                        <th className="px-2 py-2 text-right text-xs font-medium text-gray-500">Net</th>
+                        <th className="px-2 py-2 text-center text-xs font-medium text-gray-500">VAT %</th>
+                        <th className="px-2 py-2 text-right text-xs font-medium text-gray-500">Total</th>
+                        <th className="px-2 py-2 text-left text-xs font-medium text-gray-500">Status</th>
+                        <th className="px-2 py-2"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {store.parts.map((part, i) => (
+                        <tr key={i} className="border-b border-gray-100">
+                          <td className="px-1 py-1"><Input value={part.partName} onChange={(e) => store.updatePart(i, { partName: e.target.value })} className="text-xs" /></td>
+                          <td className="px-1 py-1"><Input value={part.partNumber || ""} onChange={(e) => store.updatePart(i, { partNumber: e.target.value })} className="text-xs" /></td>
+                          <td className="px-1 py-1"><Input type="number" min="1" value={part.quantity} onChange={(e) => store.updatePart(i, { quantity: parseInt(e.target.value) || 1 })} className="text-xs text-center" /></td>
+                          <td className="px-1 py-1"><Input type="number" min="0" step="0.01" value={part.unitPrice} onChange={(e) => store.updatePart(i, { unitPrice: parseFloat(e.target.value) || 0 })} className="text-xs text-right" /></td>
+                          <td className="px-1 py-1"><Input type="number" min="0" max="100" value={part.discountPercent} onChange={(e) => store.updatePart(i, { discountPercent: parseFloat(e.target.value) || 0 })} className="text-xs text-center" /></td>
+                          <td className="px-1 py-1 text-xs text-right text-gray-500">{CURRENCY} {part.discountAmount.toLocaleString()}</td>
+                          <td className="px-1 py-1 text-xs text-right">{CURRENCY} {part.netPrice.toLocaleString()}</td>
+                          <td className="px-1 py-1"><Input type="number" min="0" max="100" value={part.vatPercent} onChange={(e) => store.updatePart(i, { vatPercent: parseFloat(e.target.value) || 0 })} className="text-xs text-center" /></td>
+                          <td className="px-1 py-1 text-xs text-right font-medium">{CURRENCY} {part.totalPrice.toLocaleString()}</td>
+                          <td className="px-1 py-1">
+                            <Select value={part.partStatus || ""} onChange={(e) => store.updatePart(i, { partStatus: e.target.value as never })} className="text-xs">
+                              <option value="">-</option>
+                              {PART_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+                            </Select>
+                          </td>
+                          <td className="px-1 py-1">
+                            <button onClick={() => store.removePart(i)} className="text-red-400 hover:text-red-600"><Trash2 className="w-3.5 h-3.5" /></button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <button onClick={store.addPart} className="flex items-center gap-1.5 rounded-lg border border-dashed border-gray-300 px-3 py-2 text-xs font-medium text-gray-600 hover:bg-gray-50 transition">
+                  <Plus className="w-3.5 h-3.5" /> Add Part
+                </button>
+              </Section>
+
+              {/* Services */}
+              <Section title="Labour & Services">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-gray-200">
+                        <th className="px-2 py-2 text-left text-xs font-medium text-gray-500">Description</th>
+                        <th className="px-2 py-2 text-center text-xs font-medium text-gray-500">Qty</th>
+                        <th className="px-2 py-2 text-right text-xs font-medium text-gray-500">Unit Cost</th>
+                        <th className="px-2 py-2 text-right text-xs font-medium text-gray-500">Discount</th>
+                        <th className="px-2 py-2 text-right text-xs font-medium text-gray-500">VAT</th>
+                        <th className="px-2 py-2 text-right text-xs font-medium text-gray-500">Total</th>
+                        <th className="px-2 py-2 text-left text-xs font-medium text-gray-500">Type</th>
+                        <th className="px-2 py-2"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {store.services.map((svc, i) => (
+                        <tr key={i} className="border-b border-gray-100">
+                          <td className="px-1 py-1"><Input value={svc.description} onChange={(e) => store.updateService(i, { description: e.target.value })} className="text-xs" /></td>
+                          <td className="px-1 py-1"><Input type="number" min="1" value={svc.quantity} onChange={(e) => store.updateService(i, { quantity: parseInt(e.target.value) || 1 })} className="text-xs text-center" /></td>
+                          <td className="px-1 py-1"><Input type="number" min="0" step="0.01" value={svc.unitCost} onChange={(e) => store.updateService(i, { unitCost: parseFloat(e.target.value) || 0 })} className="text-xs text-right" /></td>
+                          <td className="px-1 py-1"><Input type="number" min="0" step="0.01" value={svc.discount} onChange={(e) => store.updateService(i, { discount: parseFloat(e.target.value) || 0 })} className="text-xs text-right" /></td>
+                          <td className="px-1 py-1 text-xs text-right">{CURRENCY} {svc.vat.toLocaleString()}</td>
+                          <td className="px-1 py-1 text-xs text-right font-medium">{CURRENCY} {svc.totalCost.toLocaleString()}</td>
+                          <td className="px-1 py-1">
+                            <Select value={svc.serviceType || ""} onChange={(e) => store.updateService(i, { serviceType: e.target.value as never })} className="text-xs">
+                              <option value="">-</option>
+                              {SERVICE_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                            </Select>
+                          </td>
+                          <td className="px-1 py-1">
+                            <button onClick={() => store.removeService(i)} className="text-red-400 hover:text-red-600"><Trash2 className="w-3.5 h-3.5" /></button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <button onClick={store.addService} className="flex items-center gap-1.5 rounded-lg border border-dashed border-gray-300 px-3 py-2 text-xs font-medium text-gray-600 hover:bg-gray-50 transition">
+                  <Plus className="w-3.5 h-3.5" /> Add Service
+                </button>
+              </Section>
+
+              {/* Cost Summary */}
+              {(() => {
+                const cs = store.getCostSummary();
+                return (
+                  <Section title="Repair Cost Estimate">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      <div className="space-y-2 text-sm">
+                        <h4 className="font-semibold text-gray-700">Parts</h4>
+                        <div className="flex justify-between"><span className="text-gray-500">Gross Total:</span><span>{CURRENCY} {cs.partsGrossTotal.toLocaleString()}</span></div>
+                        <div className="flex justify-between"><span className="text-gray-500">Less Discount:</span><span className="text-red-600">-{CURRENCY} {cs.partsDiscount.toLocaleString()}</span></div>
+                        <div className="flex justify-between font-medium"><span>Net Parts Total:</span><span>{CURRENCY} {cs.partsNetTotal.toLocaleString()}</span></div>
+                      </div>
+                      <div className="space-y-2 text-sm">
+                        <h4 className="font-semibold text-gray-700">Services</h4>
+                        <div className="flex justify-between"><span className="text-gray-500">Labour:</span><span>{CURRENCY} {cs.labourTotal.toLocaleString()}</span></div>
+                        <div className="flex justify-between"><span className="text-gray-500">Paint:</span><span>{CURRENCY} {cs.paintTotal.toLocaleString()}</span></div>
+                        <div className="flex justify-between"><span className="text-gray-500">Miscellaneous:</span><span>{CURRENCY} {cs.miscellaneousTotal.toLocaleString()}</span></div>
+                        <div className="flex justify-between font-medium"><span>Services Subtotal:</span><span>{CURRENCY} {cs.servicesSubtotal.toLocaleString()}</span></div>
+                      </div>
+                    </div>
+                    <div className="mt-4 pt-4 border-t border-gray-200 space-y-2 text-sm">
+                      <div className="flex justify-between"><span className="text-gray-500">Subtotal Before VAT:</span><span>{CURRENCY} {cs.subtotalBeforeVat.toLocaleString()}</span></div>
+                      <div className="flex justify-between"><span className="text-gray-500">VAT (16%):</span><span>{CURRENCY} {cs.vatAmount.toLocaleString()}</span></div>
+                      <div className="flex justify-between text-lg font-bold"><span>Grand Total:</span><span className="text-emerald-700">{CURRENCY} {cs.grandTotal.toLocaleString()}</span></div>
+                    </div>
+                  </Section>
+                );
+              })()}
+            </div>
+          )}
+
+          {/* ═══════════════════════════════════════════════════════════════════ */}
+          {/* STEP: Remarks                                                     */}
+          {/* ═══════════════════════════════════════════════════════════════════ */}
+          {store.step === "remarks" && (
+            <div className="space-y-6">
+              <Section title="General Remarks">
+                <div className="space-y-3">
+                  <Field label="General Remarks"><Textarea value={store.remark.generalRemarks || ""} onChange={(e) => store.updateRemark({ generalRemarks: e.target.value })} /></Field>
+                  <Field label="Parts To Be Replaced"><Textarea value={store.remark.partsToBeReplaced || ""} onChange={(e) => store.updateRemark({ partsToBeReplaced: e.target.value })} /></Field>
+                  <Field label="Parts To Be Painted"><Textarea value={store.remark.partsToBePainted || ""} onChange={(e) => store.updateRemark({ partsToBePainted: e.target.value })} /></Field>
+                  <Field label="Parts Requiring Repair"><Textarea value={store.remark.partsRequiringRepair || ""} onChange={(e) => store.updateRemark({ partsRequiringRepair: e.target.value })} /></Field>
+                  <Field label="Pre-Accident Damage"><Textarea value={store.remark.preAccidentDamage || ""} onChange={(e) => store.updateRemark({ preAccidentDamage: e.target.value })} /></Field>
+                  <Field label="Additional Observations"><Textarea value={store.remark.additionalObservations || ""} onChange={(e) => store.updateRemark({ additionalObservations: e.target.value })} /></Field>
+                </div>
+              </Section>
+
+              <Section title="Additional Damage Observations">
+                {store.additionalObservations.map((obs, i) => (
+                  <div key={i} className="rounded-lg border border-gray-200 p-4 mb-3 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium text-gray-500">Observation {i + 1}</span>
+                      <button onClick={() => store.removeAdditionalObservation(i)} className="text-red-400 hover:text-red-600"><Trash2 className="w-3.5 h-3.5" /></button>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <Field label="Description"><Textarea value={obs.damageDescription || ""} onChange={(e) => { const n = [...store.additionalObservations]; n[i] = { ...n[i], damageDescription: e.target.value }; store.setAdditionalObservations(n); }} /></Field>
+                      <Field label="Insured's Explanation"><Textarea value={obs.insuredExplanation || ""} onChange={(e) => { const n = [...store.additionalObservations]; n[i] = { ...n[i], insuredExplanation: e.target.value }; store.setAdditionalObservations(n); }} /></Field>
+                      <Field label="Assessor's Opinion"><Textarea value={obs.assessorOpinion || ""} onChange={(e) => { const n = [...store.additionalObservations]; n[i] = { ...n[i], assessorOpinion: e.target.value }; store.setAdditionalObservations(n); }} /></Field>
+                      <div className="space-y-3">
+                        <Field label={`Est. Repair Cost (${CURRENCY})`}><Input type="number" min="0" value={obs.estimatedRepairCost} onChange={(e) => { const n = [...store.additionalObservations]; n[i] = { ...n[i], estimatedRepairCost: parseFloat(e.target.value) || 0, estimatedTotalCost: (parseFloat(e.target.value) || 0) + (n[i].estimatedPaintingCost || 0) }; store.setAdditionalObservations(n); }} /></Field>
+                        <Field label={`Est. Painting Cost (${CURRENCY})`}><Input type="number" min="0" value={obs.estimatedPaintingCost} onChange={(e) => { const n = [...store.additionalObservations]; n[i] = { ...n[i], estimatedPaintingCost: parseFloat(e.target.value) || 0, estimatedTotalCost: (n[i].estimatedRepairCost || 0) + (parseFloat(e.target.value) || 0) }; store.setAdditionalObservations(n); }} /></Field>
+                        <Field label={`Est. Total (${CURRENCY})`}><Input type="number" value={obs.estimatedTotalCost} readOnly className="bg-gray-50 font-semibold" /></Field>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                <button onClick={store.addAdditionalObservation} className="flex items-center gap-1.5 rounded-lg border border-dashed border-gray-300 px-3 py-2 text-xs font-medium text-gray-600 hover:bg-gray-50 transition">
+                  <Plus className="w-3.5 h-3.5" /> Add Observation
+                </button>
+              </Section>
+            </div>
+          )}
+
+          {/* ═══════════════════════════════════════════════════════════════════ */}
+          {/* STEP: Authorization + Instructions + Signatures                   */}
+          {/* ═══════════════════════════════════════════════════════════════════ */}
+          {store.step === "authorization" && (
+            <div className="space-y-6">
+              <Section title="Assessment Status">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <Field label="Assessment Status">
+                    <Select value={store.authorization.assessmentStatus || "DRAFT"} onChange={(e) => store.updateAuthorization({ assessmentStatus: e.target.value as never })}>
+                      <option value="DRAFT">Draft</option>
+                      <option value="SUBMITTED">Submitted</option>
+                      <option value="UNDER_REVIEW">Under Review</option>
+                      <option value="APPROVED">Approved</option>
+                      <option value="REJECTED">Rejected</option>
+                      <option value="SUPPLEMENT_REQUIRED">Supplement Required</option>
+                      <option value="COMPLETED">Completed</option>
+                    </Select>
+                  </Field>
+                  <Field label="Authorization Status">
+                    <Select value={store.authorization.authorizationStatus || ""} onChange={(e) => store.updateAuthorization({ authorizationStatus: e.target.value as never })}>
+                      <option value="">Select...</option>
+                      <option value="Authorized">Authorized</option>
+                      <option value="Not Authorized">Not Authorized</option>
+                      <option value="Pending Authorization">Pending Authorization</option>
+                    </Select>
+                  </Field>
+                  <Field label="Authorized">
+                    <div className="flex items-center gap-4 py-2">
+                      <label className="flex items-center gap-1.5 text-sm">
+                        <input type="radio" checked={store.authorization.authorized === true} onChange={() => store.updateAuthorization({ authorized: true })} /> Yes
+                      </label>
+                      <label className="flex items-center gap-1.5 text-sm">
+                        <input type="radio" checked={store.authorization.authorized === false} onChange={() => store.updateAuthorization({ authorized: false })} /> No
+                      </label>
+                    </div>
+                  </Field>
+                  <Field label="Copy to Repairer">
+                    <div className="flex items-center gap-4 py-2">
+                      <label className="flex items-center gap-1.5 text-sm">
+                        <input type="radio" checked={store.authorization.copyToRepairer === true} onChange={() => store.updateAuthorization({ copyToRepairer: true })} /> Yes
+                      </label>
+                      <label className="flex items-center gap-1.5 text-sm">
+                        <input type="radio" checked={store.authorization.copyToRepairer === false} onChange={() => store.updateAuthorization({ copyToRepairer: false })} /> No
+                      </label>
+                    </div>
+                  </Field>
+                  <Field label={`Salvage Value (${CURRENCY})`}>
+                    <Input type="number" min="0" step="0.01" value={store.authorization.salvageValue || ""} onChange={(e) => store.updateAuthorization({ salvageValue: parseFloat(e.target.value) || undefined })} />
+                  </Field>
+                  <Field label={`Pre-Accident Value (${CURRENCY})`}>
+                    <Input type="number" min="0" step="0.01" value={store.authorization.preAccidentValue || ""} onChange={(e) => store.updateAuthorization({ preAccidentValue: parseFloat(e.target.value) || undefined })} />
+                  </Field>
+                </div>
+              </Section>
+
+              <Section title="Special Repair Instructions">
+                <div className="space-y-2">
+                  {store.specialInstructions.map((si, i) => (
+                    <div key={i} className="flex items-start gap-2">
+                      <span className="text-xs text-gray-400 mt-2.5">{i + 1}.</span>
+                      <Input value={si.instruction} onChange={(e) => {
+                        const n = [...store.specialInstructions];
+                        n[i] = { ...n[i], instruction: e.target.value };
+                        store.setSpecialInstructions(n);
+                      }} className="flex-1" />
+                      <button onClick={() => store.removeSpecialInstruction(i)} className="mt-1 text-red-400 hover:text-red-600"><Trash2 className="w-3.5 h-3.5" /></button>
+                    </div>
+                  ))}
+                  <div className="flex gap-2">
+                    <Input value={newInstruction} onChange={(e) => setNewInstruction(e.target.value)} placeholder="Add instruction..." className="flex-1" />
+                    <button
+                      onClick={() => { if (newInstruction.trim()) { store.addSpecialInstruction(newInstruction.trim()); setNewInstruction(""); } }}
+                      className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 transition"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              </Section>
+
+              <Section title="Signatures">
+                {store.signatures.map((sig, i) => (
+                  <div key={i} className="rounded-lg border border-gray-200 p-4 mb-3 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium text-gray-500">{sig.role} Signature</span>
+                      <button onClick={() => store.removeSignature(i)} className="text-red-400 hover:text-red-600"><Trash2 className="w-3.5 h-3.5" /></button>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <Field label="Name"><Input value={sig.name || ""} onChange={(e) => store.updateSignature(i, { name: e.target.value })} /></Field>
+                      <Field label="License No."><Input value={sig.licenseNumber || ""} onChange={(e) => store.updateSignature(i, { licenseNumber: e.target.value })} /></Field>
+                      <Field label="Organization"><Input value={sig.organization || ""} onChange={(e) => store.updateSignature(i, { organization: e.target.value })} /></Field>
+                      <Field label="Phone"><Input value={sig.phone || ""} onChange={(e) => store.updateSignature(i, { phone: e.target.value })} /></Field>
+                      <Field label="Date"><Input type="date" value={sig.signatureDate || ""} onChange={(e) => store.updateSignature(i, { signatureDate: e.target.value })} /></Field>
+                    </div>
+                  </div>
+                ))}
+                <div className="flex gap-2">
+                  <button onClick={() => store.addSignature("ASSESSOR")} className="flex items-center gap-1.5 rounded-lg border border-dashed border-gray-300 px-3 py-2 text-xs font-medium text-gray-600 hover:bg-gray-50 transition">
+                    <Plus className="w-3.5 h-3.5" /> Assessor Signature
+                  </button>
+                  <button onClick={() => store.addSignature("REPAIRER")} className="flex items-center gap-1.5 rounded-lg border border-dashed border-gray-300 px-3 py-2 text-xs font-medium text-gray-600 hover:bg-gray-50 transition">
+                    <Plus className="w-3.5 h-3.5" /> Repairer Signature
+                  </button>
+                </div>
+              </Section>
+            </div>
+          )}
+
+          {/* ═══════════════════════════════════════════════════════════════════ */}
+          {/* STEP: Payment                                                     */}
+          {/* ═══════════════════════════════════════════════════════════════════ */}
+          {store.step === "payment" && (
+            <div className="space-y-4">
+              <Section title="Assessment Payment">
+                {store.paid ? (
+                  <div className="rounded-lg bg-emerald-50 border border-emerald-200 p-6 text-center">
+                    <CheckCircle className="w-12 h-12 text-emerald-500 mx-auto mb-3" />
+                    <h3 className="text-lg font-semibold text-emerald-800">Payment Confirmed</h3>
+                    <p className="text-sm text-emerald-600 mt-1">Your assessment has been paid. You can now view the full results.</p>
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <CreditCard className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Report Fee</h3>
+                    <p className="text-3xl font-bold text-gray-900 mb-4">
+                      {loadingPrice ? "..." : `${CURRENCY} ${paymentAmount.toLocaleString()}`}
+                    </p>
+                    <p className="text-sm text-gray-500 mb-6">Pay to access the full assessment report and PDF download.</p>
+                    <button
+                      onClick={handlePayment}
+                      disabled={store.paying}
+                      className="rounded-lg bg-gray-900 px-6 py-3 text-sm font-semibold text-white hover:bg-gray-800 transition"
+                    >
+                      {store.paying ? <Loader2 className="w-4 h-4 animate-spin inline mr-2" /> : null}
+                      {store.paying ? "Processing..." : `Pay ${CURRENCY} ${paymentAmount.toLocaleString()}`}
+                    </button>
+                  </div>
+                )}
+              </Section>
+            </div>
+          )}
+
+          {/* ═══════════════════════════════════════════════════════════════════ */}
+          {/* STEP: Results                                                     */}
+          {/* ═══════════════════════════════════════════════════════════════════ */}
+          {store.step === "results" && (
+            <div className="space-y-8">
+              <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+                <h2 className="text-lg font-bold text-gray-900 mb-4">ASSESSMENT REPORT</h2>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-2 text-sm">
+                  <div><span className="text-gray-500">Assessment No:</span> <span className="font-medium">{store.assessmentId?.slice(0, 8)}...</span></div>
+                  <div><span className="text-gray-500">Insured:</span> <span className="font-medium">{store.claim.insuredName || "N/A"}</span></div>
+                  <div><span className="text-gray-500">Policy No:</span> <span className="font-medium">{store.claim.policyNumber || "N/A"}</span></div>
+                  <div><span className="text-gray-500">Registration:</span> <span className="font-medium">{store.vehicle.registrationNumber || "N/A"}</span></div>
+                  <div><span className="text-gray-500">Claim No:</span> <span className="font-medium">{store.claim.claimNumber || "N/A"}</span></div>
+                  <div><span className="text-gray-500">Assessment Date:</span> <span className="font-medium">{store.feeNote.assessmentDate || "N/A"}</span></div>
+                  <div><span className="text-gray-500">Status:</span> <span className="font-medium">{store.authorization.assessmentStatus || "DRAFT"}</span></div>
+                  <div><span className="text-gray-500">Grand Total:</span> <span className="font-bold text-emerald-700">{formatCurrency(store.getCostSummary().grandTotal)}</span></div>
+                </div>
+              </div>
+
+              {/* 1. Fee Note */}
+              <Section title="1. Assessment / Fee Note">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                  <div><span className="text-gray-500">Reference Number:</span> <span className="font-medium">{store.feeNote.referenceNumber || "N/A"}</span></div>
+                  <div><span className="text-gray-500">Assessment Date:</span> <span className="font-medium">{store.feeNote.assessmentDate || "N/A"}</span></div>
+                  <div><span className="text-gray-500">Professional Fee:</span> <span className="font-medium">{formatCurrency(store.feeNote.professionalFee)}</span></div>
+                  <div><span className="text-gray-500">VAT:</span> <span className="font-medium">{formatCurrency(store.feeNote.vat)}</span></div>
+                  <div><span className="text-gray-500">Reimbursement:</span> <span className="font-medium">{formatCurrency(store.feeNote.reimbursement)}</span></div>
+                  <div><span className="text-gray-500">Total Professional Fee:</span> <span className="font-medium">{formatCurrency(store.feeNote.totalProfessionalFee)}</span></div>
+                </div>
+              </Section>
+
+              {/* 2. Insurance & 3. Claim Details */}
+              <Section title="2. Claim Details">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                  <div><span className="text-gray-500">Claim Number:</span> <span className="font-medium">{store.claim.claimNumber || "N/A"}</span></div>
+                  <div><span className="text-gray-500">Insured Name:</span> <span className="font-medium">{store.claim.insuredName || "N/A"}</span></div>
+                  <div><span className="text-gray-500">Insured Phone:</span> <span className="font-medium">{store.claim.insuredPhone || "N/A"}</span></div>
+                  <div><span className="text-gray-500">Insured Email:</span> <span className="font-medium">{store.claim.insuredEmail || "N/A"}</span></div>
+                  <div><span className="text-gray-500">Insured Address:</span> <span className="font-medium">{store.claim.insuredAddress || "N/A"}</span></div>
+                  <div><span className="text-gray-500">Policy Number:</span> <span className="font-medium">{store.claim.policyNumber || "N/A"}</span></div>
+                  <div><span className="text-gray-500">Sum Insured:</span> <span className="font-medium">{store.claim.sumInsured ? formatCurrency(store.claim.sumInsured) : "N/A"}</span></div>
+                  <div><span className="text-gray-500">Excess:</span> <span className="font-medium">{store.claim.excessPercentage ? `${store.claim.excessPercentage}%` : "N/A"}</span></div>
+                  <div><span className="text-gray-500">Date of Instruction:</span> <span className="font-medium">{store.claim.dateOfInstruction || "N/A"}</span></div>
+                  <div><span className="text-gray-500">Date of Assessment:</span> <span className="font-medium">{store.claim.dateOfAssessment || "N/A"}</span></div>
+                </div>
+              </Section>
+
+              {/* 4. Vehicle Details */}
+              <Section title="3. Vehicle Details">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                  <div><span className="text-gray-500">Registration:</span> <span className="font-medium">{store.vehicle.registrationNumber || "N/A"}</span></div>
+                  <div><span className="text-gray-500">Colour:</span> <span className="font-medium">{store.vehicle.colour || "N/A"}</span></div>
+                  <div><span className="text-gray-500">Year of Manufacture:</span> <span className="font-medium">{store.vehicle.yearOfManufacture || "N/A"}</span></div>
+                  <div><span className="text-gray-500">Engine Number:</span> <span className="font-medium">{store.vehicle.engineNumber || "N/A"}</span></div>
+                  <div><span className="text-gray-500">Chassis / VIN:</span> <span className="font-medium">{store.vehicle.chassisNumber || store.vehicle.vin || "N/A"}</span></div>
+                  <div><span className="text-gray-500">Mileage:</span> <span className="font-medium">{store.vehicle.mileage || "N/A"}</span></div>
+                  <div><span className="text-gray-500">Engine Type:</span> <span className="font-medium">{store.vehicle.engineType || "N/A"}</span></div>
+                  <div><span className="text-gray-500">Mode of Transport:</span> <span className="font-medium">{store.vehicle.modeOfTransport || "N/A"}</span></div>
+                </div>
+              </Section>
+
+              {/* 5. Vehicle Condition */}
+              <Section title="4. Vehicle Condition">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                  <div><span className="text-gray-500">Overall Condition:</span> <span className="font-medium">{store.vehicleCondition.overallCondition || "N/A"}</span></div>
+                  <div><span className="text-gray-500">Tyre Brand:</span> <span className="font-medium">{store.vehicleCondition.tyreBrand || "N/A"}</span></div>
+                  <div><span className="text-gray-500">Tyre Size:</span> <span className="font-medium">{store.vehicleCondition.tyreSize || "N/A"}</span></div>
+                  <div><span className="text-gray-500">Spare Tyre:</span> <span className="font-medium">{store.vehicleCondition.spareTyreCondition || "N/A"}</span></div>
+                  <div><span className="text-gray-500">Mechanical:</span> <span className="font-medium">{store.vehicleCondition.mechanicalCondition || "N/A"}</span></div>
+                  <div><span className="text-gray-500">Interior:</span> <span className="font-medium">{store.vehicleCondition.interiorCondition || "N/A"}</span></div>
+                  <div><span className="text-gray-500">Exterior:</span> <span className="font-medium">{store.vehicleCondition.exteriorCondition || "N/A"}</span></div>
+                </div>
+                {store.vehicleCondition.tyres.length > 0 && (
+                  <div className="mt-3">
+                    <p className="text-xs font-medium text-gray-500 mb-2">Tyre Conditions:</p>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      {store.vehicleCondition.tyres.map((t, i) => (
+                        <div key={i} className="rounded-lg bg-gray-50 border border-gray-100 px-3 py-2 text-xs">
+                          <span className="font-medium text-gray-700">{t.position}:</span> <span className="text-gray-500">{t.percentage}%</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </Section>
+
+              {/* 6. Accident Details */}
+              <Section title="5. Accident Details">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                  <div><span className="text-gray-500">Accident Date:</span> <span className="font-medium">{store.accidentDetail.accidentDate || "N/A"}</span></div>
+                  <div><span className="text-gray-500">Location:</span> <span className="font-medium">{store.accidentDetail.accidentLocation || "N/A"}</span></div>
+                  <div><span className="text-gray-500">Damage Consistent:</span> <span className="font-medium">{store.accidentDetail.damageConsistentWithAccident ? "Yes" : "No"}</span></div>
+                </div>
+                {store.accidentDetail.accidentDescription && <p className="mt-2 text-sm text-gray-700 bg-gray-50 rounded-lg p-3"><span className="font-medium text-gray-500">Description:</span> {store.accidentDetail.accidentDescription}</p>}
+                {store.accidentDetail.insuredExplanation && <p className="mt-2 text-sm text-gray-700 bg-gray-50 rounded-lg p-3"><span className="font-medium text-gray-500">Insured's Explanation:</span> {store.accidentDetail.insuredExplanation}</p>}
+                {store.accidentDetail.assessorObservation && <p className="mt-2 text-sm text-gray-700 bg-gray-50 rounded-lg p-3"><span className="font-medium text-gray-500">Assessor's Observation:</span> {store.accidentDetail.assessorObservation}</p>}
+              </Section>
+
+              {/* 7. Damage Assessment */}
+              {store.damageItems.length > 0 && (
+                <Section title="6. Damage Assessment">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs border-collapse">
+                      <thead>
+                        <tr className="bg-gray-50 border-b border-gray-200">
+                          <th className="text-left px-3 py-2 font-medium text-gray-600">Area</th>
+                          <th className="text-left px-3 py-2 font-medium text-gray-600">Part</th>
+                          <th className="text-left px-3 py-2 font-medium text-gray-600">Side</th>
+                          <th className="text-left px-3 py-2 font-medium text-gray-600">Description</th>
+                          <th className="text-left px-3 py-2 font-medium text-gray-600">Action</th>
+                          <th className="text-center px-3 py-2 font-medium text-gray-600">Accident</th>
+                          <th className="text-center px-3 py-2 font-medium text-gray-600">Pre-Accident</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {store.damageItems.map((d, i) => (
+                          <tr key={i} className="border-b border-gray-100 hover:bg-gray-50/50">
+                            <td className="px-3 py-2 text-gray-900">{d.damageArea || "-"}</td>
+                            <td className="px-3 py-2 text-gray-900">{d.partName || "-"}</td>
+                            <td className="px-3 py-2 text-gray-900">{d.side || "-"}</td>
+                            <td className="px-3 py-2 text-gray-900 max-w-[200px] truncate">{d.damageDescription || "-"}</td>
+                            <td className="px-3 py-2"><span className="rounded-full bg-gray-100 px-2 py-0.5 text-gray-700">{d.actionRequired || "-"}</span></td>
+                            <td className="px-3 py-2 text-center">{d.accidentRelated ? <span className="text-emerald-600">Yes</span> : <span className="text-red-500">No</span>}</td>
+                            <td className="px-3 py-2 text-center">{d.preAccidentDamage ? <span className="text-amber-600">Yes</span> : <span className="text-gray-400">No</span>}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </Section>
               )}
-            </div>
-          </div>
-          <DialogFooter>
-            <button onClick={() => setVehicleModalOpen(false)} className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition">Cancel</button>
-            <button onClick={saveVehicle} disabled={savingModal}
-              className="px-4 py-2 text-sm font-semibold text-white bg-gray-900 rounded-lg hover:bg-gray-800 transition disabled:opacity-50 inline-flex items-center gap-2">
-              {savingModal && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Save Changes
-            </button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
-      {/* Summary / Damage Info Modal */}
-      <Dialog open={summaryModalOpen} onOpenChange={setSummaryModalOpen}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Edit Damage Summary</DialogTitle>
-            <DialogDescription>Update the damage assessment summary and severity.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Damage Summary</label>
-              <textarea rows={4} value={summaryForm.summary} onChange={(e) => setSummaryForm({ ...summaryForm, summary: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition bg-white resize-none" />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Severity</label>
-                <select value={summaryForm.severity} onChange={(e) => setSummaryForm({ ...summaryForm, severity: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition bg-white">
-                  {["Minor", "Moderate", "Severe", "Critical"].map((s) => <option key={s} value={s}>{s}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Estimated Cost ({CURRENCY})</label>
-                <input type="number" min="0" step="0.01" value={summaryForm.estimated_total_cost || ""} onChange={(e) => setSummaryForm({ ...summaryForm, estimated_total_cost: parseFloat(e.target.value) || 0 })}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition bg-white" />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Est. Labor Hours</label>
-                <input type="number" min="0" step="0.5" value={summaryForm.estimated_total_labor_hours || ""} onChange={(e) => setSummaryForm({ ...summaryForm, estimated_total_labor_hours: parseFloat(e.target.value) || 0 })}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition bg-white" />
-              </div>
-              <div className="flex items-end gap-4">
-                <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
-                  <input type="checkbox" checked={summaryForm.structural_damage} onChange={(e) => setSummaryForm({ ...summaryForm, structural_damage: e.target.checked })}
-                    className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-                  Structural Damage
-                </label>
-                <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
-                  <input type="checkbox" checked={summaryForm.possible_total_loss} onChange={(e) => setSummaryForm({ ...summaryForm, possible_total_loss: e.target.checked })}
-                    className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-                  Total Loss
-                </label>
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <button onClick={() => setSummaryModalOpen(false)} className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition">Cancel</button>
-            <button onClick={saveSummary} disabled={savingModal}
-              className="px-4 py-2 text-sm font-semibold text-white bg-gray-900 rounded-lg hover:bg-gray-800 transition disabled:opacity-50 inline-flex items-center gap-2">
-              {savingModal && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Save Changes
-            </button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+              {/* 8. Parts Required */}
+              {store.parts.length > 0 && (
+                <Section title="7. Parts Required">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs border-collapse">
+                      <thead>
+                        <tr className="bg-gray-50 border-b border-gray-200">
+                          <th className="text-left px-2 py-2 font-medium text-gray-600">Part</th>
+                          <th className="text-left px-2 py-2 font-medium text-gray-600">Part No.</th>
+                          <th className="text-center px-2 py-2 font-medium text-gray-600">Qty</th>
+                          <th className="text-right px-2 py-2 font-medium text-gray-600">Unit Price</th>
+                          <th className="text-right px-2 py-2 font-medium text-gray-600">Disc. %</th>
+                          <th className="text-right px-2 py-2 font-medium text-gray-600">Discount</th>
+                          <th className="text-right px-2 py-2 font-medium text-gray-600">Net Price</th>
+                          <th className="text-right px-2 py-2 font-medium text-gray-600">Total</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {store.parts.map((p, i) => (
+                          <tr key={i} className="border-b border-gray-100 hover:bg-gray-50/50">
+                            <td className="px-2 py-2 text-gray-900">{p.partName || "-"}</td>
+                            <td className="px-2 py-2 text-gray-500">{p.partNumber || "-"}</td>
+                            <td className="px-2 py-2 text-center">{p.quantity}</td>
+                            <td className="px-2 py-2 text-right">{formatCurrency(p.unitPrice)}</td>
+                            <td className="px-2 py-2 text-right">{p.discountPercent}%</td>
+                            <td className="px-2 py-2 text-right text-red-600">{formatCurrency(p.discountAmount)}</td>
+                            <td className="px-2 py-2 text-right">{formatCurrency(p.netPrice)}</td>
+                            <td className="px-2 py-2 text-right font-medium">{formatCurrency(p.totalPrice)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </Section>
+              )}
 
-      {/* Structural Concerns Modal */}
-      <Dialog open={structuralModalOpen} onOpenChange={setStructuralModalOpen}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Edit Structural Concerns</DialogTitle>
-            <DialogDescription>Add, remove, or modify structural concerns identified in the assessment.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3 py-2">
-            {structuralForm.map((concern, i) => (
-              <div key={i} className="flex items-start gap-2">
-                <span className="mt-2 w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
-                <input type="text" value={concern} onChange={(e) => { const updated = [...structuralForm]; updated[i] = e.target.value; setStructuralForm(updated); }}
-                  className="flex-1 px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition bg-white" placeholder="Concern description" />
-                <button onClick={() => setStructuralForm(structuralForm.filter((_, idx) => idx !== i))}
-                  className="mt-1.5 p-1 text-gray-300 hover:text-red-500 transition"><Trash2 className="w-4 h-4" /></button>
-              </div>
-            ))}
-            <button onClick={() => setStructuralForm([...structuralForm, ""])}
-              className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-amber-700 bg-amber-100 rounded-lg hover:bg-amber-200 transition">
-              <Plus className="w-3 h-3" /> Add Concern
-            </button>
-          </div>
-          <DialogFooter>
-            <button onClick={() => setStructuralModalOpen(false)} className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition">Cancel</button>
-            <button onClick={saveStructural} disabled={savingModal}
-              className="px-4 py-2 text-sm font-semibold text-white bg-gray-900 rounded-lg hover:bg-gray-800 transition disabled:opacity-50 inline-flex items-center gap-2">
-              {savingModal && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Save Changes
-            </button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+              {/* 9. Services */}
+              {store.services.length > 0 && (
+                <Section title="8. Labour & Services">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs border-collapse">
+                      <thead>
+                        <tr className="bg-gray-50 border-b border-gray-200">
+                          <th className="text-left px-2 py-2 font-medium text-gray-600">Description</th>
+                          <th className="text-center px-2 py-2 font-medium text-gray-600">Qty</th>
+                          <th className="text-right px-2 py-2 font-medium text-gray-600">Unit Cost</th>
+                          <th className="text-right px-2 py-2 font-medium text-gray-600">Discount</th>
+                          <th className="text-right px-2 py-2 font-medium text-gray-600">Total</th>
+                          <th className="text-left px-2 py-2 font-medium text-gray-600">Type</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {store.services.map((s, i) => (
+                          <tr key={i} className="border-b border-gray-100 hover:bg-gray-50/50">
+                            <td className="px-2 py-2 text-gray-900">{s.description || "-"}</td>
+                            <td className="px-2 py-2 text-center">{s.quantity}</td>
+                            <td className="px-2 py-2 text-right">{formatCurrency(s.unitCost)}</td>
+                            <td className="px-2 py-2 text-right text-red-600">{formatCurrency(s.discount)}</td>
+                            <td className="px-2 py-2 text-right font-medium">{formatCurrency(s.totalCost)}</td>
+                            <td className="px-2 py-2"><span className="rounded-full bg-gray-100 px-2 py-0.5">{s.serviceType || "-"}</span></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </Section>
+              )}
 
-      {/* Recommendations Modal */}
-      <Dialog open={recommendationsModalOpen} onOpenChange={setRecommendationsModalOpen}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Edit Recommendations</DialogTitle>
-            <DialogDescription>Add, remove, or modify the recommendations for this assessment.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3 py-2">
-            {recommendationsForm.map((rec, i) => (
-              <div key={i} className="flex items-start gap-2">
-                <span className="mt-2 w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0" />
-                <input type="text" value={rec} onChange={(e) => { const updated = [...recommendationsForm]; updated[i] = e.target.value; setRecommendationsForm(updated); }}
-                  className="flex-1 px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition bg-white" placeholder="Recommendation" />
-                <button onClick={() => setRecommendationsForm(recommendationsForm.filter((_, idx) => idx !== i))}
-                  className="mt-1.5 p-1 text-gray-300 hover:text-red-500 transition"><Trash2 className="w-4 h-4" /></button>
-              </div>
-            ))}
-            <button onClick={() => setRecommendationsForm([...recommendationsForm, ""])}
-              className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-blue-700 bg-blue-100 rounded-lg hover:bg-blue-200 transition">
-              <Plus className="w-3 h-3" /> Add Recommendation
-            </button>
-          </div>
-          <DialogFooter>
-            <button onClick={() => setRecommendationsModalOpen(false)} className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition">Cancel</button>
-            <button onClick={saveRecommendations} disabled={savingModal}
-              className="px-4 py-2 text-sm font-semibold text-white bg-gray-900 rounded-lg hover:bg-gray-800 transition disabled:opacity-50 inline-flex items-center gap-2">
-              {savingModal && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Save Changes
-            </button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+              {/* 10. Cost Summary */}
+              <Section title="9. Repair Cost Estimate">
+                {(() => { const cs = store.getCostSummary(); return (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-sm">
+                    <div className="space-y-2">
+                      <p className="font-semibold text-gray-700">Parts</p>
+                      <div className="space-y-1 text-gray-600">
+                        <p>Gross Total: <span className="font-medium">{formatCurrency(cs.partsGrossTotal)}</span></p>
+                        <p>Less Discount: <span className="font-medium text-red-600">{formatCurrency(cs.partsDiscount)}</span></p>
+                        <p>Net Parts Total: <span className="font-medium">{formatCurrency(cs.partsNetTotal)}</span></p>
+                      </div>
+                      <p className="font-semibold text-gray-700 mt-3">Services</p>
+                      <div className="space-y-1 text-gray-600">
+                        <p>Labour: <span className="font-medium">{formatCurrency(cs.labourTotal)}</span></p>
+                        <p>Paint: <span className="font-medium">{formatCurrency(cs.paintTotal)}</span></p>
+                        <p>Miscellaneous: <span className="font-medium">{formatCurrency(cs.miscellaneousTotal)}</span></p>
+                        <p>Services Subtotal: <span className="font-medium">{formatCurrency(cs.servicesSubtotal)}</span></p>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="font-semibold text-gray-700">Final Estimate</p>
+                      <div className="space-y-1 text-gray-600">
+                        <p>Parts Subtotal: <span className="font-medium">{formatCurrency(cs.partsSubtotal)}</span></p>
+                        <p>Services Subtotal: <span className="font-medium">{formatCurrency(cs.servicesSubtotal)}</span></p>
+                        <p>Subtotal Before VAT: <span className="font-medium">{formatCurrency(cs.subtotalBeforeVat)}</span></p>
+                        <p>VAT (16%): <span className="font-medium">{formatCurrency(cs.vatAmount)}</span></p>
+                      </div>
+                      <div className="pt-2 border-t border-gray-200">
+                        <p className="text-base font-bold text-emerald-700">Grand Total: {formatCurrency(cs.grandTotal)}</p>
+                      </div>
+                    </div>
+                  </div>
+                ); })()}
+              </Section>
 
-      {/* Lightbox */}
-      {lightboxImage && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4" onClick={() => setLightboxImage(null)}>
-          <button onClick={() => setLightboxImage(null)} className="absolute top-4 right-4 text-white/80 hover:text-white transition">
-            <X className="w-8 h-8" />
-          </button>
-          <img src={lightboxImage} alt="Enlarged view" className="max-h-[90vh] max-w-[90vw] rounded-lg shadow-2xl object-contain" onClick={(e) => e.stopPropagation()} />
+              {/* 11. Remarks */}
+              {(store.remark.generalRemarks || store.remark.partsToBeReplaced || store.remark.partsToBePainted || store.remark.partsRequiringRepair || store.remark.preAccidentDamage || store.remark.additionalObservations) && (
+                <Section title="10. General Remarks">
+                  <div className="space-y-2 text-sm">
+                    {store.remark.generalRemarks && <p><span className="font-medium text-gray-500">General:</span> {store.remark.generalRemarks}</p>}
+                    {store.remark.partsToBeReplaced && <p><span className="font-medium text-gray-500">Parts To Be Replaced:</span> {store.remark.partsToBeReplaced}</p>}
+                    {store.remark.partsToBePainted && <p><span className="font-medium text-gray-500">Parts To Be Painted:</span> {store.remark.partsToBePainted}</p>}
+                    {store.remark.partsRequiringRepair && <p><span className="font-medium text-gray-500">Parts Requiring Repair:</span> {store.remark.partsRequiringRepair}</p>}
+                    {store.remark.preAccidentDamage && <p><span className="font-medium text-gray-500">Pre-Accident Damage:</span> {store.remark.preAccidentDamage}</p>}
+                    {store.remark.additionalObservations && <p><span className="font-medium text-gray-500">Additional Observations:</span> {store.remark.additionalObservations}</p>}
+                  </div>
+                </Section>
+              )}
+
+              {/* 12. Additional Observations */}
+              {store.additionalObservations.length > 0 && (
+                <Section title="11. Additional Damage Observations">
+                  {store.additionalObservations.map((o, i) => (
+                    <div key={i} className="rounded-lg bg-gray-50 border border-gray-100 p-3 mb-2 last:mb-0">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                        <div><span className="text-gray-500">Description:</span> <span className="font-medium">{o.damageDescription || "N/A"}</span></div>
+                        <div><span className="text-gray-500">Accident Related:</span> <span className="font-medium">{o.accidentRelated ? "Yes" : "No"}</span></div>
+                        {o.insuredExplanation && <div className="sm:col-span-2"><span className="text-gray-500">Insured's Explanation:</span> <span className="font-medium">{o.insuredExplanation}</span></div>}
+                        {o.assessorOpinion && <div className="sm:col-span-2"><span className="text-gray-500">Assessor's Opinion:</span> <span className="font-medium">{o.assessorOpinion}</span></div>}
+                        <div><span className="text-gray-500">Est. Repair Cost:</span> <span className="font-medium">{formatCurrency(o.estimatedRepairCost)}</span></div>
+                        <div><span className="text-gray-500">Est. Painting Cost:</span> <span className="font-medium">{formatCurrency(o.estimatedPaintingCost)}</span></div>
+                        <div><span className="text-gray-500">Est. Total:</span> <span className="font-medium">{formatCurrency(o.estimatedTotalCost)}</span></div>
+                      </div>
+                    </div>
+                  ))}
+                </Section>
+              )}
+
+              {/* 13. Authorization */}
+              <Section title="12. Assessment Authorization">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                  <div><span className="text-gray-500">Authorized:</span> <span className="font-medium">{store.authorization.authorized ? "Yes" : "No"}</span></div>
+                  <div><span className="text-gray-500">Status:</span> <span className="font-medium">{store.authorization.authorizationStatus}</span></div>
+                  <div><span className="text-gray-500">Copy To Repairer:</span> <span className="font-medium">{store.authorization.copyToRepairer ? "Yes" : "No"}</span></div>
+                  <div><span className="text-gray-500">Salvage Value:</span> <span className="font-medium">{store.authorization.salvageValue ? formatCurrency(store.authorization.salvageValue) : "N/A"}</span></div>
+                  <div><span className="text-gray-500">Pre-Accident Value:</span> <span className="font-medium">{store.authorization.preAccidentValue ? formatCurrency(store.authorization.preAccidentValue) : "N/A"}</span></div>
+                </div>
+              </Section>
+
+              {/* 14. Special Instructions */}
+              {store.specialInstructions.length > 0 && (
+                <Section title="13. Special Repair Instructions">
+                  <ul className="space-y-1.5 text-sm text-gray-700">
+                    {store.specialInstructions.map((si, i) => (
+                      <li key={i} className="flex items-start gap-2">
+                        <span className="text-gray-400 mt-0.5">•</span>
+                        <span>{si.instruction}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </Section>
+              )}
+
+              {/* 15. Signatures */}
+              {store.signatures.length > 0 && (
+                <Section title="14. Signatures">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {store.signatures.map((sig, i) => (
+                      <div key={i} className="rounded-xl border border-gray-200 p-4">
+                        <p className="text-sm font-semibold text-gray-900 mb-2">{sig.role}</p>
+                        <div className="space-y-1 text-xs text-gray-600">
+                          <p>Name: <span className="font-medium text-gray-800">{sig.name || "N/A"}</span></p>
+                          <p>License: <span className="font-medium text-gray-800">{sig.licenseNumber || "N/A"}</span></p>
+                          <p>Organization: <span className="font-medium text-gray-800">{sig.organization || "N/A"}</span></p>
+                          <p>Date: <span className="font-medium text-gray-800">{sig.signatureDate || "N/A"}</span></p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </Section>
+              )}
+
+              {/* AI Analysis Result */}
+              {store.result != null && (
+                <Section title="AI Analysis Result">
+                  <pre className="text-xs text-gray-700 bg-gray-50 rounded-lg p-4 overflow-x-auto max-h-96 overflow-y-auto">
+                    {JSON.stringify(store.result, null, 2)}
+                  </pre>
+                </Section>
+              )}
+
+              {/* Photos — always at the bottom */}
+              {store.photos.length > 0 && (
+                <Section title="Uploaded Vehicle / Damage Images">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                    {store.photos.map((p, i) => (
+                      <a key={p.id || i} href={p.path} target="_blank" rel="noopener noreferrer" className="group relative block rounded-lg overflow-hidden border border-gray-200 bg-gray-50 hover:border-gray-400 transition">
+                        <div className="aspect-[4/3]">
+                          <img
+                            src={p.path}
+                            alt={p.caption || `Photo ${i + 1}`}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                            loading="lazy"
+                          />
+                        </div>
+                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-2">
+                          <p className="text-xs text-white truncate">{p.caption || `Image ${i + 1}`}</p>
+                        </div>
+                      </a>
+                    ))}
+                  </div>
+                </Section>
+              )}
+
+              {/* Actions */}
+              <div className="flex flex-wrap gap-3 pt-4 border-t border-gray-200">
+                <button
+                  onClick={handleDownloadPdf}
+                  disabled={store.downloadingPdf || !store.assessmentId}
+                  className="flex items-center gap-2 rounded-lg bg-gray-900 px-5 py-3 text-sm font-semibold text-white hover:bg-gray-800 transition disabled:opacity-50"
+                >
+                  {store.downloadingPdf ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                  {store.downloadingPdf ? "Generating..." : "Download PDF Report"}
+                </button>
+                <Link
+                  href="/dashboard"
+                  className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-5 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
+                >
+                  <ArrowLeft className="w-4 h-4" /> Back to Dashboard
+                </Link>
+              </div>
+            </div>
+          )}
         </div>
-      )}
+
+        {/* Navigation Buttons */}
+        <div className="flex items-center justify-between mt-6">
+          <button
+            onClick={prevStep}
+            disabled={STEPS.findIndex((s) => s.key === store.step) === 0}
+            className="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition disabled:opacity-40"
+          >
+            <ChevronLeft className="w-4 h-4" /> Previous
+          </button>
+          <button
+            onClick={advanceStep}
+            disabled={!canAdvance() || store.step === "results" || store.saving}
+            className="flex items-center gap-1.5 rounded-lg bg-gray-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-gray-800 transition disabled:opacity-40"
+          >
+            {store.saving ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+            {store.saving ? "Saving..." : "Save & Next"} <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

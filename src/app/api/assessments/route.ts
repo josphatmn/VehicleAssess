@@ -28,10 +28,8 @@ export async function GET(request: NextRequest) {
   if (search) {
     where.OR = [
       { assessmentNumber: { contains: search } },
-      { customerName: { contains: search } },
-      { registrationNumber: { contains: search } },
-      { vin: { contains: search } },
-      { insuranceCompany: { contains: search } },
+      { claim: { insuredName: { contains: search } } },
+      { vehicle: { registrationNumber: { contains: search } } },
     ];
   }
 
@@ -41,15 +39,17 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: "desc" },
       skip,
       take: limit,
-      select: {
-        id: true,
-        assessmentNumber: true,
-        customerName: true,
-        status: true,
-        registrationNumber: true,
-        vehicleNotes: true,
-        insuranceCompany: true,
-        createdAt: true,
+      include: {
+        claim: { select: { insuredName: true } },
+        vehicle: {
+          select: {
+            registrationNumber: true,
+            make: { select: { name: true } },
+            vehicleModel: { select: { name: true } },
+          },
+        },
+        insuranceCompany: { select: { name: true } },
+        authorization: { select: { assessmentStatus: true } },
       },
     }),
     prisma.assessment.count({ where }),
@@ -57,11 +57,15 @@ export async function GET(request: NextRequest) {
 
   return NextResponse.json({
     assessments: assessments.map((a) => ({
-      ...a,
+      id: a.id,
+      assessmentNumber: a.assessmentNumber,
+      status: a.authorization?.assessmentStatus || a.status,
+      insuredName: a.claim?.insuredName || "N/A",
+      registrationNumber: a.vehicle?.registrationNumber || "N/A",
+      vehicleMake: a.vehicle?.make?.name || "",
+      vehicleModel: a.vehicle?.vehicleModel?.name || "",
+      insuranceCompany: a.insuranceCompany?.name || "N/A",
       createdAt: a.createdAt.toISOString(),
-      vehicleDisplay: [a.registrationNumber, a.vehicleNotes]
-        .filter(Boolean)
-        .join(" - ") || "N/A",
     })),
     total,
     totalPages: Math.ceil(total / limit),
@@ -75,8 +79,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const body = await request.json();
-
   const year = new Date().getFullYear();
   const random = Math.floor(Math.random() * 999999)
     .toString()
@@ -87,15 +89,6 @@ export async function POST(request: NextRequest) {
     data: {
       assessmentNumber,
       status: "DRAFT",
-      customerName: body.customerName,
-      customerPhone: body.customerPhone,
-      customerEmail: body.customerEmail,
-      insuranceCompany: body.insuranceCompany,
-      claimNumber: body.claimNumber,
-      registrationNumber: body.registrationNumber,
-      vin: body.vin,
-      odometer: body.odometer,
-      vehicleNotes: body.vehicleNotes,
       userId: session.user.id,
     },
   });

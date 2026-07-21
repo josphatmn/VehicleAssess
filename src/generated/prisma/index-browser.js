@@ -126,46 +126,12 @@ exports.Prisma.UserScalarFieldEnum = {
   name: 'name',
   email: 'email',
   role: 'role',
+  phone: 'phone',
+  organization: 'organization',
+  licenseNumber: 'licenseNumber',
+  address: 'address',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
-};
-
-exports.Prisma.AssessmentScalarFieldEnum = {
-  id: 'id',
-  assessmentNumber: 'assessmentNumber',
-  status: 'status',
-  customerName: 'customerName',
-  customerPhone: 'customerPhone',
-  customerEmail: 'customerEmail',
-  customerAddress: 'customerAddress',
-  insuranceCompany: 'insuranceCompany',
-  claimNumber: 'claimNumber',
-  registrationNumber: 'registrationNumber',
-  vin: 'vin',
-  odometer: 'odometer',
-  vehicleNotes: 'vehicleNotes',
-  aiRawResponse: 'aiRawResponse',
-  verifiedVehicleJson: 'verifiedVehicleJson',
-  verifiedDamageJson: 'verifiedDamageJson',
-  paid: 'paid',
-  paymentRef: 'paymentRef',
-  paymentAmount: 'paymentAmount',
-  paymentDate: 'paymentDate',
-  userId: 'userId',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-};
-
-exports.Prisma.AssessmentImageScalarFieldEnum = {
-  id: 'id',
-  filename: 'filename',
-  originalName: 'originalName',
-  path: 'path',
-  mimeType: 'mimeType',
-  size: 'size',
-  sortOrder: 'sortOrder',
-  assessmentId: 'assessmentId',
-  createdAt: 'createdAt'
 };
 
 exports.Prisma.VehicleMakeScalarFieldEnum = {
@@ -198,26 +164,252 @@ exports.Prisma.VehiclePartScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
-exports.Prisma.AssessmentDamagedPartScalarFieldEnum = {
+exports.Prisma.InsuranceCompanyScalarFieldEnum = {
   id: 'id',
   name: 'name',
-  severity: 'severity',
-  confirmed: 'confirmed',
-  assessmentId: 'assessmentId',
-  createdAt: 'createdAt'
+  phone: 'phone',
+  email: 'email',
+  website: 'website',
+  isActive: 'isActive',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 };
 
-exports.Prisma.AssessmentReplacementPartScalarFieldEnum = {
+exports.Prisma.RepairerScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  contactPerson: 'contactPerson',
+  phone: 'phone',
+  email: 'email',
+  address: 'address',
+  location: 'location',
+  isActive: 'isActive',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.AssessmentScalarFieldEnum = {
+  id: 'id',
+  assessmentNumber: 'assessmentNumber',
+  status: 'status',
+  currentStep: 'currentStep',
+  userId: 'userId',
+  insuranceCompanyId: 'insuranceCompanyId',
+  repairerId: 'repairerId',
+  paid: 'paid',
+  paymentRef: 'paymentRef',
+  paymentAmount: 'paymentAmount',
+  paymentDate: 'paymentDate',
+  aiRawResponse: 'aiRawResponse',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.AssessmentFeeNoteScalarFieldEnum = {
+  id: 'id',
+  referenceNumber: 'referenceNumber',
+  assessmentDate: 'assessmentDate',
+  professionalFee: 'professionalFee',
+  vat: 'vat',
+  reimbursement: 'reimbursement',
+  totalProfessionalFee: 'totalProfessionalFee',
+  assessmentId: 'assessmentId'
+};
+
+exports.Prisma.AssessmentClaimScalarFieldEnum = {
+  id: 'id',
+  claimNumber: 'claimNumber',
+  insuredName: 'insuredName',
+  insuredPhone: 'insuredPhone',
+  insuredEmail: 'insuredEmail',
+  insuredAddress: 'insuredAddress',
+  policyNumber: 'policyNumber',
+  sumInsured: 'sumInsured',
+  excessPercentage: 'excessPercentage',
+  excessAmount: 'excessAmount',
+  dateOfInstruction: 'dateOfInstruction',
+  dateOfAssessment: 'dateOfAssessment',
+  assessmentId: 'assessmentId'
+};
+
+exports.Prisma.AssessmentVehicleScalarFieldEnum = {
+  id: 'id',
+  registrationNumber: 'registrationNumber',
+  makeId: 'makeId',
+  modelId: 'modelId',
+  variantId: 'variantId',
+  colour: 'colour',
+  yearOfManufacture: 'yearOfManufacture',
+  modeOfTransport: 'modeOfTransport',
+  engineType: 'engineType',
+  engineNumber: 'engineNumber',
+  chassisNumber: 'chassisNumber',
+  vin: 'vin',
+  mileage: 'mileage',
+  vehiclePopularity: 'vehiclePopularity',
+  repairerName: 'repairerName',
+  assessmentId: 'assessmentId'
+};
+
+exports.Prisma.VehicleConditionScalarFieldEnum = {
+  id: 'id',
+  overallCondition: 'overallCondition',
+  tyreBrand: 'tyreBrand',
+  tyreSize: 'tyreSize',
+  spareTyreCondition: 'spareTyreCondition',
+  mechanicalCondition: 'mechanicalCondition',
+  interiorCondition: 'interiorCondition',
+  exteriorCondition: 'exteriorCondition',
+  assessmentId: 'assessmentId'
+};
+
+exports.Prisma.TyreConditionScalarFieldEnum = {
+  id: 'id',
+  position: 'position',
+  percentage: 'percentage',
+  vehicleConditionId: 'vehicleConditionId'
+};
+
+exports.Prisma.AccidentDetailScalarFieldEnum = {
+  id: 'id',
+  accidentDate: 'accidentDate',
+  accidentLocation: 'accidentLocation',
+  accidentDescription: 'accidentDescription',
+  accidentCircumstances: 'accidentCircumstances',
+  damageDescription: 'damageDescription',
+  insuredExplanation: 'insuredExplanation',
+  assessorObservation: 'assessorObservation',
+  damageConsistentWithAccident: 'damageConsistentWithAccident',
+  damageConsistencyNote: 'damageConsistencyNote',
+  assessmentId: 'assessmentId'
+};
+
+exports.Prisma.DamageItemScalarFieldEnum = {
+  id: 'id',
+  damageArea: 'damageArea',
+  partName: 'partName',
+  side: 'side',
+  damageDescription: 'damageDescription',
+  actionRequired: 'actionRequired',
+  accidentRelated: 'accidentRelated',
+  preAccidentDamage: 'preAccidentDamage',
+  remarks: 'remarks',
+  sortOrder: 'sortOrder',
+  assessmentId: 'assessmentId'
+};
+
+exports.Prisma.AssessmentPartScalarFieldEnum = {
   id: 'id',
   partName: 'partName',
   partNumber: 'partNumber',
+  vehicleMake: 'vehicleMake',
+  vehicleModel: 'vehicleModel',
   quantity: 'quantity',
   unitPrice: 'unitPrice',
-  subtotal: 'subtotal',
-  confirmed: 'confirmed',
-  vehiclePartId: 'vehiclePartId',
+  discountPercent: 'discountPercent',
+  discountAmount: 'discountAmount',
+  netPrice: 'netPrice',
+  vatPercent: 'vatPercent',
+  vatAmount: 'vatAmount',
+  totalPrice: 'totalPrice',
+  partStatus: 'partStatus',
+  remarks: 'remarks',
+  sortOrder: 'sortOrder',
+  assessmentId: 'assessmentId'
+};
+
+exports.Prisma.AssessmentServiceScalarFieldEnum = {
+  id: 'id',
+  description: 'description',
+  quantity: 'quantity',
+  unitCost: 'unitCost',
+  discount: 'discount',
+  vat: 'vat',
+  totalCost: 'totalCost',
+  serviceType: 'serviceType',
+  remarks: 'remarks',
+  sortOrder: 'sortOrder',
+  assessmentId: 'assessmentId'
+};
+
+exports.Prisma.AssessmentRemarkScalarFieldEnum = {
+  id: 'id',
+  generalRemarks: 'generalRemarks',
+  partsToBeReplaced: 'partsToBeReplaced',
+  partsToBePainted: 'partsToBePainted',
+  partsRequiringRepair: 'partsRequiringRepair',
+  preAccidentDamage: 'preAccidentDamage',
+  additionalObservations: 'additionalObservations',
+  assessmentId: 'assessmentId'
+};
+
+exports.Prisma.AdditionalDamageObservationScalarFieldEnum = {
+  id: 'id',
+  damageDescription: 'damageDescription',
+  insuredExplanation: 'insuredExplanation',
+  assessorOpinion: 'assessorOpinion',
+  accidentRelated: 'accidentRelated',
+  estimatedRepairCost: 'estimatedRepairCost',
+  estimatedPaintingCost: 'estimatedPaintingCost',
+  estimatedTotalCost: 'estimatedTotalCost',
+  sortOrder: 'sortOrder',
+  assessmentId: 'assessmentId'
+};
+
+exports.Prisma.AssessmentAuthorizationScalarFieldEnum = {
+  id: 'id',
+  authorized: 'authorized',
+  authorizationStatus: 'authorizationStatus',
+  copyToRepairer: 'copyToRepairer',
+  salvageValue: 'salvageValue',
+  preAccidentValue: 'preAccidentValue',
+  assessmentStatus: 'assessmentStatus',
+  assessmentId: 'assessmentId'
+};
+
+exports.Prisma.AssessmentInstructionScalarFieldEnum = {
+  id: 'id',
+  instruction: 'instruction',
+  sortOrder: 'sortOrder',
+  assessmentId: 'assessmentId'
+};
+
+exports.Prisma.AssessmentSignatureScalarFieldEnum = {
+  id: 'id',
+  role: 'role',
+  name: 'name',
+  licenseNumber: 'licenseNumber',
+  organization: 'organization',
+  phone: 'phone',
+  email: 'email',
+  address: 'address',
+  signatureData: 'signatureData',
+  signatureDate: 'signatureDate',
+  assessmentId: 'assessmentId'
+};
+
+exports.Prisma.AssessmentPhotoScalarFieldEnum = {
+  id: 'id',
+  filename: 'filename',
+  originalName: 'originalName',
+  path: 'path',
+  mimeType: 'mimeType',
+  size: 'size',
+  sortOrder: 'sortOrder',
+  caption: 'caption',
   assessmentId: 'assessmentId',
-  createdAt: 'createdAt'
+  damageItemId: 'damageItemId'
+};
+
+exports.Prisma.AssessmentSupplementScalarFieldEnum = {
+  id: 'id',
+  supplementNumber: 'supplementNumber',
+  status: 'status',
+  reason: 'reason',
+  notes: 'notes',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  assessmentId: 'assessmentId'
 };
 
 exports.Prisma.AppSettingScalarFieldEnum = {
@@ -276,15 +468,6 @@ exports.Prisma.PartPriceScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
-exports.Prisma.InspectionItemScalarFieldEnum = {
-  id: 'id',
-  item: 'item',
-  notes: 'notes',
-  completed: 'completed',
-  assessmentId: 'assessmentId',
-  createdAt: 'createdAt'
-};
-
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -303,19 +486,33 @@ exports.Prisma.NullsOrder = {
 
 exports.Prisma.ModelName = {
   User: 'User',
-  Assessment: 'Assessment',
-  AssessmentImage: 'AssessmentImage',
   VehicleMake: 'VehicleMake',
   VehicleModel: 'VehicleModel',
   VehicleVariant: 'VehicleVariant',
   VehiclePart: 'VehiclePart',
-  AssessmentDamagedPart: 'AssessmentDamagedPart',
-  AssessmentReplacementPart: 'AssessmentReplacementPart',
+  InsuranceCompany: 'InsuranceCompany',
+  Repairer: 'Repairer',
+  Assessment: 'Assessment',
+  AssessmentFeeNote: 'AssessmentFeeNote',
+  AssessmentClaim: 'AssessmentClaim',
+  AssessmentVehicle: 'AssessmentVehicle',
+  VehicleCondition: 'VehicleCondition',
+  TyreCondition: 'TyreCondition',
+  AccidentDetail: 'AccidentDetail',
+  DamageItem: 'DamageItem',
+  AssessmentPart: 'AssessmentPart',
+  AssessmentService: 'AssessmentService',
+  AssessmentRemark: 'AssessmentRemark',
+  AdditionalDamageObservation: 'AdditionalDamageObservation',
+  AssessmentAuthorization: 'AssessmentAuthorization',
+  AssessmentInstruction: 'AssessmentInstruction',
+  AssessmentSignature: 'AssessmentSignature',
+  AssessmentPhoto: 'AssessmentPhoto',
+  AssessmentSupplement: 'AssessmentSupplement',
   AppSetting: 'AppSetting',
   Supplier: 'Supplier',
   SupplierPartPrice: 'SupplierPartPrice',
-  PartPrice: 'PartPrice',
-  InspectionItem: 'InspectionItem'
+  PartPrice: 'PartPrice'
 };
 
 /**

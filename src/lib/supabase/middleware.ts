@@ -6,7 +6,7 @@ export async function updateSession(request: NextRequest) {
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
         getAll() {
@@ -25,16 +25,20 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  let user: { id: string } | null = null;
+  try {
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
+  } catch {
+    // Auth server unreachable — let the request through; API routes handle their own auth
+  }
 
-  // Skip auth for API routes — they handle their own auth
+  // Skip auth checks for API routes
   if (request.nextUrl.pathname.startsWith("/api/")) {
     return supabaseResponse;
   }
 
-  const publicPaths = ["/", "/login"];
+  const publicPaths = ["/", "/login", "/register", "/forgot-password", "/update-password"];
   const isPublic = publicPaths.some((p) =>
     request.nextUrl.pathname === p || request.nextUrl.pathname.startsWith(p + "/")
   );

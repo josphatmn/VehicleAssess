@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useActionState } from "react";
-import { X, Loader2 } from "lucide-react";
+import { useState, useEffect, useRef, useActionState } from "react";
+import { X, Loader2, MailCheck } from "lucide-react";
 import { login, register } from "@/actions/auth";
 
 interface AuthModalProps {
@@ -14,27 +14,28 @@ export function AuthModal({ open, onClose, defaultTab = "login" }: AuthModalProp
   const [tab, setTab] = useState<"login" | "register">(defaultTab);
   const [loginState, loginAction, loginPending] = useActionState(login, undefined);
   const [registerState, registerAction, registerPending] = useActionState(register, undefined);
+  const closedRef = useRef(false);
 
   useEffect(() => {
     setTab(defaultTab);
   }, [defaultTab]);
 
   useEffect(() => {
-    if (loginState?.success) onClose();
-  }, [loginState, onClose]);
-
-  useEffect(() => {
-    if (registerState?.success) onClose();
-  }, [registerState, onClose]);
+    if (loginState?.success && !closedRef.current) {
+      closedRef.current = true;
+      onClose();
+    }
+  }, [loginState]);
 
   useEffect(() => {
     if (!open) return;
+    closedRef.current = false;
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open) return null;
 
@@ -102,6 +103,22 @@ export function AuthModal({ open, onClose, defaultTab = "login" }: AuthModalProp
                 Demo: admin@vehicle-assess.com / admin123
               </p>
             </form>
+          ) : registerState?.success ? (
+            <div className="text-center space-y-4 py-4">
+              <div className="mx-auto w-14 h-14 rounded-full bg-green-100 flex items-center justify-center">
+                <MailCheck className="w-7 h-7 text-green-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">Check your email</h3>
+              <p className="text-sm text-gray-500">
+                A confirmation email has been sent to <span className="font-medium text-gray-700">{registerState.email}</span>. Check the email sent from <span className="font-medium text-gray-700">Supabase Auth</span> with subject <span className="font-medium text-gray-700">&quot;Confirm your email address&quot;</span> and follow the instructions to confirm before logging in.
+              </p>
+              <button
+                onClick={() => setTab("login")}
+                className="w-full py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition"
+              >
+                Back to Sign In
+              </button>
+            </div>
           ) : (
             <form action={registerAction} className="space-y-4">
               <div>
