@@ -15,26 +15,26 @@ interface AuthSession {
 export async function auth(): Promise<AuthSession> {
   const supabase = await createClient();
 
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { user: authUser }, error } = await supabase.auth.getUser();
 
-  if (!session?.user) {
+  if (error || !authUser) {
     return { user: null };
   }
 
   let dbUser = await prisma.user.findUnique({
-    where: { supabaseUserId: session.user.id },
+    where: { supabaseUserId: authUser.id },
     select: { id: true, name: true, email: true, role: true },
   });
 
-  if (!dbUser && session.user.email) {
+  if (!dbUser && authUser.email) {
     dbUser = await prisma.user.findUnique({
-      where: { email: session.user.email },
+      where: { email: authUser.email },
       select: { id: true, name: true, email: true, role: true },
     });
     if (dbUser) {
       dbUser = await prisma.user.update({
         where: { id: dbUser.id },
-        data: { supabaseUserId: session.user.id },
+        data: { supabaseUserId: authUser.id },
         select: { id: true, name: true, email: true, role: true },
       });
     }
@@ -43,9 +43,9 @@ export async function auth(): Promise<AuthSession> {
   if (!dbUser) {
     dbUser = await prisma.user.create({
       data: {
-        supabaseUserId: session.user.id,
-        name: session.user.user_metadata?.name || session.user.email?.split("@")[0] || "User",
-        email: session.user.email || "",
+        supabaseUserId: authUser.id,
+        name: authUser.user_metadata?.name || authUser.email?.split("@")[0] || "User",
+        email: authUser.email || "",
         role: "ASSESSOR",
       },
       select: { id: true, name: true, email: true, role: true },
