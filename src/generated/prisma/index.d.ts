@@ -3742,6 +3742,7 @@ export namespace Prisma {
     organization: string | null
     licenseNumber: string | null
     address: string | null
+    logoUrl: string | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -3756,6 +3757,7 @@ export namespace Prisma {
     organization: string | null
     licenseNumber: string | null
     address: string | null
+    logoUrl: string | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -3770,6 +3772,7 @@ export namespace Prisma {
     organization: number
     licenseNumber: number
     address: number
+    logoUrl: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -3786,6 +3789,7 @@ export namespace Prisma {
     organization?: true
     licenseNumber?: true
     address?: true
+    logoUrl?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -3800,6 +3804,7 @@ export namespace Prisma {
     organization?: true
     licenseNumber?: true
     address?: true
+    logoUrl?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -3814,6 +3819,7 @@ export namespace Prisma {
     organization?: true
     licenseNumber?: true
     address?: true
+    logoUrl?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -3901,6 +3907,7 @@ export namespace Prisma {
     organization: string | null
     licenseNumber: string | null
     address: string | null
+    logoUrl: string | null
     createdAt: Date
     updatedAt: Date
     _count: UserCountAggregateOutputType | null
@@ -3932,6 +3939,7 @@ export namespace Prisma {
     organization?: boolean
     licenseNumber?: boolean
     address?: boolean
+    logoUrl?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     assessments?: boolean | User$assessmentsArgs<ExtArgs>
@@ -3948,6 +3956,7 @@ export namespace Prisma {
     organization?: boolean
     licenseNumber?: boolean
     address?: boolean
+    logoUrl?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }, ExtArgs["result"]["user"]>
@@ -3962,6 +3971,7 @@ export namespace Prisma {
     organization?: boolean
     licenseNumber?: boolean
     address?: boolean
+    logoUrl?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }, ExtArgs["result"]["user"]>
@@ -3976,11 +3986,12 @@ export namespace Prisma {
     organization?: boolean
     licenseNumber?: boolean
     address?: boolean
+    logoUrl?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "supabaseUserId" | "name" | "email" | "role" | "phone" | "organization" | "licenseNumber" | "address" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "supabaseUserId" | "name" | "email" | "role" | "phone" | "organization" | "licenseNumber" | "address" | "logoUrl" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     assessments?: boolean | User$assessmentsArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
@@ -4003,6 +4014,7 @@ export namespace Prisma {
       organization: string | null
       licenseNumber: string | null
       address: string | null
+      logoUrl: string | null
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["user"]>
@@ -4438,6 +4450,7 @@ export namespace Prisma {
     readonly organization: FieldRef<"User", 'String'>
     readonly licenseNumber: FieldRef<"User", 'String'>
     readonly address: FieldRef<"User", 'String'>
+    readonly logoUrl: FieldRef<"User", 'String'>
     readonly createdAt: FieldRef<"User", 'DateTime'>
     readonly updatedAt: FieldRef<"User", 'DateTime'>
   }
@@ -36461,6 +36474,7 @@ export namespace Prisma {
     organization: 'organization',
     licenseNumber: 'licenseNumber',
     address: 'address',
+    logoUrl: 'logoUrl',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -36991,6 +37005,7 @@ export namespace Prisma {
     organization?: StringNullableFilter<"User"> | string | null
     licenseNumber?: StringNullableFilter<"User"> | string | null
     address?: StringNullableFilter<"User"> | string | null
+    logoUrl?: StringNullableFilter<"User"> | string | null
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
     assessments?: AssessmentListRelationFilter
@@ -37006,6 +37021,7 @@ export namespace Prisma {
     organization?: SortOrderInput | SortOrder
     licenseNumber?: SortOrderInput | SortOrder
     address?: SortOrderInput | SortOrder
+    logoUrl?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     assessments?: AssessmentOrderByRelationAggregateInput
@@ -37024,6 +37040,7 @@ export namespace Prisma {
     organization?: StringNullableFilter<"User"> | string | null
     licenseNumber?: StringNullableFilter<"User"> | string | null
     address?: StringNullableFilter<"User"> | string | null
+    logoUrl?: StringNullableFilter<"User"> | string | null
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
     assessments?: AssessmentListRelationFilter
@@ -37039,6 +37056,7 @@ export namespace Prisma {
     organization?: SortOrderInput | SortOrder
     licenseNumber?: SortOrderInput | SortOrder
     address?: SortOrderInput | SortOrder
+    logoUrl?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: UserCountOrderByAggregateInput
@@ -37059,6 +37077,7 @@ export namespace Prisma {
     organization?: StringNullableWithAggregatesFilter<"User"> | string | null
     licenseNumber?: StringNullableWithAggregatesFilter<"User"> | string | null
     address?: StringNullableWithAggregatesFilter<"User"> | string | null
+    logoUrl?: StringNullableWithAggregatesFilter<"User"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
   }
@@ -39259,6 +39278,7 @@ export namespace Prisma {
     organization?: string | null
     licenseNumber?: string | null
     address?: string | null
+    logoUrl?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     assessments?: AssessmentCreateNestedManyWithoutUserInput
@@ -39274,6 +39294,7 @@ export namespace Prisma {
     organization?: string | null
     licenseNumber?: string | null
     address?: string | null
+    logoUrl?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     assessments?: AssessmentUncheckedCreateNestedManyWithoutUserInput
@@ -39289,6 +39310,7 @@ export namespace Prisma {
     organization?: NullableStringFieldUpdateOperationsInput | string | null
     licenseNumber?: NullableStringFieldUpdateOperationsInput | string | null
     address?: NullableStringFieldUpdateOperationsInput | string | null
+    logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     assessments?: AssessmentUpdateManyWithoutUserNestedInput
@@ -39304,6 +39326,7 @@ export namespace Prisma {
     organization?: NullableStringFieldUpdateOperationsInput | string | null
     licenseNumber?: NullableStringFieldUpdateOperationsInput | string | null
     address?: NullableStringFieldUpdateOperationsInput | string | null
+    logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     assessments?: AssessmentUncheckedUpdateManyWithoutUserNestedInput
@@ -39319,6 +39342,7 @@ export namespace Prisma {
     organization?: string | null
     licenseNumber?: string | null
     address?: string | null
+    logoUrl?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -39333,6 +39357,7 @@ export namespace Prisma {
     organization?: NullableStringFieldUpdateOperationsInput | string | null
     licenseNumber?: NullableStringFieldUpdateOperationsInput | string | null
     address?: NullableStringFieldUpdateOperationsInput | string | null
+    logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -39347,6 +39372,7 @@ export namespace Prisma {
     organization?: NullableStringFieldUpdateOperationsInput | string | null
     licenseNumber?: NullableStringFieldUpdateOperationsInput | string | null
     address?: NullableStringFieldUpdateOperationsInput | string | null
+    logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -41832,6 +41858,7 @@ export namespace Prisma {
     organization?: SortOrder
     licenseNumber?: SortOrder
     address?: SortOrder
+    logoUrl?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -41846,6 +41873,7 @@ export namespace Prisma {
     organization?: SortOrder
     licenseNumber?: SortOrder
     address?: SortOrder
+    logoUrl?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -41860,6 +41888,7 @@ export namespace Prisma {
     organization?: SortOrder
     licenseNumber?: SortOrder
     address?: SortOrder
+    logoUrl?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -46053,6 +46082,7 @@ export namespace Prisma {
     organization?: string | null
     licenseNumber?: string | null
     address?: string | null
+    logoUrl?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -46067,6 +46097,7 @@ export namespace Prisma {
     organization?: string | null
     licenseNumber?: string | null
     address?: string | null
+    logoUrl?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -46644,6 +46675,7 @@ export namespace Prisma {
     organization?: NullableStringFieldUpdateOperationsInput | string | null
     licenseNumber?: NullableStringFieldUpdateOperationsInput | string | null
     address?: NullableStringFieldUpdateOperationsInput | string | null
+    logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -46658,6 +46690,7 @@ export namespace Prisma {
     organization?: NullableStringFieldUpdateOperationsInput | string | null
     licenseNumber?: NullableStringFieldUpdateOperationsInput | string | null
     address?: NullableStringFieldUpdateOperationsInput | string | null
+    logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }

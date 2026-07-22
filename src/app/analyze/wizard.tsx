@@ -7,7 +7,7 @@ import {
   X, Camera, FileText, CheckCircle, AlertCircle, Loader2,
   ChevronLeft, ChevronRight, ArrowLeft, Plus, Trash2,
   CreditCard, Download, PenTool, User, Car, Shield,
-  Wrench, ClipboardList, MessageSquare, Stamp, AlertTriangle,
+  Wrench, MessageSquare, Stamp,
 } from "lucide-react";
 import { useWizardStore, STEP_PARAM, PARAM_TO_STEP, type Step } from "@/hooks/use-wizard-store";
 import { useSession } from "@/hooks/use-session";
@@ -15,7 +15,7 @@ import { Navbar } from "@/components/navbar";
 import { CURRENCY, formatCurrency } from "@/lib/currency";
 import { uploadImages as supabaseUpload, deleteImage as supabaseDelete } from "@/lib/supabase";
 import { toast } from "sonner";
-import { DAMAGE_ACTIONS, PART_STATUSES, SERVICE_TYPES, TYRE_POSITIONS, computePartTotals, computeServiceTotals, type VehicleData } from "@/types";
+import { PART_STATUSES, SERVICE_TYPES, computePartTotals, computeServiceTotals, type VehicleData } from "@/types";
 import { DatePicker } from "@/components/date-picker";
 
 const STEPS: { key: Step; label: string; icon: React.ReactNode }[] = [
@@ -24,8 +24,6 @@ const STEPS: { key: Step; label: string; icon: React.ReactNode }[] = [
   { key: "payment", label: "Payment", icon: <CreditCard className="w-4 h-4" /> },
   { key: "intake", label: "Fee Note & Claim", icon: <FileText className="w-4 h-4" /> },
   { key: "vehicle", label: "Vehicle Details", icon: <Car className="w-4 h-4" /> },
-  { key: "condition", label: "Vehicle Condition", icon: <ClipboardList className="w-4 h-4" /> },
-  { key: "damage", label: "Damage Assessment", icon: <AlertTriangle className="w-4 h-4" /> },
   { key: "estimate", label: "Parts & Cost", icon: <Wrench className="w-4 h-4" /> },
   { key: "remarks", label: "Remarks", icon: <MessageSquare className="w-4 h-4" /> },
   { key: "authorization", label: "Auth & Signatures", icon: <Stamp className="w-4 h-4" /> },
@@ -109,6 +107,8 @@ export default function AnalyzeWizard() {
   const [newInstruction, setNewInstruction] = useState("");
   const [paymentAmount, setPaymentAmount] = useState(500);
   const [loadingPrice, setLoadingPrice] = useState(true);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const logoInputRef = useRef<HTMLInputElement>(null);
 
   const setStep = useCallback(
     (s: Step) => {
@@ -174,6 +174,7 @@ export default function AnalyzeWizard() {
       }
     };
     init();
+    fetch("/api/user/logo").then(r => r.json()).then(d => { if (d.logoUrl) setLogoUrl(d.logoUrl); }).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -335,6 +336,28 @@ export default function AnalyzeWizard() {
     store.setPreviews([...store.previews, ...newPreviews]);
   };
 
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const reader = new FileReader();
+      reader.onload = async (ev) => {
+        const dataUrl = ev.target?.result as string;
+        const res = await fetch("/api/user/logo", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ logo: dataUrl }),
+        });
+        const data = await res.json();
+        if (data.logoUrl) setLogoUrl(data.logoUrl);
+        toast.success("Logo updated");
+      };
+      reader.readAsDataURL(file);
+    } catch {
+      toast.error("Failed to upload logo");
+    }
+  };
+
   const handlePayment = async () => {
     if (!store.assessmentId) {
       const id = await saveAssessment();
@@ -376,8 +399,6 @@ export default function AnalyzeWizard() {
         return true;
       case "intake": return !!store.claim.insuredName;
       case "vehicle": return true;
-      case "condition": return true;
-      case "damage": return true;
       case "estimate": return true;
       case "remarks": return true;
       case "authorization": return true;
@@ -403,8 +424,22 @@ export default function AnalyzeWizard() {
 
   if (loadingAssessment || sessionLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-8">
+          <svg className="w-16 h-16 animate-spin" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="12" r="10" stroke="url(#spin-grad-a)" strokeWidth="2.5" strokeLinecap="round" strokeDasharray="31.4 31.4" strokeDashoffset="0" />
+            <defs>
+              <linearGradient id="spin-grad-a" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#3B82F6" /><stop offset="50%" stopColor="#8B5CF6" /><stop offset="100%" stopColor="#EC4899" />
+              </linearGradient>
+            </defs>
+          </svg>
+          <div className="flex items-center gap-2.5">
+            <span className="w-3 h-3 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: "0s" }} />
+            <span className="w-3 h-3 rounded-full bg-violet-500 animate-bounce" style={{ animationDelay: "0.15s" }} />
+            <span className="w-3 h-3 rounded-full bg-pink-500 animate-bounce" style={{ animationDelay: "0.3s" }} />
+          </div>
+        </div>
       </div>
     );
   }
@@ -419,8 +454,30 @@ export default function AnalyzeWizard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {(store.saving || uploading || store.analyzing || store.paying || store.downloadingPdf) && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-white/60 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-6 rounded-xl bg-white px-14 py-10 border border-gray-200">
+            <svg className="w-14 h-14 animate-spin" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="12" cy="12" r="10" stroke="url(#spin-grad-b)" strokeWidth="2.5" strokeLinecap="round" strokeDasharray="31.4 31.4" strokeDashoffset="0" />
+              <defs>
+                <linearGradient id="spin-grad-b" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#3B82F6" /><stop offset="50%" stopColor="#8B5CF6" /><stop offset="100%" stopColor="#EC4899" />
+                </linearGradient>
+              </defs>
+            </svg>
+            <p className="text-base font-semibold text-gray-800">
+              {store.analyzing ? "Analyzing photos" : store.paying ? "Processing payment" : uploading ? "Uploading photos" : store.downloadingPdf ? "Generating PDF" : "Loading"}
+            </p>
+            <div className="flex items-center gap-2 -mt-1">
+              <span className="w-2 h-2 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: "0s" }} />
+              <span className="w-2 h-2 rounded-full bg-violet-500 animate-bounce" style={{ animationDelay: "0.15s" }} />
+              <span className="w-2 h-2 rounded-full bg-pink-500 animate-bounce" style={{ animationDelay: "0.3s" }} />
+            </div>
+          </div>
+        </div>
+      )}
       <Navbar />
-      <div className="max-w-5xl mx-auto px-4 py-6">
+      <div className="max-w-7xl mx-auto px-4 py-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
@@ -442,7 +499,7 @@ export default function AnalyzeWizard() {
         </div>
 
         {/* Progress Bar */}
-        <div className="flex items-center gap-1 mb-6 overflow-x-auto pb-2">
+        <div className="flex items-center gap-1 mb-6 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {visibleSteps.map((s, i) => {
             const active = store.step === s.key;
             const completed = visibleSteps.findIndex((x) => x.key === store.step) > i;
@@ -453,7 +510,7 @@ export default function AnalyzeWizard() {
                   await saveAssessment(undefined, true);
                   setStep(s.key);
                 }}
-                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium whitespace-nowrap transition ${
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium whitespace-nowrap cursor-pointer transition ${
                   active
                     ? "bg-gray-900 text-white"
                     : completed
@@ -462,7 +519,7 @@ export default function AnalyzeWizard() {
                 }`}
               >
                 {completed ? <CheckCircle className="w-3.5 h-3.5" /> : s.icon}
-                <span className="hidden sm:inline">{s.label}</span>
+                <span>{s.label}</span>
               </button>
             );
           })}
@@ -678,177 +735,6 @@ export default function AnalyzeWizard() {
               </Section>
             </div>
           )}
-
-          {/* ═══════════════════════════════════════════════════════════════════ */}
-          {/* STEP: Vehicle Condition                                           */}
-          {/* ═══════════════════════════════════════════════════════════════════ */}
-          {store.step === "condition" && (
-            <div className="space-y-6">
-              <Section title="Vehicle Condition">
-                {!!((store.result as Record<string, unknown>)?.damage) && (
-                  <button
-                    onClick={() => {
-                      const d = (store.result as Record<string, unknown>).damage as Record<string, unknown>;
-                      const sev = (d.severity as string || "").toLowerCase();
-                      const map: Record<string, string> = { minor: "Good", moderate: "Fair", severe: "Poor", critical: "Very Poor" };
-                      const mapCapped: Record<string, string> = { minor: "Good", moderate: "Fair", severe: "Poor", critical: "Poor" };
-                      const updates: Record<string, unknown> = {};
-                      updates.overallCondition = map[sev] || "";
-                      let mech = mapCapped[sev] || "";
-                      if (d.structural_damage) {
-                        const bump: Record<string, string> = { Good: "Fair", Fair: "Poor", Poor: "Poor" };
-                        mech = bump[mech] || mech;
-                      }
-                      updates.mechanicalCondition = mech;
-                      let int = mapCapped[sev] || "";
-                      if (d.rollover) {
-                        const bump: Record<string, string> = { Good: "Fair", Fair: "Poor", Poor: "Poor" };
-                        int = bump[int] || int;
-                      }
-                      updates.interiorCondition = int;
-                      updates.exteriorCondition = mapCapped[sev] || "";
-                      store.updateVehicleCondition(updates as Parameters<typeof store.updateVehicleCondition>[0]);
-                      toast.success("Vehicle condition filled from AI analysis");
-                    }}
-                    className="mb-4 flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700 hover:bg-emerald-100 transition"
-                  >
-                    <PenTool className="w-3.5 h-3.5" /> Auto-fill from AI Analysis
-                  </button>
-                )}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <Field label="Overall Condition">
-                    <Select value={store.vehicleCondition.overallCondition || ""} onChange={(e) => store.updateVehicleCondition({ overallCondition: e.target.value })}>
-                      <option value="">Select...</option>
-                      <option value="Excellent">Excellent</option>
-                      <option value="Good">Good</option>
-                      <option value="Fair">Fair</option>
-                      <option value="Poor">Poor</option>
-                      <option value="Very Poor">Very Poor</option>
-                    </Select>
-                  </Field>
-                  <Field label="Spare Tyre Condition">
-                    <Select value={store.vehicleCondition.spareTyreCondition || ""} onChange={(e) => store.updateVehicleCondition({ spareTyreCondition: e.target.value })}>
-                      <option value="">Select...</option>
-                      <option value="Good">Good</option>
-                      <option value="Fair">Fair</option>
-                      <option value="Poor">Poor</option>
-                      <option value="Missing">Missing</option>
-                    </Select>
-                  </Field>
-                  <Field label="General Mechanical">
-                    <Select value={store.vehicleCondition.mechanicalCondition || ""} onChange={(e) => store.updateVehicleCondition({ mechanicalCondition: e.target.value })}>
-                      <option value="">Select...</option>
-                      <option value="Excellent">Excellent</option>
-                      <option value="Good">Good</option>
-                      <option value="Fair">Fair</option>
-                      <option value="Poor">Poor</option>
-                    </Select>
-                  </Field>
-                  <Field label="Interior Condition">
-                    <Select value={store.vehicleCondition.interiorCondition || ""} onChange={(e) => store.updateVehicleCondition({ interiorCondition: e.target.value })}>
-                      <option value="">Select...</option>
-                      <option value="Excellent">Excellent</option>
-                      <option value="Good">Good</option>
-                      <option value="Fair">Fair</option>
-                      <option value="Poor">Poor</option>
-                    </Select>
-                  </Field>
-                  <Field label="Exterior Condition">
-                    <Select value={store.vehicleCondition.exteriorCondition || ""} onChange={(e) => store.updateVehicleCondition({ exteriorCondition: e.target.value })}>
-                      <option value="">Select...</option>
-                      <option value="Excellent">Excellent</option>
-                      <option value="Good">Good</option>
-                      <option value="Fair">Fair</option>
-                      <option value="Poor">Poor</option>
-                    </Select>
-                  </Field>
-                </div>
-              </Section>
-
-              <Section title="Tyre Details">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-                  <Field label="Tyre Brand">
-                    <Input value={store.vehicleCondition.tyreBrand || ""} onChange={(e) => store.updateVehicleCondition({ tyreBrand: e.target.value })} placeholder="e.g. Bridgestone" />
-                  </Field>
-                  <Field label="Tyre Size">
-                    <Input value={store.vehicleCondition.tyreSize || ""} onChange={(e) => store.updateVehicleCondition({ tyreSize: e.target.value })} placeholder="e.g. 265/65R17" />
-                  </Field>
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  {TYRE_POSITIONS.map((pos) => {
-                    const tyre = store.vehicleCondition.tyres.find((t) => t.position === pos);
-                    const pct = tyre?.percentage || 0;
-                    return (
-                      <div key={pos} className="rounded-lg border border-gray-200 p-3 text-center">
-                        <div className="text-xs font-semibold text-gray-500 mb-2">{pos}</div>
-                        <input
-                          type="range"
-                          min="0"
-                          max="100"
-                          value={pct}
-                          onChange={(e) => {
-                            const newTyres = store.vehicleCondition.tyres.map((t) =>
-                              t.position === pos ? { ...t, percentage: parseInt(e.target.value) } : t
-                            );
-                            store.updateVehicleCondition({ tyres: newTyres });
-                          }}
-                          className="w-full"
-                        />
-                        <div className={`text-lg font-bold mt-1 ${pct <= 30 ? "text-red-600" : pct <= 60 ? "text-amber-600" : "text-emerald-600"}`}>
-                          {pct}%
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </Section>
-
-              <Section title="Accident Details">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <Field label="Accident Date">
-                    <DatePicker value={store.accidentDetail.accidentDate || ""} onChange={(v) => store.updateAccidentDetail({ accidentDate: v })} />
-                  </Field>
-                  <Field label="Accident Location">
-                    <Input value={store.accidentDetail.accidentLocation || ""} onChange={(e) => store.updateAccidentDetail({ accidentLocation: e.target.value })} />
-                  </Field>
-                  <Field label="Accident Description" className="sm:col-span-2">
-                    <Textarea value={store.accidentDetail.accidentDescription || ""} onChange={(e) => store.updateAccidentDetail({ accidentDescription: e.target.value })} />
-                  </Field>
-                  <Field label="Accident Circumstances" className="sm:col-span-2">
-                    <Textarea value={store.accidentDetail.accidentCircumstances || ""} onChange={(e) => store.updateAccidentDetail({ accidentCircumstances: e.target.value })} />
-                  </Field>
-                  <Field label="Damage Description" className="sm:col-span-2">
-                    <Textarea value={store.accidentDetail.damageDescription || ""} onChange={(e) => store.updateAccidentDetail({ damageDescription: e.target.value })} />
-                  </Field>
-                  <Field label="Insured's Explanation" className="sm:col-span-2">
-                    <Textarea value={store.accidentDetail.insuredExplanation || ""} onChange={(e) => store.updateAccidentDetail({ insuredExplanation: e.target.value })} />
-                  </Field>
-                  <Field label="Assessor's Observation" className="sm:col-span-2">
-                    <Textarea value={store.accidentDetail.assessorObservation || ""} onChange={(e) => store.updateAccidentDetail({ assessorObservation: e.target.value })} />
-                  </Field>
-                  <Field label="Damage Consistent with Accident">
-                    <div className="flex items-center gap-4 py-2">
-                      <label className="flex items-center gap-1.5 text-sm">
-                        <input type="radio" checked={store.accidentDetail.damageConsistentWithAccident === true} onChange={() => store.updateAccidentDetail({ damageConsistentWithAccident: true })} className="text-emerald-600" />
-                        Yes
-                      </label>
-                      <label className="flex items-center gap-1.5 text-sm">
-                        <input type="radio" checked={store.accidentDetail.damageConsistentWithAccident === false} onChange={() => store.updateAccidentDetail({ damageConsistentWithAccident: false })} className="text-red-600" />
-                        No
-                      </label>
-                    </div>
-                  </Field>
-                  <Field label="Consistency Note">
-                    <Input value={store.accidentDetail.damageConsistencyNote || ""} onChange={(e) => store.updateAccidentDetail({ damageConsistencyNote: e.target.value })} placeholder='e.g. "Damage consistent with moderate collision on LHR side."' />
-                  </Field>
-                </div>
-              </Section>
-            </div>
-          )}
-
-          {/* ═══════════════════════════════════════════════════════════════════ */}
-          {/* STEP: Photo Upload                                                */}
-          {/* ═══════════════════════════════════════════════════════════════════ */}
           {store.step === "upload" && (
             <div className="space-y-4">
               <Section title="Vehicle & Damage Photos">
@@ -1044,82 +930,7 @@ export default function AnalyzeWizard() {
             </div>
           )}
 
-          {/* ═══════════════════════════════════════════════════════════════════ */}
-          {/* STEP: Damage Assessment Table                                     */}
-          {/* ═══════════════════════════════════════════════════════════════════ */}
-          {store.step === "damage" && (
-            <div className="space-y-4">
-              <Section title="Damage Assessment">
-                {!!((store.result as Record<string, unknown>)?.replacement_parts as Array<unknown> | undefined)?.length && (
-                  <button
-                    onClick={() => {
-                      const parts = (store.result as Record<string, unknown>).replacement_parts as Array<Record<string, unknown>>;
-                      const items = parts.map((p, i) => ({
-                        damageArea: p.damageArea as string || "",
-                        partName: p.partName as string || "",
-                        side: p.side as string || "",
-                        damageDescription: [p.damageType as string, p.damageSeverity as string].filter(Boolean).join(" - "),
-                        actionRequired: "Replace" as const,
-                        accidentRelated: true,
-                        preAccidentDamage: false,
-                        remarks: "",
-                        sortOrder: i,
-                      }));
-                      store.setDamageItems(items);
-                      toast.success(`${items.length} damage items filled from AI analysis`);
-                    }}
-                    className="mb-4 flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700 hover:bg-emerald-100 transition"
-                  >
-                    <PenTool className="w-3.5 h-3.5" /> Auto-fill from AI Analysis
-                  </button>
-                )}
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-gray-200">
-                        <th className="px-2 py-2 text-left text-xs font-medium text-gray-500">Area</th>
-                        <th className="px-2 py-2 text-left text-xs font-medium text-gray-500">Part</th>
-                        <th className="px-2 py-2 text-left text-xs font-medium text-gray-500">Side</th>
-                        <th className="px-2 py-2 text-left text-xs font-medium text-gray-500">Description</th>
-                        <th className="px-2 py-2 text-left text-xs font-medium text-gray-500">Action</th>
-                        <th className="px-2 py-2 text-center text-xs font-medium text-gray-500">Accident</th>
-                        <th className="px-2 py-2 text-center text-xs font-medium text-gray-500">Pre</th>
-                        <th className="px-2 py-2"></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {store.damageItems.map((item, i) => (
-                        <tr key={i} className="border-b border-gray-100">
-                          <td className="px-1 py-1"><Input value={item.damageArea || ""} onChange={(e) => store.updateDamageItem(i, { damageArea: e.target.value })} className="text-xs" /></td>
-                          <td className="px-1 py-1"><Input value={item.partName || ""} onChange={(e) => store.updateDamageItem(i, { partName: e.target.value })} className="text-xs" /></td>
-                          <td className="px-1 py-1"><Input value={item.side || ""} onChange={(e) => store.updateDamageItem(i, { side: e.target.value })} className="text-xs" placeholder="LHR" /></td>
-                          <td className="px-1 py-1"><Input value={item.damageDescription || ""} onChange={(e) => store.updateDamageItem(i, { damageDescription: e.target.value })} className="text-xs" /></td>
-                          <td className="px-1 py-1">
-                            <Select value={item.actionRequired || ""} onChange={(e) => store.updateDamageItem(i, { actionRequired: e.target.value as never })} className="text-xs">
-                              <option value="">Select</option>
-                              {DAMAGE_ACTIONS.map((a) => <option key={a} value={a}>{a}</option>)}
-                            </Select>
-                          </td>
-                          <td className="px-1 py-1 text-center">
-                            <input type="checkbox" checked={item.accidentRelated} onChange={(e) => store.updateDamageItem(i, { accidentRelated: e.target.checked })} className="rounded text-emerald-600" />
-                          </td>
-                          <td className="px-1 py-1 text-center">
-                            <input type="checkbox" checked={item.preAccidentDamage} onChange={(e) => store.updateDamageItem(i, { preAccidentDamage: e.target.checked })} className="rounded text-amber-600" />
-                          </td>
-                          <td className="px-1 py-1">
-                            <button onClick={() => store.removeDamageItem(i)} className="text-red-400 hover:text-red-600"><Trash2 className="w-3.5 h-3.5" /></button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                <button onClick={store.addDamageItem} className="flex items-center gap-1.5 rounded-lg border border-dashed border-gray-300 px-3 py-2 text-xs font-medium text-gray-600 hover:bg-gray-50 transition">
-                  <Plus className="w-3.5 h-3.5" /> Add Damage Item
-                </button>
-              </Section>
-            </div>
-          )}
+
 
           {/* ═══════════════════════════════════════════════════════════════════ */}
           {/* STEP: Parts + Services + Cost Summary                             */}
@@ -1173,15 +984,12 @@ export default function AnalyzeWizard() {
               {/* Parts */}
               <Section title="Parts Required">
                 <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
+                    <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-gray-200">
                         <th className="px-2 py-2 text-left text-xs font-medium text-gray-500">Part Name</th>
-                        <th className="px-2 py-2 text-left text-xs font-medium text-gray-500">Part No.</th>
                         <th className="px-2 py-2 text-center text-xs font-medium text-gray-500">Qty</th>
                         <th className="px-2 py-2 text-right text-xs font-medium text-gray-500">Unit Price</th>
-                        <th className="px-2 py-2 text-center text-xs font-medium text-gray-500">Disc %</th>
-                        <th className="px-2 py-2 text-right text-xs font-medium text-gray-500">Disc Amt</th>
                         <th className="px-2 py-2 text-right text-xs font-medium text-gray-500">Net</th>
                         <th className="px-2 py-2 text-center text-xs font-medium text-gray-500">VAT %</th>
                         <th className="px-2 py-2 text-right text-xs font-medium text-gray-500">Total</th>
@@ -1193,11 +1001,8 @@ export default function AnalyzeWizard() {
                       {store.parts.map((part, i) => (
                         <tr key={i} className="border-b border-gray-100">
                           <td className="px-1 py-1"><Input value={part.partName} onChange={(e) => store.updatePart(i, { partName: e.target.value })} className="text-xs" /></td>
-                          <td className="px-1 py-1"><Input value={part.partNumber || ""} onChange={(e) => store.updatePart(i, { partNumber: e.target.value })} className="text-xs" /></td>
                           <td className="px-1 py-1"><Input type="number" min="1" value={part.quantity} onChange={(e) => store.updatePart(i, { quantity: parseInt(e.target.value) || 1 })} className="text-xs text-center" /></td>
                           <td className="px-1 py-1"><Input type="number" min="0" step="0.01" value={part.unitPrice} onChange={(e) => store.updatePart(i, { unitPrice: parseFloat(e.target.value) || 0 })} className="text-xs text-right" /></td>
-                          <td className="px-1 py-1"><Input type="number" min="0" max="100" value={part.discountPercent} onChange={(e) => store.updatePart(i, { discountPercent: parseFloat(e.target.value) || 0 })} className="text-xs text-center" /></td>
-                          <td className="px-1 py-1 text-xs text-right text-gray-500">{CURRENCY} {part.discountAmount.toLocaleString()}</td>
                           <td className="px-1 py-1 text-xs text-right">{CURRENCY} {part.netPrice.toLocaleString()}</td>
                           <td className="px-1 py-1"><Input type="number" min="0" max="100" value={part.vatPercent} onChange={(e) => store.updatePart(i, { vatPercent: parseFloat(e.target.value) || 0 })} className="text-xs text-center" /></td>
                           <td className="px-1 py-1 text-xs text-right font-medium">{CURRENCY} {part.totalPrice.toLocaleString()}</td>
@@ -1510,20 +1315,27 @@ export default function AnalyzeWizard() {
           {/* ═══════════════════════════════════════════════════════════════════ */}
           {store.step === "results" && (
             <div className="space-y-8">
-              <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-                <h2 className="text-lg font-bold text-gray-900 mb-4">ASSESSMENT REPORT</h2>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-2 text-sm">
-                  <div><span className="text-gray-500">Assessment No:</span> <span className="font-medium">{store.assessmentId?.slice(0, 8)}...</span></div>
-                  <div><span className="text-gray-500">Insured:</span> <span className="font-medium">{store.claim.insuredName || "N/A"}</span></div>
-                  <div><span className="text-gray-500">Policy No:</span> <span className="font-medium">{store.claim.policyNumber || "N/A"}</span></div>
-                  <div><span className="text-gray-500">Registration:</span> <span className="font-medium">{store.vehicle.registrationNumber || "N/A"}</span></div>
-                  <div><span className="text-gray-500">Claim No:</span> <span className="font-medium">{store.claim.claimNumber || "N/A"}</span></div>
-                  <div><span className="text-gray-500">Assessment Date:</span> <span className="font-medium">{store.feeNote.assessmentDate || "N/A"}</span></div>
-                  <div><span className="text-gray-500">Status:</span> <span className="font-medium">{store.authorization.assessmentStatus || "DRAFT"}</span></div>
-                  <div><span className="text-gray-500">Grand Total:</span> <span className="font-bold text-emerald-700">{formatCurrency(store.getCostSummary().grandTotal)}</span></div>
-                </div>
+              <div className="flex flex-col items-center gap-3 mb-2">
+                {logoUrl ? (
+                  <>
+                    <img src={logoUrl} alt="Company logo" className="max-h-[150px] w-auto object-contain" />
+                    <button
+                      onClick={() => logoInputRef.current?.click()}
+                      className="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 transition"
+                    >
+                      <Camera className="w-3.5 h-3.5" /> Replace Logo
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    onClick={() => logoInputRef.current?.click()}
+                    className="flex items-center gap-1.5 rounded-lg border border-dashed border-gray-300 px-4 py-2.5 text-xs font-medium text-gray-500 hover:bg-gray-50 transition"
+                  >
+                    <Camera className="w-4 h-4" /> Upload Company Logo
+                  </button>
+                )}
+                <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
               </div>
-
               {/* 1. Fee Note */}
               <Section title="1. Assessment / Fee Note">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
@@ -1552,7 +1364,7 @@ export default function AnalyzeWizard() {
                 </div>
               </Section>
 
-              {/* 4. Vehicle Details */}
+              {/* 3. Vehicle Details */}
               <Section title="3. Vehicle Details">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                   <div><span className="text-gray-500">Registration:</span> <span className="font-medium">{store.vehicle.registrationNumber || "N/A"}</span></div>
@@ -1566,33 +1378,9 @@ export default function AnalyzeWizard() {
                 </div>
               </Section>
 
-              {/* 5. Vehicle Condition */}
-              <Section title="4. Vehicle Condition">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                  <div><span className="text-gray-500">Overall Condition:</span> <span className="font-medium">{store.vehicleCondition.overallCondition || "N/A"}</span></div>
-                  <div><span className="text-gray-500">Tyre Brand:</span> <span className="font-medium">{store.vehicleCondition.tyreBrand || "N/A"}</span></div>
-                  <div><span className="text-gray-500">Tyre Size:</span> <span className="font-medium">{store.vehicleCondition.tyreSize || "N/A"}</span></div>
-                  <div><span className="text-gray-500">Spare Tyre:</span> <span className="font-medium">{store.vehicleCondition.spareTyreCondition || "N/A"}</span></div>
-                  <div><span className="text-gray-500">Mechanical:</span> <span className="font-medium">{store.vehicleCondition.mechanicalCondition || "N/A"}</span></div>
-                  <div><span className="text-gray-500">Interior:</span> <span className="font-medium">{store.vehicleCondition.interiorCondition || "N/A"}</span></div>
-                  <div><span className="text-gray-500">Exterior:</span> <span className="font-medium">{store.vehicleCondition.exteriorCondition || "N/A"}</span></div>
-                </div>
-                {store.vehicleCondition.tyres.length > 0 && (
-                  <div className="mt-3">
-                    <p className="text-xs font-medium text-gray-500 mb-2">Tyre Conditions:</p>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                      {store.vehicleCondition.tyres.map((t, i) => (
-                        <div key={i} className="rounded-lg bg-gray-50 border border-gray-100 px-3 py-2 text-xs">
-                          <span className="font-medium text-gray-700">{t.position}:</span> <span className="text-gray-500">{t.percentage}%</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </Section>
 
-              {/* 6. Accident Details */}
-              <Section title="5. Accident Details">
+              {/* 4. Accident Details */}
+              <Section title="4. Accident Details">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                   <div><span className="text-gray-500">Accident Date:</span> <span className="font-medium">{store.accidentDetail.accidentDate || "N/A"}</span></div>
                   <div><span className="text-gray-500">Location:</span> <span className="font-medium">{store.accidentDetail.accidentLocation || "N/A"}</span></div>
@@ -1603,53 +1391,17 @@ export default function AnalyzeWizard() {
                 {store.accidentDetail.assessorObservation && <p className="mt-2 text-sm text-gray-700 bg-gray-50 rounded-lg p-3"><span className="font-medium text-gray-500">Assessor's Observation:</span> {store.accidentDetail.assessorObservation}</p>}
               </Section>
 
-              {/* 7. Damage Assessment */}
-              {store.damageItems.length > 0 && (
-                <Section title="6. Damage Assessment">
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-xs border-collapse">
-                      <thead>
-                        <tr className="bg-gray-50 border-b border-gray-200">
-                          <th className="text-left px-3 py-2 font-medium text-gray-600">Area</th>
-                          <th className="text-left px-3 py-2 font-medium text-gray-600">Part</th>
-                          <th className="text-left px-3 py-2 font-medium text-gray-600">Side</th>
-                          <th className="text-left px-3 py-2 font-medium text-gray-600">Description</th>
-                          <th className="text-left px-3 py-2 font-medium text-gray-600">Action</th>
-                          <th className="text-center px-3 py-2 font-medium text-gray-600">Accident</th>
-                          <th className="text-center px-3 py-2 font-medium text-gray-600">Pre-Accident</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {store.damageItems.map((d, i) => (
-                          <tr key={i} className="border-b border-gray-100 hover:bg-gray-50/50">
-                            <td className="px-3 py-2 text-gray-900">{d.damageArea || "-"}</td>
-                            <td className="px-3 py-2 text-gray-900">{d.partName || "-"}</td>
-                            <td className="px-3 py-2 text-gray-900">{d.side || "-"}</td>
-                            <td className="px-3 py-2 text-gray-900 max-w-[200px] truncate">{d.damageDescription || "-"}</td>
-                            <td className="px-3 py-2"><span className="rounded-full bg-gray-100 px-2 py-0.5 text-gray-700">{d.actionRequired || "-"}</span></td>
-                            <td className="px-3 py-2 text-center">{d.accidentRelated ? <span className="text-emerald-600">Yes</span> : <span className="text-red-500">No</span>}</td>
-                            <td className="px-3 py-2 text-center">{d.preAccidentDamage ? <span className="text-amber-600">Yes</span> : <span className="text-gray-400">No</span>}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </Section>
-              )}
 
-              {/* 8. Parts Required */}
+              {/* 5. Parts Required */}
               {store.parts.length > 0 && (
-                <Section title="7. Parts Required">
+                <Section title="5. Parts Required">
                   <div className="overflow-x-auto">
                     <table className="w-full text-xs border-collapse">
                       <thead>
                         <tr className="bg-gray-50 border-b border-gray-200">
                           <th className="text-left px-2 py-2 font-medium text-gray-600">Part</th>
-                          <th className="text-left px-2 py-2 font-medium text-gray-600">Part No.</th>
                           <th className="text-center px-2 py-2 font-medium text-gray-600">Qty</th>
                           <th className="text-right px-2 py-2 font-medium text-gray-600">Unit Price</th>
-                          <th className="text-right px-2 py-2 font-medium text-gray-600">Disc. %</th>
-                          <th className="text-right px-2 py-2 font-medium text-gray-600">Discount</th>
                           <th className="text-right px-2 py-2 font-medium text-gray-600">Net Price</th>
                           <th className="text-right px-2 py-2 font-medium text-gray-600">Total</th>
                         </tr>
@@ -1658,11 +1410,8 @@ export default function AnalyzeWizard() {
                         {store.parts.map((p, i) => (
                           <tr key={i} className="border-b border-gray-100 hover:bg-gray-50/50">
                             <td className="px-2 py-2 text-gray-900">{p.partName || "-"}</td>
-                            <td className="px-2 py-2 text-gray-500">{p.partNumber || "-"}</td>
                             <td className="px-2 py-2 text-center">{p.quantity}</td>
                             <td className="px-2 py-2 text-right">{formatCurrency(p.unitPrice)}</td>
-                            <td className="px-2 py-2 text-right">{p.discountPercent}%</td>
-                            <td className="px-2 py-2 text-right text-red-600">{formatCurrency(p.discountAmount)}</td>
                             <td className="px-2 py-2 text-right">{formatCurrency(p.netPrice)}</td>
                             <td className="px-2 py-2 text-right font-medium">{formatCurrency(p.totalPrice)}</td>
                           </tr>
@@ -1673,9 +1422,9 @@ export default function AnalyzeWizard() {
                 </Section>
               )}
 
-              {/* 9. Services */}
+              {/* 6. Labour & Services */}
               {store.services.length > 0 && (
-                <Section title="8. Labour & Services">
+                <Section title="6. Labour & Services">
                   <div className="overflow-x-auto">
                     <table className="w-full text-xs border-collapse">
                       <thead>
@@ -1705,8 +1454,8 @@ export default function AnalyzeWizard() {
                 </Section>
               )}
 
-              {/* 10. Cost Summary */}
-              <Section title="9. Repair Cost Estimate">
+              {/* 7. Cost Summary */}
+              <Section title="7. Repair Cost Estimate">
                 {(() => { const cs = store.getCostSummary(); return (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-sm">
                     <div className="space-y-2">
@@ -1740,9 +1489,9 @@ export default function AnalyzeWizard() {
                 ); })()}
               </Section>
 
-              {/* 11. Remarks */}
+              {/* 8. Remarks */}
               {(store.remark.generalRemarks || store.remark.partsToBeReplaced || store.remark.partsToBePainted || store.remark.partsRequiringRepair || store.remark.preAccidentDamage || store.remark.additionalObservations) && (
-                <Section title="10. General Remarks">
+                <Section title="8. General Remarks">
                   <div className="space-y-2 text-sm">
                     {store.remark.generalRemarks && <p><span className="font-medium text-gray-500">General:</span> {store.remark.generalRemarks}</p>}
                     {store.remark.partsToBeReplaced && <p><span className="font-medium text-gray-500">Parts To Be Replaced:</span> {store.remark.partsToBeReplaced}</p>}
@@ -1754,27 +1503,9 @@ export default function AnalyzeWizard() {
                 </Section>
               )}
 
-              {/* 12. Additional Observations */}
-              {store.additionalObservations.length > 0 && (
-                <Section title="11. Additional Damage Observations">
-                  {store.additionalObservations.map((o, i) => (
-                    <div key={i} className="rounded-lg bg-gray-50 border border-gray-100 p-3 mb-2 last:mb-0">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
-                        <div><span className="text-gray-500">Description:</span> <span className="font-medium">{o.damageDescription || "N/A"}</span></div>
-                        <div><span className="text-gray-500">Accident Related:</span> <span className="font-medium">{o.accidentRelated ? "Yes" : "No"}</span></div>
-                        {o.insuredExplanation && <div className="sm:col-span-2"><span className="text-gray-500">Insured's Explanation:</span> <span className="font-medium">{o.insuredExplanation}</span></div>}
-                        {o.assessorOpinion && <div className="sm:col-span-2"><span className="text-gray-500">Assessor's Opinion:</span> <span className="font-medium">{o.assessorOpinion}</span></div>}
-                        <div><span className="text-gray-500">Est. Repair Cost:</span> <span className="font-medium">{formatCurrency(o.estimatedRepairCost)}</span></div>
-                        <div><span className="text-gray-500">Est. Painting Cost:</span> <span className="font-medium">{formatCurrency(o.estimatedPaintingCost)}</span></div>
-                        <div><span className="text-gray-500">Est. Total:</span> <span className="font-medium">{formatCurrency(o.estimatedTotalCost)}</span></div>
-                      </div>
-                    </div>
-                  ))}
-                </Section>
-              )}
 
-              {/* 13. Authorization */}
-              <Section title="12. Assessment Authorization">
+              {/* 9. Authorization */}
+              <Section title="9. Assessment Authorization">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                   <div><span className="text-gray-500">Authorized:</span> <span className="font-medium">{store.authorization.authorized ? "Yes" : "No"}</span></div>
                   <div><span className="text-gray-500">Status:</span> <span className="font-medium">{store.authorization.authorizationStatus}</span></div>
@@ -1784,9 +1515,9 @@ export default function AnalyzeWizard() {
                 </div>
               </Section>
 
-              {/* 14. Special Instructions */}
+              {/* 10. Special Instructions */}
               {store.specialInstructions.length > 0 && (
-                <Section title="13. Special Repair Instructions">
+                <Section title="10. Special Repair Instructions">
                   <ul className="space-y-1.5 text-sm text-gray-700">
                     {store.specialInstructions.map((si, i) => (
                       <li key={i} className="flex items-start gap-2">
@@ -1798,9 +1529,9 @@ export default function AnalyzeWizard() {
                 </Section>
               )}
 
-              {/* 15. Signatures */}
+              {/* 11. Signatures */}
               {store.signatures.length > 0 && (
-                <Section title="14. Signatures">
+                <Section title="11. Signatures">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {store.signatures.map((sig, i) => (
                       <div key={i} className="rounded-xl border border-gray-200 p-4">
@@ -1817,14 +1548,6 @@ export default function AnalyzeWizard() {
                 </Section>
               )}
 
-              {/* AI Analysis Result */}
-              {store.result != null && (
-                <Section title="AI Analysis Result">
-                  <pre className="text-xs text-gray-700 bg-gray-50 rounded-lg p-4 overflow-x-auto max-h-96 overflow-y-auto">
-                    {JSON.stringify(store.result, null, 2)}
-                  </pre>
-                </Section>
-              )}
 
               {/* Photos — always at the bottom */}
               {store.photos.length > 0 && (

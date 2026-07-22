@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
     const assessment = await prisma.assessment.findUnique({
       where: { id: assessmentId },
       include: {
-        user: { select: { name: true } },
+        user: { select: { name: true, logoUrl: true } },
         insuranceCompany: true,
         repairer: true,
         feeNote: true,
@@ -147,41 +147,24 @@ export async function POST(request: NextRequest) {
     doc.fillColor(COLORS.black);
     doc.y = 75;
 
-    // Summary card
-    const partsCost = assessment.parts.reduce((s, p) => s + p.totalPrice, 0);
-    const servicesCost = assessment.services.reduce((s, s2) => s + s2.totalCost, 0);
-    const grandTotal = partsCost + servicesCost;
+    // Logo
+    if (assessment.user?.logoUrl) {
+      let logoBuffer: Buffer | null = null;
+      try {
+        const resp = await fetch(assessment.user.logoUrl);
+        if (resp.ok) {
+          const arr = await resp.arrayBuffer();
+          logoBuffer = Buffer.from(arr);
+        }
+      } catch { /* logo fetch failed */ }
 
-    doc.roundedRect(50, doc.y, 495, 55, 6).fill(COLORS.bgLight);
-    doc.roundedRect(50, doc.y, 495, 55, 6).lineWidth(1).stroke(COLORS.border);
-    doc.fillColor(COLORS.black);
-
-    const summaryY = doc.y + 6;
-    doc.fontSize(8).font("Helvetica-Bold").fillColor(COLORS.muted).text("Assessment No.", 60, summaryY);
-    doc.fillColor(COLORS.primary).font("Helvetica").text(assessment.assessmentNumber, 60, summaryY + 10);
-    doc.fillColor(COLORS.muted).font("Helvetica-Bold").text("Insured", 190, summaryY);
-    doc.fillColor(COLORS.primary).font("Helvetica").text(assessment.claim?.insuredName || "N/A", 190, summaryY + 10);
-    doc.fillColor(COLORS.muted).font("Helvetica-Bold").text("Registration", 320, summaryY);
-    doc.fillColor(COLORS.primary).font("Helvetica").text(assessment.vehicle?.registrationNumber || "N/A", 320, summaryY + 10);
-    doc.fillColor(COLORS.muted).font("Helvetica-Bold").text("Policy No.", 450, summaryY);
-    doc.fillColor(COLORS.primary).font("Helvetica").text(assessment.claim?.policyNumber || "N/A", 450, summaryY + 10);
-
-    doc.fillColor(COLORS.muted).font("Helvetica-Bold").text("Claim No.", 60, summaryY + 26);
-    doc.fillColor(COLORS.primary).font("Helvetica").text(assessment.claim?.claimNumber || "N/A", 60, summaryY + 36);
-    doc.fillColor(COLORS.muted).font("Helvetica-Bold").text("Assessment Date", 190, summaryY + 26);
-    doc.fillColor(COLORS.primary).font("Helvetica").text(
-      assessment.feeNote?.assessmentDate
-        ? new Date(assessment.feeNote.assessmentDate).toLocaleDateString("en-KE")
-        : "N/A",
-      190, summaryY + 36
-    );
-    doc.fillColor(COLORS.muted).font("Helvetica-Bold").text("Grand Total", 320, summaryY + 26);
-    doc.fillColor(COLORS.accent).font("Helvetica-Bold").text(formatKES(grandTotal), 320, summaryY + 36);
-    doc.fillColor(COLORS.muted).font("Helvetica-Bold").text("Status", 450, summaryY + 26);
-    drawBadge(doc, (assessment.authorization?.assessmentStatus || assessment.status) as string, 450, summaryY + 36, COLORS.accentLight);
-    doc.fillColor(COLORS.black);
-    doc.y = summaryY + 60;
-    doc.moveDown(0.5);
+      if (logoBuffer && logoBuffer.length > 100) {
+        try {
+          doc.image(logoBuffer, 50, doc.y, { fit: [495, 150], align: "center", valign: "center" });
+          doc.y += 160;
+        } catch { /* logo render failed */ }
+      }
+    }
 
     // ═══════════════════════════════════════════════════════════════════════════
     // 1. FEE NOTE
@@ -278,7 +261,7 @@ export async function POST(request: NextRequest) {
     if (assessment.damageItems.length > 0) {
       drawSectionBox(doc, "6. DAMAGE ASSESSMENT");
       const tableLeft = 50;
-      const colWidths = [65, 65, 45, 130, 65, 55, 55];
+      const colWidths = [70, 70, 50, 140, 70, 55, 40];
       const headers = ["Area", "Part", "Side", "Description", "Action", "Accident", "Pre-Accident"];
 
       drawTableHeader(doc, tableLeft, doc.y, headers, colWidths);
@@ -310,7 +293,7 @@ export async function POST(request: NextRequest) {
     if (assessment.parts.length > 0) {
       drawSectionBox(doc, "7. PARTS REQUIRED");
       const tableLeft = 50;
-      const cw = [85, 55, 30, 55, 40, 50, 50, 35, 50];
+      const cw = [90, 60, 35, 60, 45, 55, 55, 40, 55];
       const headers = ["Part Name", "Part No.", "Qty", "Unit Price", "Disc. %", "Discount", "Net Price", "VAT %", "Total"];
 
       drawTableHeader(doc, tableLeft, doc.y, headers, cw);
@@ -365,7 +348,7 @@ export async function POST(request: NextRequest) {
     if (assessment.services.length > 0) {
       drawSectionBox(doc, "8. LABOUR & SERVICES");
       const tableLeft = 50;
-      const cw = [130, 35, 55, 50, 55, 65, 60];
+      const cw = [140, 40, 60, 55, 60, 70, 70];
       const headers = ["Description", "Qty", "Unit Cost", "Discount", "VAT", "Total", "Type"];
 
       drawTableHeader(doc, tableLeft, doc.y, headers, cw);
@@ -508,13 +491,13 @@ export async function POST(request: NextRequest) {
     // ═══════════════════════════════════════════════════════════════════════════
     if (assessment.photos.length > 0) {
       doc.addPage();
-      drawHeader(doc, "VEHICLE / DAMAGE PHOTOGRAPHS");
+      drawHeader(doc, "PHOTOS");
 
       const imgMargin = 50;
-      const gap = 10;
-      const cols = 2;
-      const imgWidth = (495 - gap) / cols;
-      const imgHeight = 200;
+      const gap = 8;
+      const cols = 3;
+      const imgWidth = (495 - gap * (cols - 1)) / cols;
+      const imgHeight = 130;
       let x = imgMargin;
       let y = doc.y;
       let col = 0;

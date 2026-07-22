@@ -130,6 +130,7 @@ exports.Prisma.UserScalarFieldEnum = {
   organization: 'organization',
   licenseNumber: 'licenseNumber',
   address: 'address',
+  logoUrl: 'logoUrl',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
