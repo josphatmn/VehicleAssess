@@ -15,7 +15,8 @@ import { Navbar } from "@/components/navbar";
 import { CURRENCY, formatCurrency } from "@/lib/currency";
 import { uploadImages as supabaseUpload, deleteImage as supabaseDelete } from "@/lib/supabase";
 import { toast } from "sonner";
-import { DAMAGE_ACTIONS, PART_STATUSES, SERVICE_TYPES, TYRE_POSITIONS } from "@/types";
+import { DAMAGE_ACTIONS, PART_STATUSES, SERVICE_TYPES, TYRE_POSITIONS, computePartTotals, computeServiceTotals, type VehicleData } from "@/types";
+import { DatePicker } from "@/components/date-picker";
 
 const STEPS: { key: Step; label: string; icon: React.ReactNode }[] = [
   { key: "upload", label: "Photos", icon: <Camera className="w-4 h-4" /> },
@@ -97,6 +98,11 @@ export default function AnalyzeWizard() {
   }>({ makes: [] });
   const [insuranceCompanies, setInsuranceCompanies] = useState<Array<{ id: string; name: string }>>([]);
   const [repairers, setRepairers] = useState<Array<{ id: string; name: string; contactPerson?: string; phone?: string; email?: string; address?: string }>>([]);
+  const isAdmin = sessionUser?.role === "ADMIN";
+  const visibleSteps = isAdmin
+    ? STEPS.filter((s) => s.key !== "payment")
+    : STEPS;
+
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState({ done: 0, total: 0 });
   const [loadingAssessment, setLoadingAssessment] = useState(false);
@@ -125,6 +131,12 @@ export default function AnalyzeWizard() {
       if (s.report_price) setPaymentAmount(parseInt(s.report_price, 10));
     }).catch(() => {}).finally(() => setLoadingPrice(false));
   }, []);
+
+  // Auto-mark paid for admin users
+  useEffect(() => {
+    if (isAdmin) store.setPaid(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAdmin]);
 
   // Load assessment on mount
   const didMountRef = useRef(false);
@@ -155,7 +167,7 @@ export default function AnalyzeWizard() {
             const a = await res.json();
             store.setAssessmentId(id);
             store.loadAssessment(a);
-            store.setPaid(a.paid || false);
+            store.setPaid(a.paid || (isAdmin ? true : false));
           }
         } catch {}
         setLoadingAssessment(false);
@@ -168,11 +180,11 @@ export default function AnalyzeWizard() {
   // Auto-set step from URL
   useEffect(() => {
     const urlStep = PARAM_TO_STEP[searchParams.get("step") || ""];
-    if (urlStep && urlStep !== store.step) store.setStep(urlStep);
+    if (urlStep && urlStep !== store.step && !(isAdmin && urlStep === "payment")) store.setStep(urlStep);
     const urlId = searchParams.get("id");
     if (urlId && urlId !== store.assessmentId) store.setAssessmentId(urlId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams]);
+  }, [searchParams, isAdmin]);
 
   // Auto-compute fee note total
   useEffect(() => {
@@ -354,8 +366,14 @@ export default function AnalyzeWizard() {
   const canAdvance = (): boolean => {
     switch (store.step) {
       case "upload": return true;
-      case "analyze": return true;
-      case "payment": return true;
+      case "analyze":
+        // ASSESSOR must complete AI analysis before proceeding to payment
+        if (!isAdmin && store.result === null) return false;
+        return true;
+      case "payment":
+        // ASSESSOR must pay before proceeding to intake
+        if (!isAdmin && !store.paid) return false;
+        return true;
       case "intake": return !!store.claim.insuredName;
       case "vehicle": return true;
       case "condition": return true;
@@ -372,15 +390,15 @@ export default function AnalyzeWizard() {
     // Always save current state before advancing
     const id = await saveAssessment(undefined, true);
     if (!id && !store.assessmentId) return;
-    const idx = STEPS.findIndex((s) => s.key === store.step);
-    if (idx < STEPS.length - 1) setStep(STEPS[idx + 1].key);
+    const idx = visibleSteps.findIndex((s) => s.key === store.step);
+    if (idx < visibleSteps.length - 1) setStep(visibleSteps[idx + 1].key);
   };
 
   const prevStep = async () => {
     // Save current state before going back
     await saveAssessment(undefined, true);
-    const idx = STEPS.findIndex((s) => s.key === store.step);
-    if (idx > 0) setStep(STEPS[idx - 1].key);
+    const idx = visibleSteps.findIndex((s) => s.key === store.step);
+    if (idx > 0) setStep(visibleSteps[idx - 1].key);
   };
 
   if (loadingAssessment || sessionLoading) {
@@ -425,9 +443,9 @@ export default function AnalyzeWizard() {
 
         {/* Progress Bar */}
         <div className="flex items-center gap-1 mb-6 overflow-x-auto pb-2">
-          {STEPS.map((s, i) => {
+          {visibleSteps.map((s, i) => {
             const active = store.step === s.key;
-            const completed = STEPS.findIndex((x) => x.key === store.step) > i;
+            const completed = visibleSteps.findIndex((x) => x.key === store.step) > i;
             return (
               <button
                 key={s.key}
@@ -463,7 +481,7 @@ export default function AnalyzeWizard() {
                     <Input value={store.feeNote.referenceNumber || ""} onChange={(e) => store.updateFeeNote({ referenceNumber: e.target.value })} placeholder="e.g. REF-001" />
                   </Field>
                   <Field label="Assessment Date">
-                    <Input type="date" value={store.feeNote.assessmentDate || ""} onChange={(e) => store.updateFeeNote({ assessmentDate: e.target.value })} />
+                    <DatePicker value={store.feeNote.assessmentDate || ""} onChange={(v) => store.updateFeeNote({ assessmentDate: v })} />
                   </Field>
                   <Field label={`Professional Fee (${CURRENCY})`}>
                     <Input type="number" min="0" step="0.01" value={store.feeNote.professionalFee || ""} onChange={(e) => store.updateFeeNote({ professionalFee: parseFloat(e.target.value) || 0 })} />
@@ -523,10 +541,10 @@ export default function AnalyzeWizard() {
                     <Input type="number" value={store.claim.excessAmount?.toFixed(2) || ""} readOnly className="bg-gray-50" />
                   </Field>
                   <Field label="Date of Instruction">
-                    <Input type="date" value={store.claim.dateOfInstruction || ""} onChange={(e) => store.updateClaim({ dateOfInstruction: e.target.value })} />
+                    <DatePicker value={store.claim.dateOfInstruction || ""} onChange={(v) => store.updateClaim({ dateOfInstruction: v })} />
                   </Field>
                   <Field label="Date of Assessment">
-                    <Input type="date" value={store.claim.dateOfAssessment || ""} onChange={(e) => store.updateClaim({ dateOfAssessment: e.target.value })} />
+                    <DatePicker value={store.claim.dateOfAssessment || ""} onChange={(v) => store.updateClaim({ dateOfAssessment: v })} />
                   </Field>
                 </div>
               </Section>
@@ -539,6 +557,58 @@ export default function AnalyzeWizard() {
           {store.step === "vehicle" && (
             <div className="space-y-6">
               <Section title="Vehicle Identification">
+                {!!((store.result as Record<string, unknown>)?.vehicle) && (
+                  <button
+                    onClick={async () => {
+                      const ai = (store.result as Record<string, unknown>).vehicle as Record<string, unknown>;
+                      const updates: Record<string, unknown> = {};
+                      if (ai.registration) updates.registrationNumber = ai.registration;
+                      if (ai.color) updates.colour = ai.color;
+                      if (ai.year) updates.yearOfManufacture = parseInt(ai.year as string, 10) || undefined;
+                      if (ai.make) {
+                        const makeName = (ai.make as string).trim();
+                        const modelName = ai.model ? (ai.model as string).trim() : undefined;
+                        const variantName = ai.variant ? (ai.variant as string).trim() : undefined;
+                        const make = vehicleCatalog.makes.find(
+                          (m) => m.name.toLowerCase() === makeName.toLowerCase()
+                        );
+                        if (make) {
+                          updates.makeId = make.id;
+                          if (modelName) {
+                            const model = make.models.find(
+                              (m) => m.name.toLowerCase() === modelName.toLowerCase()
+                            );
+                            if (model) {
+                              updates.modelId = model.id;
+                              if (variantName) {
+                                const variant = model.variants.find(
+                                  (v) => v.name.toLowerCase() === variantName.toLowerCase()
+                                );
+                                if (variant) updates.variantId = variant.id;
+                              }
+                            }
+                          }
+                        }
+                        const needsCreation = !updates.makeId || (modelName && !updates.modelId) || (variantName && !updates.variantId);
+                        if (needsCreation) {
+                          const { resolveOrCreateVehicle } = await import("@/actions/vehicle-catalog");
+                          const resolved = await resolveOrCreateVehicle(makeName, modelName, variantName);
+                          if (resolved.makeId && !updates.makeId) updates.makeId = resolved.makeId;
+                          if (resolved.modelId && !updates.modelId) updates.modelId = resolved.modelId;
+                          if (resolved.variantId && !updates.variantId) updates.variantId = resolved.variantId;
+                          fetch("/api/catalogs").then(r => r.json()).then(d => {
+                            if (d.makes) setVehicleCatalog({ makes: d.makes });
+                          }).catch(() => {});
+                        }
+                      }
+                      store.updateVehicle(updates as Partial<VehicleData>);
+                      toast.success("Vehicle details filled from AI analysis");
+                    }}
+                    className="mb-4 flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700 hover:bg-emerald-100 transition"
+                  >
+                    <PenTool className="w-3.5 h-3.5" /> Auto-fill from AI Analysis
+                  </button>
+                )}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <Field label="Registration Number">
                     <Input value={store.vehicle.registrationNumber || ""} onChange={(e) => store.updateVehicle({ registrationNumber: e.target.value })} placeholder="e.g. KAA 123A" />
@@ -615,6 +685,36 @@ export default function AnalyzeWizard() {
           {store.step === "condition" && (
             <div className="space-y-6">
               <Section title="Vehicle Condition">
+                {!!((store.result as Record<string, unknown>)?.damage) && (
+                  <button
+                    onClick={() => {
+                      const d = (store.result as Record<string, unknown>).damage as Record<string, unknown>;
+                      const sev = (d.severity as string || "").toLowerCase();
+                      const map: Record<string, string> = { minor: "Good", moderate: "Fair", severe: "Poor", critical: "Very Poor" };
+                      const mapCapped: Record<string, string> = { minor: "Good", moderate: "Fair", severe: "Poor", critical: "Poor" };
+                      const updates: Record<string, unknown> = {};
+                      updates.overallCondition = map[sev] || "";
+                      let mech = mapCapped[sev] || "";
+                      if (d.structural_damage) {
+                        const bump: Record<string, string> = { Good: "Fair", Fair: "Poor", Poor: "Poor" };
+                        mech = bump[mech] || mech;
+                      }
+                      updates.mechanicalCondition = mech;
+                      let int = mapCapped[sev] || "";
+                      if (d.rollover) {
+                        const bump: Record<string, string> = { Good: "Fair", Fair: "Poor", Poor: "Poor" };
+                        int = bump[int] || int;
+                      }
+                      updates.interiorCondition = int;
+                      updates.exteriorCondition = mapCapped[sev] || "";
+                      store.updateVehicleCondition(updates as Parameters<typeof store.updateVehicleCondition>[0]);
+                      toast.success("Vehicle condition filled from AI analysis");
+                    }}
+                    className="mb-4 flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700 hover:bg-emerald-100 transition"
+                  >
+                    <PenTool className="w-3.5 h-3.5" /> Auto-fill from AI Analysis
+                  </button>
+                )}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <Field label="Overall Condition">
                     <Select value={store.vehicleCondition.overallCondition || ""} onChange={(e) => store.updateVehicleCondition({ overallCondition: e.target.value })}>
@@ -706,7 +806,7 @@ export default function AnalyzeWizard() {
               <Section title="Accident Details">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <Field label="Accident Date">
-                    <Input type="date" value={store.accidentDetail.accidentDate || ""} onChange={(e) => store.updateAccidentDetail({ accidentDate: e.target.value })} />
+                    <DatePicker value={store.accidentDetail.accidentDate || ""} onChange={(v) => store.updateAccidentDetail({ accidentDate: v })} />
                   </Field>
                   <Field label="Accident Location">
                     <Input value={store.accidentDetail.accidentLocation || ""} onChange={(e) => store.updateAccidentDetail({ accidentLocation: e.target.value })} />
@@ -865,10 +965,80 @@ export default function AnalyzeWizard() {
                   </button>
                 )}
                 {store.result !== null && (
-                  <div className="mt-4 rounded-lg bg-emerald-50 border border-emerald-200 p-4">
-                    <CheckCircle className="w-5 h-5 text-emerald-600 mb-2" />
-                    <p className="text-sm text-emerald-700 font-medium">Analysis complete! Review results in the Damage Assessment step.</p>
-                  </div>
+                  <>
+                    <div className="mt-4 rounded-lg bg-emerald-50 border border-emerald-200 p-4">
+                      <CheckCircle className="w-5 h-5 text-emerald-600 mb-2" />
+                      <p className="text-sm text-emerald-700 font-medium">Analysis complete! Review results in the Damage Assessment step.</p>
+                    </div>
+                    {(() => {
+                      const r = store.result as Record<string, unknown>;
+                      const v = r?.vehicle as Record<string, unknown> | undefined;
+                      const d = r?.damage as Record<string, unknown> | undefined;
+                      const parts = (r?.replacement_parts as Array<Record<string, unknown>>) || [];
+                      const concerns = (r?.structural_concerns as string[]) || [];
+                      const recs = (r?.recommendations as string[]) || [];
+                      return (
+                        <div className="mt-4 space-y-3">
+                          <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+                            <h4 className="text-xs font-semibold text-gray-900 uppercase tracking-wider mb-3">Vehicle Detected</h4>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1.5 text-sm">
+                              {!!v?.make && <div><span className="text-gray-500">Make:</span> <span className="font-medium">{v.make as string}</span></div>}
+                              {!!v?.model && <div><span className="text-gray-500">Model:</span> <span className="font-medium">{v.model as string}</span></div>}
+                              {!!v?.variant && <div><span className="text-gray-500">Variant:</span> <span className="font-medium">{v.variant as string}</span></div>}
+                              {!!v?.year && <div><span className="text-gray-500">Year:</span> <span className="font-medium">{v.year as string}</span></div>}
+                              {!!v?.color && <div><span className="text-gray-500">Color:</span> <span className="font-medium">{v.color as string}</span></div>}
+                              {!!v?.registration && <div><span className="text-gray-500">Reg:</span> <span className="font-medium">{v.registration as string}</span></div>}
+                              {!!v?.body_type && <div><span className="text-gray-500">Body:</span> <span className="font-medium">{v.body_type as string}</span></div>}
+                              {v?.confidence != null && <div><span className="text-gray-500">Confidence:</span> <span className="font-medium">{(v.confidence as number * 100).toFixed(0)}%</span></div>}
+                            </div>
+                          </div>
+                          {d && (
+                            <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+                              <h4 className="text-xs font-semibold text-gray-900 uppercase tracking-wider mb-3">Damage Assessment</h4>
+                              <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-1.5 text-sm">
+                                <div><span className="text-gray-500">Severity:</span> <span className="font-medium">{d.severity as string}</span></div>
+                                <div><span className="text-gray-500">Est. Cost:</span> <span className="font-medium">KSh {(d.estimated_total_cost as number).toLocaleString()}</span></div>
+                                <div><span className="text-gray-500">Labor Hours:</span> <span className="font-medium">{d.estimated_total_labor_hours as string}</span></div>
+                                <div><span className="text-gray-500">Structural:</span> <span className="font-medium">{d.structural_damage ? "Yes" : "No"}</span></div>
+                                <div><span className="text-gray-500">Rollover:</span> <span className="font-medium">{d.rollover ? "Yes" : "No"}</span></div>
+                                <div><span className="text-gray-500">Total Loss:</span> <span className="font-medium">{d.possible_total_loss ? "Possible" : "No"}</span></div>
+                              </div>
+                              {!!d?.summary && <p className="mt-2 text-sm text-gray-700 bg-gray-50 rounded-lg p-3">{d.summary as string}</p>}
+                            </div>
+                          )}
+                          {parts.length > 0 && (
+                            <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+                              <h4 className="text-xs font-semibold text-gray-900 uppercase tracking-wider mb-3">Detected Parts ({parts.length})</h4>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                {parts.map((p, i) => (
+                                  <div key={i} className="rounded-lg bg-gray-50 border border-gray-100 p-3 text-sm">
+                                    <p className="font-medium text-gray-900">{p.partName as string}</p>
+                                    <p className="text-xs text-gray-500 mt-0.5">{p.damageType as string} · {p.damageSeverity as string} · Qty: {p.estimatedQuantity as number}</p>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          {concerns.length > 0 && (
+                            <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+                              <h4 className="text-xs font-semibold text-amber-800 uppercase tracking-wider mb-2">Structural Concerns</h4>
+                              <ul className="space-y-1">
+                                {concerns.map((c, i) => <li key={i} className="text-sm text-amber-700 flex items-start gap-2"><span className="text-amber-400 mt-0.5">•</span>{c}</li>)}
+                              </ul>
+                            </div>
+                          )}
+                          {recs.length > 0 && (
+                            <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
+                              <h4 className="text-xs font-semibold text-blue-800 uppercase tracking-wider mb-2">Recommendations</h4>
+                              <ul className="space-y-1">
+                                {recs.map((r, i) => <li key={i} className="text-sm text-blue-700 flex items-start gap-2"><span className="text-blue-400 mt-0.5">•</span>{r}</li>)}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
+                  </>
                 )}
               </Section>
             </div>
@@ -880,6 +1050,29 @@ export default function AnalyzeWizard() {
           {store.step === "damage" && (
             <div className="space-y-4">
               <Section title="Damage Assessment">
+                {!!((store.result as Record<string, unknown>)?.replacement_parts as Array<unknown> | undefined)?.length && (
+                  <button
+                    onClick={() => {
+                      const parts = (store.result as Record<string, unknown>).replacement_parts as Array<Record<string, unknown>>;
+                      const items = parts.map((p, i) => ({
+                        damageArea: p.damageArea as string || "",
+                        partName: p.partName as string || "",
+                        side: p.side as string || "",
+                        damageDescription: [p.damageType as string, p.damageSeverity as string].filter(Boolean).join(" - "),
+                        actionRequired: "Replace" as const,
+                        accidentRelated: true,
+                        preAccidentDamage: false,
+                        remarks: "",
+                        sortOrder: i,
+                      }));
+                      store.setDamageItems(items);
+                      toast.success(`${items.length} damage items filled from AI analysis`);
+                    }}
+                    className="mb-4 flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700 hover:bg-emerald-100 transition"
+                  >
+                    <PenTool className="w-3.5 h-3.5" /> Auto-fill from AI Analysis
+                  </button>
+                )}
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
@@ -933,6 +1126,50 @@ export default function AnalyzeWizard() {
           {/* ═══════════════════════════════════════════════════════════════════ */}
           {store.step === "estimate" && (
             <div className="space-y-6">
+              {!!((store.result as Record<string, unknown>)?.replacement_parts as Array<unknown> | undefined)?.length && (
+                <button
+                  onClick={() => {
+                    const r = store.result as Record<string, unknown>;
+                    const parts = (r.replacement_parts as Array<Record<string, unknown>>) || [];
+                    const d = r.damage as Record<string, unknown> | undefined;
+                    store.setParts(parts.map((p, i) => computePartTotals({
+                      partName: p.partName as string || "",
+                      partNumber: p.partNumber as string || "",
+                      vehicleMake: "",
+                      vehicleModel: "",
+                      quantity: (p.estimatedQuantity as number) || 1,
+                      unitPrice: 0,
+                      discountPercent: 0,
+                      discountAmount: 0,
+                      netPrice: 0,
+                      vatPercent: 16,
+                      vatAmount: 0,
+                      totalPrice: 0,
+                      partStatus: "Replace",
+                      remarks: "",
+                      sortOrder: i,
+                    })));
+                    const hours = d?.estimated_total_labor_hours as number | undefined;
+                    if (hours && hours > 0) {
+                      store.setServices([computeServiceTotals({
+                        description: `Body & paint labour (${hours} hrs)`,
+                        quantity: hours,
+                        unitCost: 0,
+                        discount: 0,
+                        vat: 0,
+                        totalCost: 0,
+                        serviceType: "Labour",
+                        remarks: "",
+                        sortOrder: 0,
+                      })]);
+                    }
+                    toast.success(`Parts and services filled from AI analysis`);
+                  }}
+                  className="mb-4 flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700 hover:bg-emerald-100 transition"
+                >
+                  <PenTool className="w-3.5 h-3.5" /> Auto-fill Parts & Services from AI Analysis
+                </button>
+              )}
               {/* Parts */}
               <Section title="Parts Required">
                 <div className="overflow-x-auto">
@@ -1064,6 +1301,32 @@ export default function AnalyzeWizard() {
           {store.step === "remarks" && (
             <div className="space-y-6">
               <Section title="General Remarks">
+                {!!store.result && (
+                  <button
+                    onClick={() => {
+                      const r = store.result as Record<string, unknown>;
+                      const d = r.damage as Record<string, unknown> | undefined;
+                      const concerns = (r.structural_concerns as string[]) || [];
+                      const recs = (r.recommendations as string[]) || [];
+                      const parts = (r.replacement_parts as Array<Record<string, unknown>>) || [];
+                      const lines: string[] = [];
+                      if (d?.summary) lines.push(`Damage Assessment: ${d.summary}`);
+                      if (concerns.length) lines.push(`Structural Concerns: ${concerns.join("; ")}`);
+                      if (recs.length) lines.push(`Recommendations: ${recs.join("; ")}`);
+                      store.updateRemark({ generalRemarks: lines.join("\n\n") });
+                      if (parts.length) {
+                        store.updateRemark({ partsToBeReplaced: parts.map((p) => `• ${p.partName}${p.damageType ? ` (${p.damageType})` : ""}`).join("\n") });
+                      }
+                      if (concerns.length) {
+                        store.updateRemark({ preAccidentDamage: concerns.map((c) => `• ${c}`).join("\n") });
+                      }
+                      toast.success("Remarks generated from AI analysis");
+                    }}
+                    className="mb-4 flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700 hover:bg-emerald-100 transition"
+                  >
+                    <PenTool className="w-3.5 h-3.5" /> Generate from AI Analysis
+                  </button>
+                )}
                 <div className="space-y-3">
                   <Field label="General Remarks"><Textarea value={store.remark.generalRemarks || ""} onChange={(e) => store.updateRemark({ generalRemarks: e.target.value })} /></Field>
                   <Field label="Parts To Be Replaced"><Textarea value={store.remark.partsToBeReplaced || ""} onChange={(e) => store.updateRemark({ partsToBeReplaced: e.target.value })} /></Field>
@@ -1192,7 +1455,7 @@ export default function AnalyzeWizard() {
                       <Field label="License No."><Input value={sig.licenseNumber || ""} onChange={(e) => store.updateSignature(i, { licenseNumber: e.target.value })} /></Field>
                       <Field label="Organization"><Input value={sig.organization || ""} onChange={(e) => store.updateSignature(i, { organization: e.target.value })} /></Field>
                       <Field label="Phone"><Input value={sig.phone || ""} onChange={(e) => store.updateSignature(i, { phone: e.target.value })} /></Field>
-                      <Field label="Date"><Input type="date" value={sig.signatureDate || ""} onChange={(e) => store.updateSignature(i, { signatureDate: e.target.value })} /></Field>
+                      <Field label="Date"><DatePicker value={sig.signatureDate || ""} onChange={(v) => store.updateSignature(i, { signatureDate: v })} /></Field>
                     </div>
                   </div>
                 ))}
@@ -1211,7 +1474,7 @@ export default function AnalyzeWizard() {
           {/* ═══════════════════════════════════════════════════════════════════ */}
           {/* STEP: Payment                                                     */}
           {/* ═══════════════════════════════════════════════════════════════════ */}
-          {store.step === "payment" && (
+          {store.step === "payment" && !isAdmin && (
             <div className="space-y-4">
               <Section title="Assessment Payment">
                 {store.paid ? (
@@ -1611,7 +1874,7 @@ export default function AnalyzeWizard() {
         <div className="flex items-center justify-between mt-6">
           <button
             onClick={prevStep}
-            disabled={STEPS.findIndex((s) => s.key === store.step) === 0}
+            disabled={visibleSteps.findIndex((s) => s.key === store.step) === 0}
             className="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition disabled:opacity-40"
           >
             <ChevronLeft className="w-4 h-4" /> Previous
